@@ -1,4 +1,4 @@
-namespace conduit;
+namespace conduit.Configuration;
 
 public class ConduitConfiguration
 {

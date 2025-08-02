@@ -2,6 +2,6 @@ namespace conduit;
 
 public interface IConduit
 {
-    Task<T> EnquireAsync<T>(IInquiry<T> inquiry, CancellationToken cancellationToken = default)
-        where T : class, IReply;
+    Task<T> PushAsync<T>(IRequest<T> request, CancellationToken cancellationToken = default)
+        where T : class, IResponse;
 }

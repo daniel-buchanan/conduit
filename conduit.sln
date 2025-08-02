@@ -5,6 +5,10 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "conduit", "src\conduit\conduit.csproj", "{9F1D9F2F-AAF3-4047-B222-C1BABBE4CE78}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "conduit.logging", "src\conduit.logging\conduit.logging.csproj", "{2A1796C9-97B0-45C5-9050-6864C4A328E8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "conduit.common", "src\conduit.common\conduit.common.csproj", "{FC32E322-F071-4FC6-8E80-07F8FDA9B929}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +22,13 @@ Global
 		{9F1D9F2F-AAF3-4047-B222-C1BABBE4CE78}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9F1D9F2F-AAF3-4047-B222-C1BABBE4CE78}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9F1D9F2F-AAF3-4047-B222-C1BABBE4CE78}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2A1796C9-97B0-45C5-9050-6864C4A328E8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2A1796C9-97B0-45C5-9050-6864C4A328E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2A1796C9-97B0-45C5-9050-6864C4A328E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2A1796C9-97B0-45C5-9050-6864C4A328E8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FC32E322-F071-4FC6-8E80-07F8FDA9B929}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FC32E322-F071-4FC6-8E80-07F8FDA9B929}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FC32E322-F071-4FC6-8E80-07F8FDA9B929}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FC32E322-F071-4FC6-8E80-07F8FDA9B929}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
