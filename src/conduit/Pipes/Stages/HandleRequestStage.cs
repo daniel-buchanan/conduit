@@ -8,10 +8,9 @@ public class HandleRequestStage<TRequest, TResponse>(
     where TResponse : class
     where TRequest : IRequest<TResponse>
 {
-    protected override async Task<TResponse> ExecuteInternalAsync(
+    protected override async Task<TResponse?> ExecuteInternalAsync(
         Guid instanceId, 
-        IRequest<TResponse> request, 
-        Func<IRequest<TResponse>, CancellationToken, Task<TResponse>> next, 
+        IRequest<TResponse> request,
         CancellationToken cancellationToken)
     {
         Logger.Debug("[{0}] IRequestHandler<{1}, {2}>.HandleAsync", instanceId, typeof(TRequest).Name, typeof(TResponse).Name);

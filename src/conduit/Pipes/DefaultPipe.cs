@@ -16,10 +16,12 @@ public class DefaultPipe<TRequest, TResponse>(
     {
         var instanceId = Guid.NewGuid();
         logger.Debug("[{0}] IPipe<{1}>.ExecuteAsync", instanceId, typeof(TResponse).Name);
+        Func<IRequest<TResponse>, CancellationToken, Task<TResponse>> handlerFunc = (req, ct)
+            => handler.ExecuteAsync(instanceId, req, (r, c) => post.ExecuteAsync(instanceId, r, c), ct);
         return await pre.ExecuteAsync(
-            instanceId, 
-            request, 
-            handler.ExecuteAsync, 
+            instanceId,
+            request,
+            handlerFunc,
             cancellationToken);
     }
 }

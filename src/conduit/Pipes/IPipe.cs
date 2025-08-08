@@ -5,5 +5,5 @@ public interface IPipe;
 public interface IPipe<TResponse> : IPipe
     where TResponse : class
 {
-    Task<TResponse> SendAsync(IRequest<TResponse> request, CancellationToken cancellationToken = default);
+    Task<TResponse?> SendAsync(IRequest<TResponse> request, CancellationToken cancellationToken = default);
 }
