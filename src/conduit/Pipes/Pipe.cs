@@ -1,55 +1,26 @@
-using System.Diagnostics;
-using conduit.logging;
-
 namespace conduit.Pipes;
 
-public abstract class Pipe<TResponse> : IPipe<TResponse>
-    where TResponse : class
+/// <summary>
+/// Provides an abstract base class for Conduit pipes, defining the core behavior for sending requests.
+/// </summary>
+/// <typeparam name="TRequest">The type of the request processed by this pipe.</typeparam>
+/// <typeparam name="TResponse">The type of the response produced by this pipe.</typeparam>
+public abstract class Pipe<TRequest, TResponse> : IPipe<TRequest, TResponse> 
+    where TResponse : class 
+    where TRequest : class, IRequest<TResponse>
 {
-    private readonly IPipeStage<TResponse>[] _pipeStages;
-    private readonly ILog _logger;
-
-    protected Pipe(ILog logger, IPipeInput<TResponse> input)
+    /// <summary>
+    /// Sends a request through the pipe asynchronously. Derived classes must implement this method
+    /// to define the specific pipeline logic.
+    /// </summary>
+    /// <param name="request">The request to send.</param>
+    /// <param name="cancellationToken">A cancellation token to observe while waiting for the task to complete.</param>
+    /// <returns>A task that represents the asynchronous operation, returning the response.</returns>
+    public virtual Task<TResponse?> SendAsync(TRequest request, CancellationToken cancellationToken = default)
     {
-        _logger = logger;
-        _pipeStages = [.. input.Stages];
-    }
-
-    public async Task<TResponse?> SendAsync(IRequest<TResponse> request, CancellationToken cancellationToken = default)
-    {
-        var startTime = Stopwatch.GetTimestamp();
         var instanceId = Guid.NewGuid();
-        var context = new PipeContext<TResponse>(_pipeStages.Length, request);
-        for (var index = 0; index < _pipeStages.Length; index++)
-        {
-            var stageStartTime = Stopwatch.GetTimestamp();
-            TResponse? response = null;
-            Exception? exception = null;
-            bool isSuccess = false;
-            try
-            {
-                response = await _pipeStages[index].ExecuteAsync(instanceId, request);
-                isSuccess = true;
-            }
-            catch (Exception ex)
-            {
-                exception = ex;
-            }
-            var stageEndTime = Stopwatch.GetTimestamp();
-            var duration = stageEndTime - stageStartTime;
-            context.SetStageMetric(index, new StageMetric(index, _pipeStages[index].GetType().Name, duration, isSuccess, exception));
-            if (response != null)
-                context.SetResponse(response);
-        }
-        var endTime = Stopwatch.GetTimestamp();
-        var totalDuration = endTime - startTime;
-        _logger.Debug($"Pipe execution completed in {totalDuration} ticks for instance {instanceId} with response: {context.Response?.ToString() ?? "null"}");
-        return context.Response;
+        var context = new PipeContext<TResponse>(0, request);
+        throw new NotImplementedException();
+        
     }
-}
-
-public interface IPipeInput<TResponse>
-    where TResponse : class
-{
-    IEnumerable<IPipeStage<TResponse>> Stages { get; }
 }

@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "conduit.logging", "src\cond
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "conduit.common", "src\conduit.common\conduit.common.csproj", "{FC32E322-F071-4FC6-8E80-07F8FDA9B929}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "conduit.tests", "conduit.tests\conduit.tests.csproj", "{B01E74C1-2275-4E3E-9B2B-FF4B61548BB0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +32,9 @@ Global
 		{FC32E322-F071-4FC6-8E80-07F8FDA9B929}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FC32E322-F071-4FC6-8E80-07F8FDA9B929}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FC32E322-F071-4FC6-8E80-07F8FDA9B929}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B01E74C1-2275-4E3E-9B2B-FF4B61548BB0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B01E74C1-2275-4E3E-9B2B-FF4B61548BB0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B01E74C1-2275-4E3E-9B2B-FF4B61548BB0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B01E74C1-2275-4E3E-9B2B-FF4B61548BB0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
