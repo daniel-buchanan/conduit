@@ -1,3 +1,4 @@
+using conduit.common;
 using conduit.Pipes;
 using conduit.Pipes.Stages;
 using Microsoft.Extensions.DependencyInjection;
@@ -7,6 +8,7 @@ namespace conduit.Configuration;
 public class CondiutConfigurationBuilder(ConduitConfiguration config) : IConduitConfigurationBuilder
 {
     private readonly List<ServiceDescriptor> _descriptors = new();
+    private readonly IPipeConfigurationCache _pipeConfigurationCache = new PipeConfigurationCache(HashUtil.Instance);
 
     /// <summary>
     /// Builds the Conduit configuration and registers it as a singleton service.
@@ -17,6 +19,10 @@ public class CondiutConfigurationBuilder(ConduitConfiguration config) : IConduit
     {
         var distinctDescriptors = _descriptors.Distinct().ToArray();
         services.AddRange(distinctDescriptors);
+        
+        _pipeConfigurationCache.Lock();
+        services.AddSingleton(_pipeConfigurationCache);
+        
         return config;
     }
 
@@ -57,8 +63,17 @@ public class CondiutConfigurationBuilder(ConduitConfiguration config) : IConduit
 
     public IConduitConfigurationBuilder RegisterPipe<TRequest, TResponse>(Action<IConduitPipeBuilder<TRequest, TResponse>> configure) where TRequest : class, IRequest<TResponse> where TResponse : class
     {
-        var builder = new ConduitPipeBuilder<TRequest, TResponse>(_descriptors);
+        var builder = new ConduitPipeBuilder<TRequest, TResponse>();
         configure(builder);
+        var pipeDef = builder.GetDescriptor();
+        _descriptors.AddRange(pipeDef.Stages);
+        var pipeServiceDescriptor = new ServiceDescriptor(typeof(IPipe<TRequest, TResponse>), provider =>
+        {
+            var factory = provider.GetRequiredService<IPipeFactory>();
+            return factory.Create<TRequest, TResponse>();
+        }, ServiceLifetime.Scoped);
+        _descriptors.Add(pipeServiceDescriptor);
+        _pipeConfigurationCache.Add<TRequest, TResponse>(pipeDef);
         return this;
     }
 

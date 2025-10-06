@@ -1,6 +1,7 @@
 using conduit.common;
 using conduit.Configuration;
 using conduit.logging;
+using conduit.Pipes;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace conduit;
@@ -23,6 +24,9 @@ public static class ServiceCollectionExtensions
         if(logger != null) services.AddSingleton<ILog>(logger);
         else services.AddScoped<ILog, ConsoleLog>();
         services.AddSingleton<IEnvironment, EnvironmentImpl>();
+        services.AddSingleton<IPipeConfigurationCache, PipeConfigurationCache>();
+        services.AddSingleton<IPipeFactory, PipeFactory>();
+        services.AddTransient<IHashUtil, HashUtil>();
         return services;
     }
 
