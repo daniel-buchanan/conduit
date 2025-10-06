@@ -4,27 +4,20 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace conduit.Configuration;
 
-public class CondiutConfigurationBuilder : IConduitConfigurationBuilder
+public class CondiutConfigurationBuilder(ConduitConfiguration config) : IConduitConfigurationBuilder
 {
-    private readonly IServiceCollection _services;
-    private readonly ConduitConfiguration _config;
     private readonly List<ServiceDescriptor> _descriptors = new();
-
-    public CondiutConfigurationBuilder(ConduitConfiguration config, IServiceCollection services)
-    {
-        _services = services;
-        _config = config;
-    }
 
     /// <summary>
     /// Builds the Conduit configuration and registers it as a singleton service.
     /// </summary>
+    /// <param name="services">The service collection to add to.</param>
     /// <returns>The configured Conduit configuration.</returns>
-    public IConduitConfiguration Build()
+    public IConduitConfiguration Build(IServiceCollection services)
     {
         var distinctDescriptors = _descriptors.Distinct().ToArray();
-        _services.AddRange(distinctDescriptors);
-        return _config;
+        services.AddRange(distinctDescriptors);
+        return config;
     }
 
     public IConduitConfigurationBuilder RegisterHandler<TRequest, TResponse, THandler>() 

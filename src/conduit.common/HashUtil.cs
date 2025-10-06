@@ -7,6 +7,8 @@ public interface IHashUtil
 {
     string TypeNameHash<T>();
     string TypeNameHash(Type type);
+    string TypeNameHash<TRequest, TResponse>();
+    string TypeNameHash(Type request, Type response);
 }
 
 public class HashUtil :  IHashUtil
@@ -33,5 +35,16 @@ public class HashUtil :  IHashUtil
     {
         var fullTypeName = type.FullName;
         return Hash(fullTypeName);
+    }
+
+    public string TypeNameHash<TRequest, TResponse>()
+        => TypeNameHash(typeof(TRequest), typeof(TResponse));
+
+    public string TypeNameHash(Type request, Type response)
+    {
+        var t1Name = request.FullName;
+        var t2Name = response.FullName;
+        var combined = $"{t1Name}:{t2Name}";
+        return Hash(combined);
     }
 }

@@ -1,5 +1,6 @@
 using conduit.logging;
 using conduit.tests.Handlers;
+using conduit.tests.Stages;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -7,21 +8,28 @@ using Xunit;
 
 namespace conduit.tests;
 
-public class SimpleTests
+public class PipeTests
 {
     private readonly IServiceProvider _provider;
     private readonly Mock<ILog> _loggerMock;
 
-    public SimpleTests()
+    public PipeTests()
     {
         _loggerMock = new Mock<ILog>();
         var services = new ServiceCollection();
-        services.AddConduit(c => c.RegisterHandlersAsImplementedFrom<SimpleTests>(), _loggerMock.Object);
+        services.AddConduit(c =>
+        {
+            c.RegisterPipe<TestRequest, TestResponse>(pb =>
+            {
+                pb.AddStage<LoggingStage<TestRequest, TestResponse>>();
+                pb.AddHandler<TestHandler>();
+            });
+        }, _loggerMock.Object);
         _provider = services.BuildServiceProvider();
     }
-    
+
     [Fact]
-    public async Task ValidResultReturned()
+    public async Task ManualPipeSucceeds()
     {
         // Act
         var conduit = _provider.GetRequiredService<IConduit>();
@@ -32,13 +40,15 @@ public class SimpleTests
     }
     
     [Fact]
-    public async Task LoggerInfoCalled()
+    public async Task LoggingStageHit()
     {
         // Act
         var conduit = _provider.GetRequiredService<IConduit>();
-        await conduit.PushAsync(new TestRequest(), CancellationToken.None);
+        var response = await conduit.PushAsync(new TestRequest(), CancellationToken.None);
 
         // Assert
-        _loggerMock.Verify(l => l.Info(It.IsAny<string>()), Times.Once);
+        _loggerMock.Verify(l => l.Debug(It.Is<string>(s => s.Contains("LoggingStage"))), Times.Once);
+        response.Should().NotBeNull();
     }
 }
+

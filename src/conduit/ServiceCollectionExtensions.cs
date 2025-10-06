@@ -15,11 +15,13 @@ public static class ServiceCollectionExtensions
     /// This overload registers default implementations for <see cref="IConduit"/>, <see cref="ILog"/>, and <see cref="IEnvironment"/>.
     /// </summary>
     /// <param name="services">The <see cref="IServiceCollection"/> to add the services to.</param>
+    /// <param name="logger">A logger instance to use, if not provided the default console logger will be used.</param>
     /// <returns>The <see cref="IServiceCollection"/> so that additional calls can be chained.</returns>
-    public static IServiceCollection AddConduit(this IServiceCollection services)
+    public static IServiceCollection AddConduit(this IServiceCollection services, ILog? logger = null)
     {
         services.AddSingleton<IConduit, Conduit>();
-        services.AddScoped<ILog, ConsoleLog>();
+        if(logger != null) services.AddSingleton<ILog>(logger);
+        else services.AddScoped<ILog, ConsoleLog>();
         services.AddSingleton<IEnvironment, EnvironmentImpl>();
         return services;
     }
@@ -30,15 +32,18 @@ public static class ServiceCollectionExtensions
     /// </summary>
     /// <param name="services">The <see cref="IServiceCollection"/> to add the services to.</param>
     /// <param name="configure">An action to configure the <see cref="IConduitConfigurationBuilder"/>.</param>
+    /// <param name="logger">A logger instance to use, if not provided the default console logger will be used.</param>
     /// <returns>The <see cref="IServiceCollection"/> so that additional calls can be chained.</returns>
-    public static IServiceCollection AddConduit(this IServiceCollection services,
-        Action<IConduitConfigurationBuilder> configure)
+    public static IServiceCollection AddConduit(
+        this IServiceCollection services,
+        Action<IConduitConfigurationBuilder> configure,
+        ILog? logger = null)
     {
-        services.AddConduit();
+        services.AddConduit(logger);
         var configuration = new ConduitConfiguration(HashUtil.Instance);
-        var builder = new CondiutConfigurationBuilder(configuration, services);
+        var builder = new CondiutConfigurationBuilder(configuration);
         configure(builder);
-        builder.Build();
+        builder.Build(services);
         return services;
     }
 

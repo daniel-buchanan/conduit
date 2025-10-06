@@ -92,6 +92,12 @@ public class PipeDescriptor(Type request, Type response)
     /// <param name="stages">An enumerable collection of service descriptors representing the stages.</param>
     public void SetStages(IEnumerable<ServiceDescriptor> stages)
         => Stages = stages.ToList();
+    
+    /// <summary>
+    /// Get the hash for this pipe descriptor.
+    /// </summary>
+    public string GetHash()
+        => HashUtil.Instance.TypeNameHash(RequestType, ResponseType);
 }
 
 /// <summary>
