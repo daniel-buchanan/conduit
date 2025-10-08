@@ -29,7 +29,7 @@ public class BuildablePipe<TRequest, TResponse> : Pipe<TRequest, TResponse>
             
             _logger.Debug($"[{instanceId}] Executing stage {s.Name}");
             var currentResponse = await stage.ExecuteAsync(instanceId, request, cancellationToken);
-            if(response == null) response = currentResponse;
+            if (response == null) response = currentResponse;
         }
         
         return response;

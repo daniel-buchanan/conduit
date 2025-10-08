@@ -40,5 +40,9 @@ public class ConduitPipeBuilder<TRequest, TResponse>
         return this;
     }
     
+    /// <summary>
+    /// Get the descriptor for this builder.
+    /// </summary>
+    /// <returns>The pipe descriptor built by this builder.</returns>
     public PipeDescriptor GetDescriptor() => _descriptor;
 }

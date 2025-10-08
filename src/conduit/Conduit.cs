@@ -1,3 +1,4 @@
+using conduit.common;
 using conduit.Exceptions;
 using conduit.Pipes;
 using Microsoft.Extensions.DependencyInjection;
@@ -30,7 +31,7 @@ public class Conduit(IServiceProvider provider) : IConduit
         
         var pipe = provider.GetService(pipeGenericType);
         if (pipe is null)
-            throw new PipeNotFoundException($"Pipe {pipeGenericType.Name} not found");
+            throw new PipeNotFoundException($"Implementation for Pipe {pipeGenericType.GetGenericName()} not found");
 
         var method = pipeGenericType.GetMethod("SendAsync");
         var result = await ((Task<TResponse?>)method?.Invoke(pipe, [request, cancellationToken])!)!;
