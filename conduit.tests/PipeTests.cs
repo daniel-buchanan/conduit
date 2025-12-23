@@ -22,7 +22,7 @@ public class PipeTests
             c.RegisterPipe<TestRequest, TestResponse>(pb =>
             {
                 pb.AddStage<LoggingStage<TestRequest, TestResponse>>();
-                pb.AddHandler<TestHandler>();
+                pb.AddHandler<TestRequestHandler>();
             });
         }, _loggerMock.Object);
         _provider = services.BuildServiceProvider();
@@ -49,6 +49,31 @@ public class PipeTests
         // Assert
         _loggerMock.Verify(l => l.Debug(It.Is<string>(s => s.Contains("LoggingStage"))), Times.Once);
         response.Should().NotBeNull();
+    }
+    
+    [Fact]
+    public async Task RequestHandlerHit()
+    {
+        // Act
+        var conduit = _provider.GetRequiredService<IConduit>();
+        var response = await conduit.PushAsync(new TestRequest(), CancellationToken.None);
+
+        // Assert
+        _loggerMock.Verify(l => l.Verbose(It.Is<string>(s => s.Contains(nameof(TestRequestHandler)))), Times.Once);
+        response.Should().NotBeNull();
+    }
+    
+    [Fact]
+    public async Task ValidateDuration()
+    {
+        // Act
+        var conduit = _provider.GetRequiredService<IConduit>();
+        var response = await conduit.PushWithDebugAsync(new TestRequest(), CancellationToken.None);
+
+        // Assert
+        response.Should().NotBeNull();
+        response.Response.Should().NotBeNull();
+        response.OverallDurationMs.Should().BeLessThan(2);
     }
 }
 

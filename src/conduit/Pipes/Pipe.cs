@@ -1,26 +1,68 @@
+using System.Diagnostics;
+using conduit.common;
+using conduit.Exceptions;
+using conduit.logging;
+
 namespace conduit.Pipes;
 
-/// <summary>
-/// Provides an abstract base class for Conduit pipes, defining the core behavior for sending requests.
-/// </summary>
-/// <typeparam name="TRequest">The type of the request processed by this pipe.</typeparam>
-/// <typeparam name="TResponse">The type of the response produced by this pipe.</typeparam>
-public abstract class Pipe<TRequest, TResponse> : IPipe<TRequest, TResponse> 
-    where TResponse : class 
-    where TRequest : class, IRequest<TResponse>
+/// <inheritdoc/>
+public abstract class Pipe<TRequest, TResponse>(
+    ILog logger,
+    IServiceProvider provider) : IPipe<TRequest, TResponse> 
+    where TRequest : class, IRequest<TResponse> 
+    where TResponse : class
 {
+    /// <inheritdoc/>
+    public abstract Task<TResponse?> PushAsync(TRequest request, CancellationToken cancellationToken = default);
+
+    /// <inheritdoc/>
+    public abstract Task<DebugResult<TResponse?>> PushWithDebugAsync(TRequest request, CancellationToken cancellationToken = default);
+
     /// <summary>
-    /// Sends a request through the pipe asynchronously. Derived classes must implement this method
-    /// to define the specific pipeline logic.
+    /// Execute an individual pipeline stage, with or without metrics.
     /// </summary>
-    /// <param name="request">The request to send.</param>
-    /// <param name="cancellationToken">A cancellation token to observe while waiting for the task to complete.</param>
-    /// <returns>A task that represents the asynchronous operation, returning the response.</returns>
-    public virtual Task<TResponse?> SendAsync(TRequest request, CancellationToken cancellationToken = default)
+    /// <param name="index">The index of the stage.</param>
+    /// <param name="instanceId">The ID of the pipeline run.</param>
+    /// <param name="stageType">The stage to be executed.</param>
+    /// <param name="stageTimer">The timer being used for getting stage metrics.</param>
+    /// <param name="request">The request being processed.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <param name="withMetrics">Whether to provide metrics on the stage.</param>
+    /// <returns>A record containing the Respons and optionally the Metrics for the Stage.</returns>
+    /// <exception cref="StageNotFoundException">This exception will be thrown in the stage cannot be found.</exception>
+    protected async Task<(TResponse? Response, StageMetric? Metric)> ExecuteStage(
+        int index,
+        Guid instanceId, 
+        Type stageType,
+        Stopwatch? stageTimer,
+        TRequest request,
+        CancellationToken cancellationToken,
+        bool withMetrics)
     {
-        var instanceId = Guid.NewGuid();
-        var context = new PipeContext<TResponse>(0, request);
-        throw new NotImplementedException();
+        stageTimer?.Restart();
+        StageMetric? metric = null;
+        TResponse? response;
         
+        var stage = (IPipeStage<TRequest, TResponse>?)provider.GetService(stageType);
+        var stageName = stageType.GetGenericName();
+        if (stage == null)
+            throw new StageNotFoundException($"Could not resolve stage of type {stageName}");
+            
+        logger.Debug($"[{instanceId}] {stageType.GetGenericName()} :: Executing stage {stageName}");
+        try
+        {
+            response = await stage.ExecuteAsync(instanceId, request, cancellationToken);
+            stageTimer?.Stop();
+            if(withMetrics)
+                metric = new StageMetric(index, stageType.GetGenericName(), stageTimer?.ElapsedMilliseconds ?? -1);
+        }
+        catch (Exception e)
+        {
+            stageTimer?.Stop();
+            logger.Error($"[{instanceId}] {stageType.GetGenericName()} :: Error while executing stage {stageName}", e);
+            throw;
+        }
+        
+        return (response, metric);
     }
 }

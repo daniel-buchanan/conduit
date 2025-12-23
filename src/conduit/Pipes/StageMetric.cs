@@ -8,7 +8,7 @@ namespace conduit.Pipes;
 /// <param name="Duration">The duration of the stage execution in milliseconds.</param>
 /// <param name="Success">A boolean indicating whether the stage executed successfully.</param>
 /// <param name="Exception">An optional exception if the stage failed.</param>
-public record StageMetric(int Index, string Name, long Duration, bool Success, Exception? Exception = null)
+public record StageMetric(int Index, string Name, long Duration, bool Success = true, Exception? Exception = null)
 {
     /// <summary>
     /// Gets the zero-based index of the stage in the pipeline.

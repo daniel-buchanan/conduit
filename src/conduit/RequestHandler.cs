@@ -1,3 +1,4 @@
+using conduit.common;
 using conduit.logging;
 using conduit.Pipes.Stages;
 
@@ -22,8 +23,13 @@ public abstract class RequestHandler<TRequest, TResponse>(ILog logger) : PipeSta
     /// <param name="request">The request to process.</param>
     /// <param name="cancellationToken">A cancellation token to observe while waiting for the task to complete.</param>
     /// <returns>A task that represents the asynchronous operation, returning the response.</returns>
-    protected override async Task<TResponse?> ExecuteInternalAsync(Guid instanceId, TRequest request, CancellationToken cancellationToken) 
-        => await HandleAsync(request, cancellationToken);
+    protected override async Task<TResponse?> ExecuteInternalAsync(Guid instanceId, TRequest request, CancellationToken cancellationToken)
+    {
+        var typeName = this.GetType().GetGenericName();
+        var requestTypeName = typeof(TRequest).GetGenericName();
+        logger.Verbose($"[{instanceId}] {typeName}.ExecuteInternalAsync({instanceId}, {requestTypeName})");
+        return await HandleAsync(request, cancellationToken);
+    }
 
     /// <summary>
     /// When overridden in a derived class, handles the specified request asynchronously.

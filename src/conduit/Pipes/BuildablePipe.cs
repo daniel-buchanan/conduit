@@ -1,37 +1,58 @@
+using System.Diagnostics;
 using conduit.logging;
 
 namespace conduit.Pipes;
 
-public class BuildablePipe<TRequest, TResponse> : Pipe<TRequest, TResponse> 
-    where TResponse : class 
+/// <summary>
+/// Provides a class which is the result of using a builder to create a pipe rather than creating it from the ground up.
+/// </summary>
+/// <typeparam name="TRequest">The type of the Request.</typeparam>
+/// <typeparam name="TResponse">The type of the Response</typeparam>
+public class BuildablePipe<TRequest, TResponse>(ILog logger, IServiceProvider serviceProvider, Type[] stages)
+    : Pipe<TRequest, TResponse>(logger, serviceProvider)
+    where TResponse : class
     where TRequest : class, IRequest<TResponse>
 {
-    private readonly ILog _logger;
-    private readonly Type[] _stages;
-    private readonly IServiceProvider _serviceProvider;
-    
-    public BuildablePipe(ILog logger, IServiceProvider serviceProvider, Type[] stages)
+    /// <inheritdoc/>
+    public override async Task<TResponse?> PushAsync(TRequest request, CancellationToken cancellationToken = default)
     {
-        _logger = logger;
-        _serviceProvider = serviceProvider;
-        _stages = stages;
+        var result = await PushInternalAsync(request, withMetrics: false, cancellationToken);
+        return result.Response;
     }
-    
-    public override async Task<TResponse?> SendAsync(TRequest request, CancellationToken cancellationToken = default)
+
+    /// <inheritdoc/>
+    public override async Task<DebugResult<TResponse?>> PushWithDebugAsync(TRequest request, CancellationToken cancellationToken = default)
+    {
+        var result = await PushInternalAsync(request, withMetrics: true, cancellationToken);
+        return new DebugResult<TResponse?>(result.Response, result.OverallDurationMs!.Value, result.Metrics!);
+    }
+
+    private async Task<(TResponse? Response, long? OverallDurationMs, StageMetric[]? Metrics)> PushInternalAsync(
+        TRequest request,
+        bool withMetrics,
+        CancellationToken cancellationToken = default)
     {
         TResponse? response = null;
-        var instanceId = Guid.NewGuid();
-        foreach (var s in _stages)
+        StageMetric[]? metrics = null;
+        Stopwatch? overallTimer = null;
+        Stopwatch? stageTimer = null;
+
+        if (withMetrics)
         {
-            var stage = (IPipeStage<TRequest, TResponse>?)_serviceProvider.GetService(s);
-            if (stage == null)
-                throw new InvalidOperationException($"Could not resolve stage of type {s.Name}");
-            
-            _logger.Debug($"[{instanceId}] Executing stage {s.Name}");
-            var currentResponse = await stage.ExecuteAsync(instanceId, request, cancellationToken);
-            if (response == null) response = currentResponse;
+            metrics = new StageMetric[stages.Length];
+            overallTimer = Stopwatch.StartNew();
+            stageTimer = new Stopwatch();
         }
         
-        return response;
+        var instanceId = Guid.NewGuid();
+        for (var i = 0; i < stages.Length; i++)
+        {
+            var result = await ExecuteStage(i, instanceId, stages[i], stageTimer, request, cancellationToken, withMetrics);
+            if (metrics != null) metrics[i] = result.Metric!;
+            if(response is null) response = result.Response;
+        }
+        
+        overallTimer?.Stop();
+        return (response, overallTimer?.ElapsedMilliseconds, metrics);
     }
 }

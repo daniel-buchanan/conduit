@@ -15,10 +15,18 @@ public interface IPipe<in TRequest, TResponse> : IPipe
     where TRequest : class, IRequest<TResponse>
 {
     /// <summary>
-    /// Sends a request through the pipe and awaits a response.
+    /// Pushes a request through the pipe and awaits a response.
     /// </summary>
     /// <param name="request">The request to send.</param>
     /// <param name="cancellationToken">A cancellation token to observe while waiting for the task to complete.</param>
     /// <returns>A task that represents the asynchronous operation, returning the response.</returns>
-    Task<TResponse?> SendAsync(TRequest request, CancellationToken cancellationToken = default);
+    Task<TResponse?> PushAsync(TRequest request, CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Pushes a request through the pipe and awaits a response. While timing and recording information about each stage.
+    /// </summary>
+    /// <param name="request">The request to send.</param>
+    /// <param name="cancellationToken">A cancellation token to observe while waiting for the task to complete.</param>
+    /// <returns>A task that represents the asynchronous operation, returning the response wrapped in debugging information.</returns>
+    Task<DebugResult<TResponse?>> PushWithDebugAsync(TRequest request, CancellationToken cancellationToken = default);
 }

@@ -1,3 +1,4 @@
+using conduit.common;
 using conduit.logging;
 
 namespace conduit.Pipes.Stages;
@@ -24,7 +25,9 @@ public class HandleRequestStage<TRequest, TResponse>(
     /// <returns>A task that represents the asynchronous operation, returning the response from the handler.</returns>
     protected override async Task<TResponse?> ExecuteInternalAsync(Guid instanceId, TRequest request, CancellationToken cancellationToken)
     {
-        Logger.Debug("[{0}] IRequestHandler<{1}, {2}>.HandleAsync", instanceId, typeof(TRequest).Name, typeof(TResponse).Name);
+        var requestTypeName = typeof(TRequest).GetGenericName();
+        var responseTypeName = typeof(TResponse).GetGenericName();
+        Logger.Debug($"[{instanceId}] IRequestHandler<{requestTypeName}, {responseTypeName}>.HandleAsync");
         return await handler.HandleAsync(request, cancellationToken);
     }
 }

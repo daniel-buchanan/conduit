@@ -12,7 +12,7 @@ public class TestResponse
     public string Value { get; set; } = string.Empty;
 }
 
-public class TestHandler(ILog logger) : RequestHandler<TestRequest, TestResponse>(logger)
+public class TestRequestHandler(ILog logger) : RequestHandler<TestRequest, TestResponse>(logger)
 {
     public override Task<TestResponse> HandleAsync(TestRequest testRequest, CancellationToken cancellationToken = default)
     {
