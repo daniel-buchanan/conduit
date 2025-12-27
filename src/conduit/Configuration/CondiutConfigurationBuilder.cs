@@ -1,5 +1,5 @@
 using conduit.common;
-using conduit.common.Helpers;
+using conduit.Helpers;
 using conduit.Pipes;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -32,6 +32,9 @@ public class ConduitConfigurationBuilder(ConduitConfiguration config) : IConduit
     public void AddDescriptor(Type serviceType, Type implementationType, ServiceLifetime lifetime)
         => _descriptors.Add(new ServiceDescriptor(serviceType, implementationType, lifetime));
 
+    public void AddDescriptors(params ServiceDescriptor[] descriptors)
+        => _descriptors.AddRange(descriptors);
+    
     /// <inheritdoc />
     public IConduitConfigurationBuilder RegisterHandler<TRequest, TResponse, THandler>() 
         where TRequest : class, IRequest<TResponse>
@@ -39,7 +42,7 @@ public class ConduitConfigurationBuilder(ConduitConfiguration config) : IConduit
         where THandler : IRequestHandler<TRequest, TResponse>
     {
         var defs = ReflectionHelper.GetServiceDescriptorsForHandler<TRequest, TResponse, THandler>();
-        _descriptors.AddRange(defs);
+        AddDescriptors(defs);
         return this;
     }
 
@@ -55,30 +58,37 @@ public class ConduitConfigurationBuilder(ConduitConfiguration config) : IConduit
             
             var request = genericParameters[0];
             var response = genericParameters[1];
-            
-            _descriptors.AddRange(ReflectionHelper.GetServiceDescriptorsForHandler(request, response, t));
+
+            var defs = ReflectionHelper.GetServiceDescriptorsForHandler(request, response, t);
+            AddDescriptors(defs);
         }
         
         return this;
     }
 
     /// <inheritdoc />
-    public IConduitConfigurationBuilder RegisterPipe<TRequest, TResponse>(Action<IConduitPipeBuilder<TRequest, TResponse>> configure) where TRequest : class, IRequest<TResponse> where TResponse : class
+    public IConduitConfigurationBuilder RegisterPipe<TRequest, TResponse>(Action<IConduitPipeBuilder<TRequest, TResponse>> configure) 
+        where TRequest : class, IRequest<TResponse> 
+        where TResponse : class
     {
         var builder = new ConduitPipeBuilder<TRequest, TResponse>();
         configure(builder);
+        
         var pipeDef = builder.GetDescriptor();
-        _descriptors.AddRange(pipeDef.Stages.Select(s => s.Descriptor));
+        AddDescriptors(pipeDef.Stages.Select(s => s.Descriptor).ToArray());
+        
         var pipeServiceDescriptor = GetConfiguredPipeDescriptor<TRequest, TResponse>();
         _descriptors.Add(pipeServiceDescriptor);
+        
         _pipeConfigurationCache.Add<TRequest, TResponse>(pipeDef);
+        
         return this;
     }
     
     private static ServiceDescriptor GetConfiguredPipeDescriptor<TRequest, TResponse>()
         where TRequest : class, IRequest<TResponse>
         where TResponse : class
-        => new ServiceDescriptor(typeof(IPipe<TRequest, TResponse>), PipeFactory<TRequest, TResponse>, ServiceLifetime.Scoped);
+        => new (typeof(IPipe<TRequest, TResponse>), PipeFactory<TRequest, TResponse>, ServiceLifetime.Scoped);
     
     private static IPipe<TRequest, TResponse> PipeFactory<TRequest, TResponse>(IServiceProvider provider)
         where TRequest : class, IRequest<TResponse>
@@ -92,8 +102,7 @@ public class ConduitConfigurationBuilder(ConduitConfiguration config) : IConduit
     public IConduitConfigurationBuilder RegisterPipesAsImplementedFrom<TLocator>()
     {
         var descriptors = ReflectionHelper.GetRegistrationsAsImplementedFrom<TLocator, IPipe>();
-        _descriptors.AddRange(descriptors);
-
+        AddDescriptors(descriptors);
         return this;
     }
 }

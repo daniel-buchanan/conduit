@@ -3,7 +3,7 @@ using conduit.Pipes;
 using conduit.Pipes.Stages;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace conduit.common.Helpers;
+namespace conduit.Helpers;
 
 public static class ReflectionHelper
 {

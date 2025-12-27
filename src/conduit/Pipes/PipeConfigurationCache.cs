@@ -32,6 +32,6 @@ public class PipeConfigurationCache(IHashUtil hashUtil) : IPipeConfigurationCach
         where TResponse : class
     {
         var key = hashUtil.TypeNameHash<TRequest, TResponse>();
-        return _cache.TryGetValue(key, out var descriptor) ? descriptor : null;
+        return _cache.GetValueOrDefault(key);
     }
 }

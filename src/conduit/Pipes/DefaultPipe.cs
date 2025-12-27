@@ -1,3 +1,4 @@
+using conduit.Configuration;
 using conduit.logging;
 using conduit.Pipes.Stages;
 
@@ -21,10 +22,9 @@ public class DefaultPipe<TRequest, TResponse> : BuildablePipe<TRequest, TRespons
     /// <typeparam name="TResponse">The type of the response produced by this pipe.</typeparam>
     /// <param name="logger">The logger to use for this pipe.</param>
     /// <param name="provider">The IServiceProvider to use for retrieving stages.</param>
-    public DefaultPipe(ILog logger, IServiceProvider provider) : base(logger, provider, 
-            [
-                typeof(DebugPreExecutionStage<TRequest, TResponse>),
-                typeof(HandleRequestStage<TRequest, TResponse>),
-                typeof(DebugPostExecutionStage<TRequest, TResponse>)
-            ]) { }
+    public DefaultPipe(
+        ILog logger, 
+        IServiceProvider provider, 
+        DefaultPipeConfiguration<TRequest, TResponse, IRequestHandler<TRequest, TResponse>> config) : 
+        base(logger, provider,config.GetStages()) { }
 }

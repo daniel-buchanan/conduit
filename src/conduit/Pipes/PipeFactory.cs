@@ -3,7 +3,10 @@ using conduit.logging;
 
 namespace conduit.Pipes;
 
-public class PipeFactory(IServiceProvider serviceProvider, ILog logger, IPipeConfigurationCache pipeCache) : IPipeFactory
+public class PipeFactory(
+    IServiceProvider serviceProvider, 
+    ILog logger, 
+    IPipeConfigurationCache pipeCache) : IPipeFactory
 {
     /// <inheritdoc />
     public IPipe<TRequest, TResponse> Create<TRequest, TResponse>() 

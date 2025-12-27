@@ -50,15 +50,21 @@ public abstract class Pipe<TRequest, TResponse>(
             throw new StageNotFoundException($"Could not resolve stage of type {stageName}");
             
         logger.Debug($"[{instanceId}] {stageType.GetGenericName()} :: Executing stage {stageName}");
+        
+        stageTimer?.Stop();
+        var prefetchDuration = stageTimer?.ElapsedMilliseconds;
+        stageTimer?.Restart();
+        
         try
         {
             var stageResponse = await stage.ExecuteAsync(instanceId, request, cancellationToken);
 
             if (!stageResponse.IsSuccessful) HandleUnsuccessfulResult(request, stageResponse);
+            response ??= stageResponse.Result;
             
             stageTimer?.Stop();
             if(withMetrics)
-                metric = new StageMetric(index, stageType.GetGenericName(), stageTimer?.ElapsedMilliseconds ?? -1);
+                metric = new StageMetric(index, stageType.GetGenericName(), prefetchDuration ?? -1, stageTimer?.ElapsedMilliseconds ?? -1);
         }
         catch (Exception e)
         {
