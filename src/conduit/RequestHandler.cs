@@ -23,12 +23,13 @@ public abstract class RequestHandler<TRequest, TResponse>(ILog logger) : PipeSta
     /// <param name="request">The request to process.</param>
     /// <param name="cancellationToken">A cancellation token to observe while waiting for the task to complete.</param>
     /// <returns>A task that represents the asynchronous operation, returning the response.</returns>
-    protected override async Task<TResponse?> ExecuteInternalAsync(Guid instanceId, TRequest request, CancellationToken cancellationToken)
+    protected override async Task<StageResult<TRequest, TResponse>> ExecuteInternalAsync(Guid instanceId, TRequest request, CancellationToken cancellationToken)
     {
         var typeName = this.GetType().GetGenericName();
         var requestTypeName = typeof(TRequest).GetGenericName();
-        logger.Verbose($"[{instanceId}] {typeName}.ExecuteInternalAsync({instanceId}, {requestTypeName})");
-        return await HandleAsync(request, cancellationToken);
+        Logger.Verbose($"[{instanceId}] {typeName}.ExecuteInternalAsync({instanceId}, {requestTypeName})");
+        var result = await HandleAsync(request, cancellationToken);
+        return StageResult.WithResult<TRequest, TResponse>(result, this.GetType());
     }
 
     /// <summary>

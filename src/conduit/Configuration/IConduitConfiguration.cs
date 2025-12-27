@@ -28,7 +28,8 @@ public interface IConduitConfiguration
     /// Adds a pipe stage to the Conduit configuration using non-generic types.
     /// </summary>
     /// <param name="requestType">The type of the request.</param>
+    /// <param name="responseType">The type of the response.</param>
     /// <param name="implementationType">The concrete implementation type of the pipe stage.</param>
     /// <param name="interfaceType">The interface type of the pipe stage (optional).</param>
-    void AddPipeStage(Type requestType, Type implementationType, Type? interfaceType = null);
+    void AddPipeStage(Type requestType, Type responseType, Type implementationType, Type? interfaceType = null);
 }

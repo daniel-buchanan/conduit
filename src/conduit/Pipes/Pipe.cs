@@ -2,6 +2,7 @@ using System.Diagnostics;
 using conduit.common;
 using conduit.Exceptions;
 using conduit.logging;
+using conduit.Pipes.Stages;
 
 namespace conduit.Pipes;
 
@@ -41,7 +42,7 @@ public abstract class Pipe<TRequest, TResponse>(
     {
         stageTimer?.Restart();
         StageMetric? metric = null;
-        TResponse? response;
+        TResponse? response = null;
         
         var stage = (IPipeStage<TRequest, TResponse>?)provider.GetService(stageType);
         var stageName = stageType.GetGenericName();
@@ -51,7 +52,10 @@ public abstract class Pipe<TRequest, TResponse>(
         logger.Debug($"[{instanceId}] {stageType.GetGenericName()} :: Executing stage {stageName}");
         try
         {
-            response = await stage.ExecuteAsync(instanceId, request, cancellationToken);
+            var stageResponse = await stage.ExecuteAsync(instanceId, request, cancellationToken);
+
+            if (!stageResponse.IsSuccessful) HandleUnsuccessfulResult(request, stageResponse);
+            
             stageTimer?.Stop();
             if(withMetrics)
                 metric = new StageMetric(index, stageType.GetGenericName(), stageTimer?.ElapsedMilliseconds ?? -1);
@@ -64,5 +68,17 @@ public abstract class Pipe<TRequest, TResponse>(
         }
         
         return (response, metric);
+    }
+
+    private void HandleUnsuccessfulResult(TRequest request, StageResult<TRequest, TResponse> stageResponse)
+    {
+        if (stageResponse.ValidationErrors.Length != 0)
+        {
+            throw new ValidationFailedException(ValidationResult.WithFailure(stageResponse.Result,
+                stageResponse.ValidationErrors));
+        }
+        
+        var message = $"Stage {stageResponse.StageType.GetGenericName()} Failed with Exception {stageResponse.Exception!.Message}";
+        throw new StageFailedException(message, stageResponse.Exception);
     }
 }

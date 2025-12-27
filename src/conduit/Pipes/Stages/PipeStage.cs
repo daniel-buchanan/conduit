@@ -8,7 +8,8 @@ namespace conduit.Pipes.Stages;
 /// <typeparam name="TRequest">The type of the request processed by this stage.</typeparam>
 /// <typeparam name="TResponse">The type of the response produced by this stage.</typeparam>
 /// <param name="logger">The logger instance to be used by the stage.</param>
-public abstract class PipeStage<TRequest, TResponse>(ILog logger) : IPipeStage<TRequest, TResponse>
+public abstract class PipeStage<TRequest, TResponse>(ILog logger) : 
+    IPipeStage<TRequest, TResponse>
     where TResponse : class
     where TRequest : class, IRequest<TResponse>
 {
@@ -25,7 +26,7 @@ public abstract class PipeStage<TRequest, TResponse>(ILog logger) : IPipeStage<T
     /// <param name="request">The request to process.</param>
     /// <param name="cancellationToken">A cancellation token to observe while waiting for the task to complete.</param>
     /// <returns>A task that represents the asynchronous operation, returning the response.</returns>
-    protected abstract Task<TResponse?> ExecuteInternalAsync(Guid instanceId, TRequest request, CancellationToken cancellationToken);
+    protected abstract Task<StageResult<TRequest, TResponse>> ExecuteInternalAsync(Guid instanceId, TRequest request, CancellationToken cancellationToken);
     
     /// <summary>
     /// Executes the pipe stage asynchronously without a 'next' delegate.
@@ -34,7 +35,7 @@ public abstract class PipeStage<TRequest, TResponse>(ILog logger) : IPipeStage<T
     /// <param name="request">The request to process.</param>
     /// <param name="cancellationToken">A cancellation token to observe while waiting for the task to complete.</param>
     /// <returns>A task that represents the asynchronous operation, returning the response.</returns>
-    public async Task<TResponse?> ExecuteAsync(
+    public async Task<StageResult<TRequest, TResponse>> ExecuteAsync(
         Guid instanceId, 
         TRequest request, 
         CancellationToken cancellationToken = default)
@@ -48,7 +49,7 @@ public abstract class PipeStage<TRequest, TResponse>(ILog logger) : IPipeStage<T
     /// <param name="next">A delegate to invoke the next stage in the pipe.</param>
     /// <param name="cancellationToken">A cancellation token to observe while waiting for the task to complete.</param>
     /// <returns>A task that represents the asynchronous operation, returning the response.</returns>
-    public async Task<TResponse?> ExecuteAsync(
+    public async Task<StageResult<TRequest, TResponse>> ExecuteAsync(
         Guid instanceId, 
         TRequest request, 
         Func<Guid, TRequest, CancellationToken, Task<TResponse>> next, 

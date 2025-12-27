@@ -48,8 +48,8 @@ public class BuildablePipe<TRequest, TResponse>(ILog logger, IServiceProvider se
         for (var i = 0; i < stages.Length; i++)
         {
             var result = await ExecuteStage(i, instanceId, stages[i], stageTimer, request, cancellationToken, withMetrics);
-            if (metrics != null) metrics[i] = result.Metric!;
-            if(response is null) response = result.Response;
+            metrics?[i] = result.Metric!;
+            response ??= result.Response;
         }
         
         overallTimer?.Stop();

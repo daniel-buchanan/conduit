@@ -1,3 +1,5 @@
+using conduit.Pipes.Stages;
+
 namespace conduit.Pipes;
 
 /// <summary>
@@ -21,7 +23,7 @@ public interface IPipeStage<TRequest, TResponse> : IPipeStage
     /// <param name="request">The request to process.</param>
     /// <param name="cancellationToken">A cancellation token to observe while waiting for the task to complete.</param>
     /// <returns>A task that represents the asynchronous operation, returning the response.</returns>
-    Task<TResponse?> ExecuteAsync(
+    Task<StageResult<TRequest, TResponse>> ExecuteAsync(
         Guid instanceId, 
         TRequest request, 
         CancellationToken cancellationToken = default);
@@ -34,7 +36,7 @@ public interface IPipeStage<TRequest, TResponse> : IPipeStage
     /// <param name="next">A delegate to invoke the next stage in the pipe.</param>
     /// <param name="cancellationToken">A cancellation token to observe while waiting for the task to complete.</param>
     /// <returns>A task that represents the asynchronous operation, returning the response.</returns>
-    Task<TResponse?> ExecuteAsync(
+    Task<StageResult<TRequest, TResponse>> ExecuteAsync(
         Guid instanceId, 
         TRequest request,
         Func<Guid, TRequest, CancellationToken, Task<TResponse>> next,

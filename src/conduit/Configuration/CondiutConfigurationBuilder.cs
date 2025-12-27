@@ -1,12 +1,11 @@
 using conduit.common;
 using conduit.common.Helpers;
 using conduit.Pipes;
-using conduit.Pipes.Stages;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace conduit.Configuration;
 
-public class CondiutConfigurationBuilder(ConduitConfiguration config) : IConduitConfigurationBuilder
+public class ConduitConfigurationBuilder(ConduitConfiguration config) : IConduitConfigurationBuilder
 {
     private readonly List<ServiceDescriptor> _descriptors = new();
     private readonly IPipeConfigurationCache _pipeConfigurationCache = new PipeConfigurationCache(HashUtil.Instance);
@@ -26,6 +25,12 @@ public class CondiutConfigurationBuilder(ConduitConfiguration config) : IConduit
         
         return config;
     }
+    
+    public void AddDescriptor(ServiceDescriptor descriptor)
+        => _descriptors.Add(descriptor);
+    
+    public void AddDescriptor(Type serviceType, Type implementationType, ServiceLifetime lifetime)
+        => _descriptors.Add(new ServiceDescriptor(serviceType, implementationType, lifetime));
 
     /// <inheritdoc />
     public IConduitConfigurationBuilder RegisterHandler<TRequest, TResponse, THandler>() 
@@ -45,9 +50,12 @@ public class CondiutConfigurationBuilder(ConduitConfiguration config) : IConduit
         foreach (var t in types)
         {
             var genericParameters = t.GetGenericArguments();
-            if (genericParameters.Length == 0) genericParameters = t.BaseType.GetGenericArguments();
+            if (genericParameters.Length == 0 && t.BaseType != null) genericParameters = t.BaseType.GetGenericArguments();
+            if (genericParameters.Length == 0) continue;
+            
             var request = genericParameters[0];
             var response = genericParameters[1];
+            
             _descriptors.AddRange(ReflectionHelper.GetServiceDescriptorsForHandler(request, response, t));
         }
         
@@ -60,7 +68,7 @@ public class CondiutConfigurationBuilder(ConduitConfiguration config) : IConduit
         var builder = new ConduitPipeBuilder<TRequest, TResponse>();
         configure(builder);
         var pipeDef = builder.GetDescriptor();
-        _descriptors.AddRange(pipeDef.Stages);
+        _descriptors.AddRange(pipeDef.Stages.Select(s => s.Descriptor));
         var pipeServiceDescriptor = GetConfiguredPipeDescriptor<TRequest, TResponse>();
         _descriptors.Add(pipeServiceDescriptor);
         _pipeConfigurationCache.Add<TRequest, TResponse>(pipeDef);

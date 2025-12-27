@@ -25,6 +25,12 @@ public static class ReflectionHelper
         var types = assembly.GetTypes();
         return types.Where(t => t.GetInterfaces().Any(predicate) && !t.IsInterface).ToArray();
     }
+    
+    public static Type[] GetTypesFromAssembly(Assembly assembly, Func<Type, bool> predicate)
+    {
+        var types = assembly.GetTypes();
+        return types.Where(t => t.GetInterfaces().Any(predicate) && !t.IsInterface).ToArray();
+    }
 
     public static ServiceDescriptor[] GetRegistrationsAsImplementedFrom<TLocator, TBase>(bool includeCtorDeps = false)
     {

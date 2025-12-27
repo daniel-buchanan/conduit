@@ -20,9 +20,9 @@ public class DebugPostExecutionStage<TRequest, TResponse>(ILog logger) : PipeSta
     /// <param name="request">The request being processed.</param>
     /// <param name="cancellationToken">A cancellation token to observe while waiting for the task to complete.</param>
     /// <returns>A task that represents the asynchronous operation, returning a default response.</returns>
-    protected override Task<TResponse?> ExecuteInternalAsync(Guid instanceId, TRequest request, CancellationToken cancellationToken)
+    protected override Task<StageResult<TRequest, TResponse>> ExecuteInternalAsync(Guid instanceId, TRequest request, CancellationToken cancellationToken)
     {
         Logger.Debug("[POST] ICall<{0}>.ExecuteAsync", typeof(TRequest).Name);
-        return Task.FromResult(default(TResponse));
+        return Task.FromResult(StageResult.WithIndeterminateResult<TRequest, TResponse>(this.GetType()));
     }
 }

@@ -13,7 +13,7 @@ public class PipeFactory(IServiceProvider serviceProvider, ILog logger, IPipeCon
         var config = pipeCache.Get<TRequest, TResponse>();
         if (config is null) throw new PipeNotFoundException();
         
-        var stages = config.Stages.Select(s => s.ServiceType).ToArray(); 
+        var stages = config.Stages.Select(s => s.InterfaceType).ToArray(); 
         var pipe = new BuildablePipe<TRequest, TResponse>(logger, serviceProvider, stages);
         return pipe;
     }

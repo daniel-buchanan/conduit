@@ -23,11 +23,12 @@ public class HandleRequestStage<TRequest, TResponse>(
     /// <param name="request">The request to process.</param>
     /// <param name="cancellationToken">A cancellation token to observe while waiting for the task to complete.</param>
     /// <returns>A task that represents the asynchronous operation, returning the response from the handler.</returns>
-    protected override async Task<TResponse?> ExecuteInternalAsync(Guid instanceId, TRequest request, CancellationToken cancellationToken)
+    protected override async Task<StageResult<TRequest, TResponse>> ExecuteInternalAsync(Guid instanceId, TRequest request, CancellationToken cancellationToken)
     {
         var requestTypeName = typeof(TRequest).GetGenericName();
         var responseTypeName = typeof(TResponse).GetGenericName();
         Logger.Debug($"[{instanceId}] IRequestHandler<{requestTypeName}, {responseTypeName}>.HandleAsync");
-        return await handler.HandleAsync(request, cancellationToken);
+        var result=  await handler.HandleAsync(request, cancellationToken);
+        return new StageResult<TRequest, TResponse>(result, this.GetType());
     }
 }

@@ -14,35 +14,40 @@ public class ConduitPipeBuilder<TRequest, TResponse>
     where TResponse : class
 {
     private readonly PipeDescriptor<TRequest, TResponse> _descriptor = new();
-    
-    /// <summary>
-    /// Adds a request handler to the current pipe.
-    /// </summary>
-    /// <typeparam name="THandler">The type of the request handler to add.</typeparam>
-    /// <returns>The current pipe builder instance.</returns>
+
+    /// <inheritdoc />
+    public IConduitPipeBuilder<TRequest, TResponse> AddStage(Type stage)
+    {
+        _descriptor.Stages.Add(new StageDescriptor(typeof(TRequest), typeof(TResponse),stage));
+        return this;
+    }
+
+    /// <inheritdoc />
     public IConduitPipeBuilder<TRequest, TResponse> AddHandler<THandler>() 
         where THandler : IRequestHandler<TRequest, TResponse>
     {
-        var handlerDef = new ServiceDescriptor(typeof(IRequestHandler<TRequest, TResponse>), typeof(THandler), ServiceLifetime.Scoped);
+        var handlerDef = new StageDescriptor(
+            typeof(TRequest), 
+            typeof(TResponse), 
+            typeof(THandler), 
+            typeof(IRequestHandler<TRequest, TResponse>));
         _descriptor.Stages.Add(handlerDef);
         return this;
     }
 
-    /// <summary>
-    /// Adds a pipe stage to the current pipe.
-    /// </summary>
-    /// <typeparam name="TStage">The type of the pipe stage to add.</typeparam>
-    /// <returns>The current pipe builder instance.</returns>
+    /// <inheritdoc />
     public IConduitPipeBuilder<TRequest, TResponse> AddStage<TStage>() 
-        where TStage : IPipeStage<TRequest, TResponse>
-    {
-        _descriptor.Stages.Add(new ServiceDescriptor(typeof(TStage), typeof(TStage), ServiceLifetime.Scoped));
-        return this;
-    }
-    
+        where TStage : IPipeStage<TRequest, TResponse> 
+        => AddStage(typeof(TStage));
+
     /// <summary>
     /// Get the descriptor for this builder.
     /// </summary>
     /// <returns>The pipe descriptor built by this builder.</returns>
     public PipeDescriptor GetDescriptor() => _descriptor;
+    
+    /// <summary>
+    /// Exclude this pipeline from Model Validation
+    /// </summary>
+    internal void ExcludeFromValidation() => _descriptor.ExcludeFromValidation();
 }

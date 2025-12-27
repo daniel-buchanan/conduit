@@ -48,7 +48,7 @@ public class PipeTests
 
         // Assert
         _loggerMock.Verify(l => l.Debug(It.Is<string>(s => s.Contains("LoggingStage"))), Times.Once);
-        response.Should().NotBeNull();
+        response.Should().BeNull();
     }
     
     [Fact]

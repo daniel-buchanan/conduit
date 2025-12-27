@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "conduit.common", "src\condu
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "conduit.tests", "conduit.tests\conduit.tests.csproj", "{B01E74C1-2275-4E3E-9B2B-FF4B61548BB0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "conduit.validation", "src\conduit.validation\conduit.validation.csproj", "{D0E91EB0-D2C7-41FB-A527-952917CEEB17}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,5 +38,9 @@ Global
 		{B01E74C1-2275-4E3E-9B2B-FF4B61548BB0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B01E74C1-2275-4E3E-9B2B-FF4B61548BB0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B01E74C1-2275-4E3E-9B2B-FF4B61548BB0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D0E91EB0-D2C7-41FB-A527-952917CEEB17}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D0E91EB0-D2C7-41FB-A527-952917CEEB17}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D0E91EB0-D2C7-41FB-A527-952917CEEB17}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D0E91EB0-D2C7-41FB-A527-952917CEEB17}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
