@@ -53,24 +53,19 @@ public class HashUtil :  IHashUtil
     
     private static string Hash(string input)
     {
-        using var hash = SHA512.Create();
-        var bytes = hash.ComputeHash(Encoding.UTF8.GetBytes(input));
+        var bytes = SHA512.HashData(Encoding.UTF8.GetBytes(input));
         var builder = new StringBuilder();
         foreach (var b in bytes) builder.Append(b.ToString("x2"));
         return builder.ToString();
     }
 
     /// <inheritdoc/>
-    public string TypeNameHash<T>()
-    {
-        var fullTypeName = typeof(T).FullName;
-        return Hash(fullTypeName);
-    }
+    public string TypeNameHash<T>() => TypeNameHash(typeof(T));
 
     /// <inheritdoc/>
     public string TypeNameHash(Type type)
     {
-        var fullTypeName = type.FullName;
+        var fullTypeName = type.FullName ?? type.Name;
         return Hash(fullTypeName);
     }
 
@@ -81,8 +76,8 @@ public class HashUtil :  IHashUtil
     /// <inheritdoc/>
     public string TypeNameHash(Type request, Type response)
     {
-        var t1Name = request.FullName;
-        var t2Name = response.FullName;
+        var t1Name = request.FullName ?? request.Name;
+        var t2Name = response.FullName ?? response.Name;
         var combined = $"{t1Name}:{t2Name}";
         return Hash(combined);
     }

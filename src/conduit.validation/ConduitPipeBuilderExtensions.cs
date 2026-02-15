@@ -33,7 +33,10 @@ public static class ConduitPipeBuilderExtensions
         where TRequest : class, IRequest<TResponse> 
         where TResponse : class
     {
-        (self as ConduitPipeBuilder<TRequest, TResponse>)?.ExcludeFromValidation();
+        if (self is ConduitPipeBuilder<TRequest, TResponse> builder)
+        {
+            builder.ExcludeFromValidation();
+        }
         return self;
     }
 }

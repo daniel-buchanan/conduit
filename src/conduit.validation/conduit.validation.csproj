@@ -15,6 +15,7 @@
       <PackageReference Include="Microsoft.AspNetCore.Hosting.Abstractions" />
       <PackageReference Include="Microsoft.AspNetCore.Mvc.Abstractions" />
       <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" />
+      <PackageReference Include="Newtonsoft.Json" />
     </ItemGroup>
 
 </Project>

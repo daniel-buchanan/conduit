@@ -4,7 +4,7 @@ namespace conduit.tests.Logging;
 
 public class MockStdIo(bool isStdErr) : StdIo(isStdErr)
 {
-    public event Action<string> OnWriteLine;
+    public event Action<string>? OnWriteLine;
 
     public override void WriteLine(string message)
     {
