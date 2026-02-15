@@ -1,28 +1,30 @@
+using conduit.common;
 using conduit.Pipes.Stages;
+using conduit.validation.Rules;
 
 namespace conduit.validation;
 
 public interface IModelValidator;
 
-public interface IModelValidator<TRequest> : IModelValidator
+public interface IModelValidator<TRequest, TResponse> : IModelValidator
+    where TRequest : class, IRequest<TResponse>
+    where TResponse : class
 {
     ValidationResult<TRequest> Validate(TRequest request);
     Task<ValidationResult<TRequest>> ValidateAsync(TRequest request);
 }
 
-public abstract class ModelValidator<TRequest> : IModelValidator<TRequest> where TRequest : class
+public abstract class ModelValidator<TRequest, TResponse> : IModelValidator<TRequest, TResponse>
+    where TRequest : class, IRequest<TResponse>
+    where TResponse : class
 {
-    private readonly List<Rule<TRequest>> _rules = new();
+    private readonly List<Rule<TRequest>> _rules = [];
 
     protected ModelValidator() => ConfigureSelf();
 
-    public ValidationResult<TRequest> Validate(TRequest request)
-    {
-        var t = ValidateAsync(request);
-        t.Wait();
-        return t.Result;
-    }
-
+    public ValidationResult<TRequest> Validate(TRequest request) 
+        => ValidateAsync(request).Await();
+    
     public async Task<ValidationResult<TRequest>> ValidateAsync(TRequest request)
     {
         var isSuccess = true;
@@ -48,4 +50,9 @@ public abstract class ModelValidator<TRequest> : IModelValidator<TRequest> where
     }
 
     protected abstract Task AddRules(IRuleBuilder<TRequest> ruleBuilder);
+
+    protected IRuleBuilder<TRequest> Property<TProperty>(Func<TRequest, TProperty> prop)
+    {
+        throw new NotImplementedException();
+    }
 }

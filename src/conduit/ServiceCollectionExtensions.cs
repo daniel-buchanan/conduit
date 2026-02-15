@@ -43,8 +43,7 @@ public static class ServiceCollectionExtensions
             ILog? logger = null)
         {
             services.AddConduit(logger);
-            var configuration = new ConduitConfiguration(HashUtil.Instance);
-            var builder = new ConduitConfigurationBuilder(configuration);
+            var builder = new ConduitConfigurationBuilder();
             configure(builder);
             builder.Build(services);
             return services;

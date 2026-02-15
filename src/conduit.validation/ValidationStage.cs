@@ -13,7 +13,7 @@ public class ValidationStage<TRequest, TResponse>(
 {
     protected override async Task<StageResult<TRequest, TResponse>> ExecuteInternalAsync(Guid instanceId, TRequest request, CancellationToken cancellationToken)
     {
-        var validator = provider.GetService<IModelValidator<TRequest>>();
+        var validator = provider.GetService<IModelValidator<TRequest, TResponse>>();
         
         if(validator is null && configuration.ThrowOnValidatorNotFound)
             throw new ValidatorNotFoundException($"Validator not found for request type: {typeof(TRequest).Name}");
@@ -22,4 +22,6 @@ public class ValidationStage<TRequest, TResponse>(
         var result = await validator.ValidateAsync(request);
         return StageResult.WithValidationResult<TRequest, TResponse>(result, this.GetType());
     }
+
+    public override int Order => 0;
 }

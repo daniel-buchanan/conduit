@@ -25,4 +25,7 @@ public class DebugPreExecutionStage<TRequest, TResponse>(ILog logger) : PipeStag
         Logger.Debug("[PRE] ICall<{0}>.ExecuteAsync", typeof(TRequest).Name);
         return Task.FromResult(StageResult.WithIndeterminateResult<TRequest, TResponse>(this.GetType()));
     }
+
+    /// <inheritdoc/>
+    public override int Order => 0;
 }

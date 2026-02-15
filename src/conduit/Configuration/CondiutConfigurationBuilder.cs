@@ -5,8 +5,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace conduit.Configuration;
 
-public class ConduitConfigurationBuilder(ConduitConfiguration config) : IConduitConfigurationBuilder
+public class ConduitConfigurationBuilder : IConduitConfigurationBuilder
 {
+    private readonly DefaultPipeConfiguration _defaultPipeConfiguration = new();
     private readonly List<ServiceDescriptor> _descriptors = new();
     private readonly IPipeConfigurationCache _pipeConfigurationCache = new PipeConfigurationCache(HashUtil.Instance);
 
@@ -15,25 +16,26 @@ public class ConduitConfigurationBuilder(ConduitConfiguration config) : IConduit
     /// </summary>
     /// <param name="services">The service collection to add to.</param>
     /// <returns>The configured Conduit configuration.</returns>
-    public IConduitConfiguration Build(IServiceCollection services)
+    public void Build(IServiceCollection services)
     {
-        var distinctDescriptors = _descriptors.Distinct().ToArray();
-        services.AddRange(distinctDescriptors);
+        services.AddRange(_descriptors.ToArray());
+        services.AddSingleton(_defaultPipeConfiguration);
         
         _pipeConfigurationCache.Lock();
         services.AddSingleton(_pipeConfigurationCache);
-        
-        return config;
     }
-    
+
     public void AddDescriptor(ServiceDescriptor descriptor)
         => _descriptors.Add(descriptor);
-    
-    public void AddDescriptor(Type serviceType, Type implementationType, ServiceLifetime lifetime)
-        => _descriptors.Add(new ServiceDescriptor(serviceType, implementationType, lifetime));
 
-    public void AddDescriptors(params ServiceDescriptor[] descriptors)
+    private void AddDescriptors(params ServiceDescriptor[] descriptors)
         => _descriptors.AddRange(descriptors);
+    
+    public void AddDefaultPreExecutionStage(Type stage)
+        => _defaultPipeConfiguration.PreExecutionStages.Add(stage);
+    
+    public void AddDefaultPostExecutionStage(Type stage)
+        => _defaultPipeConfiguration.PostExecutionStages.Add(stage);
     
     /// <inheritdoc />
     public IConduitConfigurationBuilder RegisterHandler<TRequest, TResponse, THandler>() 
@@ -75,6 +77,7 @@ public class ConduitConfigurationBuilder(ConduitConfiguration config) : IConduit
         configure(builder);
         
         var pipeDef = builder.GetDescriptor();
+        
         AddDescriptors(pipeDef.Stages.Select(s => s.Descriptor).ToArray());
         
         var pipeServiceDescriptor = GetConfiguredPipeDescriptor<TRequest, TResponse>();

@@ -1,3 +1,5 @@
+using conduit.validation.Rules;
+
 namespace conduit.validation;
 
 public interface IRuleBuilder<TRequest> where TRequest : class

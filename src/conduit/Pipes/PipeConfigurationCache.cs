@@ -29,9 +29,12 @@ public class PipeConfigurationCache(IHashUtil hashUtil) : IPipeConfigurationCach
     /// <inheritdoc />
     public PipeDescriptor? Get<TRequest, TResponse>() 
         where TRequest : class, IRequest<TResponse> 
-        where TResponse : class
+        where TResponse : class 
+        => Get(typeof(TRequest), typeof(TResponse));
+
+    public PipeDescriptor? Get(Type requestType, Type responseType)
     {
-        var key = hashUtil.TypeNameHash<TRequest, TResponse>();
+        var key = hashUtil.TypeNameHash(requestType, responseType);
         return _cache.GetValueOrDefault(key);
     }
 }

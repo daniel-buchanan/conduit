@@ -4,9 +4,13 @@ namespace conduit.validation;
 
 public interface IValidationBuilder
 {
-    IValidationBuilder WithValidatorFor<TRequest>(IModelValidator<TRequest> validator);
-    IValidationBuilder WithValidatorFor<TRequest, TModelValidator>()
-        where TModelValidator : IModelValidator<TRequest>;
+    IValidationBuilder WithValidatorFor<TRequest, TResponse>(IModelValidator<TRequest, TResponse> validator)
+        where TRequest : class, IRequest<TResponse>
+        where TResponse : class;
+    IValidationBuilder WithValidatorFor<TRequest, TResponse, TModelValidator>()
+        where TRequest : class, IRequest<TResponse>
+        where TResponse : class
+        where TModelValidator : IModelValidator<TRequest, TResponse>;
 
     IValidationBuilder WithValidatorsFromAssembly<TLocator>();
     IValidationBuilder WithValidatorsFromAssembly(Assembly assembly);

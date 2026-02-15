@@ -36,6 +36,9 @@ public static class ConfigurationBuilderExtensions
 
             var configInstance = new ConduitValidationConfiguration(validationBuilder.ThrowExceptionIfValidatorNotFound);
             conduitBuilder!.AddDescriptor(new ServiceDescriptor(typeof(ConduitValidationConfiguration), configInstance));
+            
+            conduitBuilder.AddDefaultPreExecutionStage(typeof(ValidationStage<,>));
+            
             return builder;
         }
     }

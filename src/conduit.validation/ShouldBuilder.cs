@@ -1,132 +1,75 @@
 using conduit.Pipes.Stages;
+using conduit.validation.Rules;
 
 namespace conduit.validation;
 
-public interface IShouldBuilder<TRequest, in TProperty> where TRequest : class
-{
-    IShouldBeBuilder<TRequest, TProperty> Should();
-    IShouldNotBeBuilder<TRequest, TProperty> NotBe();
-}
-
-public interface IShouldNotBeBuilder<TRequest, in TProperty> where TRequest : class
-{
-    IRuleBuilder<TRequest> Null(string? message = null);
-    IRuleBuilder<TRequest> EqualTo(TProperty value, string? message = null);
-    IRuleBuilder<TRequest> In(IEnumerable<TProperty> values);
-    IRuleBuilder<TRequest> In(string message, IEnumerable<TProperty> values);
-    IRuleBuilder<TRequest> OneOf(IEnumerable<TProperty> values);
-    IRuleBuilder<TRequest> OneOf(string message, IEnumerable<TProperty> values);
-}
-
-public interface IShouldBeBuilder<TRequest, in TProperty> where TRequest : class
-{
-    IRuleBuilder<TRequest> Null(string? message = null);
-    IRuleBuilder<TRequest> EqualTo(TProperty value, string? message = null);
-    IRuleBuilder<TRequest> In(IEnumerable<TProperty> values);
-    IRuleBuilder<TRequest> In(string message, IEnumerable<TProperty> values);
-    IRuleBuilder<TRequest> OneOf(IEnumerable<TProperty> values);
-    IRuleBuilder<TRequest> OneOf(string message, IEnumerable<TProperty> values);
-}
-
-
-public class ShouldBuilder<TRequest, TProperty>(
-    IRuleBuilder<TRequest> builder,
+public abstract class AbstractShouldBuilder<TRequest, TProperty>(
+    IRuleBuilder<TRequest> builder, 
     Func<TRequest, TProperty> property) : 
-    IShouldBuilder<TRequest, TProperty> where TRequest : class
-{
-    public IShouldBeBuilder<TRequest, TProperty> Should()
-        => new ShouldBeBuilder<TRequest, TProperty>(builder, property);
-
-    public IShouldNotBeBuilder<TRequest, TProperty> NotBe()
-        => new ShouldNotBeBuilder<TRequest, TProperty>(builder, property);
-}
-
-public abstract class AbstractShouldBuilder<TRequest>(IRuleBuilder<TRequest> builder)
+    IShouldBeBuilder<TRequest, TProperty>
     where TRequest : class
 {
-    protected void AddRule(Func<TRequest, bool> validator, string? message = null)
+    protected abstract bool InvertResults { get; }
+    
+    private IRuleBuilder<TRequest> AddRule(Func<TRequest, bool> validator, string? message = null)
     {
-        var rule = new Rule<TRequest>(r => validator(r) 
-            ? ValidationResult.WithSuccess(r) 
-            : ValidationResult.WithFailure(r, [new ValidationError(r.ToString() ?? string.Empty, message)]));
+        ValidationResult<TRequest> Execute(TRequest r)
+        {
+            var result = validator(r);
+            if (InvertResults) result = !result;
+            return result
+                ? ValidationResult.WithSuccess(r)
+                : ValidationResult.WithFailure(r, [new ValidationError(r.ToString() ?? string.Empty, message)]);
+        }
+
+        var rule = new Rule<TRequest>(Execute);
         builder.AddRule(rule);
+        return builder;
     }
-}
+    
+    /// <inheritdoc/>
+    public IRuleBuilder<TRequest> Null(string? message = null) 
+        => AddRule(r => property(r) != null, message);
 
-public class ShouldNotBeBuilder<TRequest, TProperty>(
-    IRuleBuilder<TRequest> builder,
-    Func<TRequest, TProperty> property) : 
-    AbstractShouldBuilder<TRequest>(builder),
-    IShouldNotBeBuilder<TRequest, TProperty> where TRequest : class
-{
-    private readonly IRuleBuilder<TRequest> _builder = builder;
+    /// <inheritdoc/>
+    public IRuleBuilder<TRequest> NullOrWhitespace(string? message = null) 
+        => AddRule(r =>
+        {
+            var val = property(r) as string;
+            return string.IsNullOrWhiteSpace(val);
+        }, message);
 
-    public IRuleBuilder<TRequest> Null(string? message = null)
-    {
-        AddRule(r => property(r) != null, message);
-        return _builder;
-    }
+    /// <inheritdoc/>
+    public IRuleBuilder<TRequest> EqualTo(TProperty value, string? message = null) 
+        => AddRule(r => !Equals(property(r), value), message);
 
-    public IRuleBuilder<TRequest> EqualTo(TProperty value, string? message = null)
-    {
-        AddRule(r => !Equals(property(r), value), message);
-        return _builder;
-    }
+    /// <inheritdoc/>
+    public IRuleBuilder<TRequest> In(IEnumerable<TProperty> values) 
+        => AddRule(r => !values.Contains(property(r)));
 
-    public IRuleBuilder<TRequest> In(IEnumerable<TProperty> values)
-    {
-        AddRule(r => !values.Contains(property(r)));
-        return _builder;
-    }
+    /// <inheritdoc/>
+    public IRuleBuilder<TRequest> In(string message, IEnumerable<TProperty> values) 
+        => AddRule(r => !values.Contains(property(r)), message);
 
-    public IRuleBuilder<TRequest> In(string message, IEnumerable<TProperty> values)
-    {
-        AddRule(r => !values.Contains(property(r)), message);
-        return _builder;
-    }
-
+    /// <inheritdoc/>
     public IRuleBuilder<TRequest> OneOf(IEnumerable<TProperty> values)
         => In(values);
 
+    /// <inheritdoc/>
     public IRuleBuilder<TRequest> OneOf(string message, IEnumerable<TProperty> values)
         => In(message, values);
 }
 
-public class ShouldBeBuilder<TRequest, TProperty>(
-    IRuleBuilder<TRequest> builder,
-    Func<TRequest, TProperty> property) : 
-    AbstractShouldBuilder<TRequest>(builder),
-    IShouldBeBuilder<TRequest, TProperty> where TRequest : class
+public class ShouldNotBeBuilder<TRequest, TProperty>(IRuleBuilder<TRequest> builder, Func<TRequest, TProperty> property) : 
+    AbstractShouldBuilder<TRequest, TProperty>(builder, property)
+    where TRequest : class
 {
-    private readonly IRuleBuilder<TRequest> _builder = builder;
+    protected override bool InvertResults => true;
+}
 
-    public IRuleBuilder<TRequest> Null(string? message = null)
-    {
-        AddRule(r => property(r) == null, message);
-        return _builder;
-    }
-
-    public IRuleBuilder<TRequest> EqualTo(TProperty value, string? message = null)
-    {
-        AddRule(r => Equals(property(r), value), message);
-        return _builder;
-    }
-
-    public IRuleBuilder<TRequest> In(IEnumerable<TProperty> values)
-    {
-        AddRule(r => values.Contains(property(r)));
-        return _builder;
-    }
-
-    public IRuleBuilder<TRequest> In(string message, IEnumerable<TProperty> values)
-    {
-        AddRule(r => values.Contains(property(r)), message);
-        return _builder;
-    }
-
-    public IRuleBuilder<TRequest> OneOf(IEnumerable<TProperty> values)
-        => In(values);
-
-    public IRuleBuilder<TRequest> OneOf(string message, IEnumerable<TProperty> values)
-        => In(message, values);
+public class ShouldBeBuilder<TRequest, TProperty>(IRuleBuilder<TRequest> builder, Func<TRequest, TProperty> property) : 
+    AbstractShouldBuilder<TRequest, TProperty>(builder, property)
+    where TRequest : class
+{
+    protected override bool InvertResults => false;
 }

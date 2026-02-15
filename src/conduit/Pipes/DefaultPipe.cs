@@ -1,6 +1,5 @@
 using conduit.Configuration;
 using conduit.logging;
-using conduit.Pipes.Stages;
 
 namespace conduit.Pipes;
 
@@ -22,6 +21,7 @@ public class DefaultPipe<TRequest, TResponse> : BuildablePipe<TRequest, TRespons
     /// <typeparam name="TResponse">The type of the response produced by this pipe.</typeparam>
     /// <param name="logger">The logger to use for this pipe.</param>
     /// <param name="provider">The IServiceProvider to use for retrieving stages.</param>
+    /// <param name="config">The configuration for this pipe.</param>
     public DefaultPipe(
         ILog logger, 
         IServiceProvider provider, 

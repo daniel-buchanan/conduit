@@ -25,4 +25,7 @@ public class DebugPostExecutionStage<TRequest, TResponse>(ILog logger) : PipeSta
         Logger.Debug("[POST] ICall<{0}>.ExecuteAsync", typeof(TRequest).Name);
         return Task.FromResult(StageResult.WithIndeterminateResult<TRequest, TResponse>(this.GetType()));
     }
+
+    /// <inheritdoc />
+    public override int Order => int.MaxValue;
 }

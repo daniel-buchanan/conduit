@@ -20,4 +20,15 @@ public class PipeFactory(
         var pipe = new BuildablePipe<TRequest, TResponse>(logger, serviceProvider, stages);
         return pipe;
     }
+
+    public IPipe Create(Type requestType, Type responseType)
+    {
+        var config = pipeCache.Get(requestType, responseType);
+        if (config is null) throw new PipeNotFoundException();
+        
+        var stages = config.Stages.Select(s => s.InterfaceType).ToArray();
+        var type = typeof(BuildablePipe<,>).MakeGenericType(requestType, responseType);
+        var arguments = new object[] { logger, serviceProvider, stages };
+        return (Activator.CreateInstance(type, arguments) as IPipe)!;
+    }
 }

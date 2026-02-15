@@ -13,11 +13,11 @@ public class ValidatingResponse
     public string Value { get; set; } = string.Empty;
 }
 
-public class ValidatingRequestValidator : ModelValidator<ValidatingRequest>
+public class ValidatingRequestValidator : ModelValidator<ValidatingRequest, ValidatingResponse>
 {
     protected override Task AddRules(IRuleBuilder<ValidatingRequest> ruleBuilder)
     {
-        ruleBuilder.Should(m => m.Message).NotBe().Null();
+        ruleBuilder.Should(m => m.Message).NotBe().NullOrWhitespace();
         return Task.CompletedTask;
     }
 }

@@ -32,4 +32,12 @@ public interface IPipeConfigurationCache
     PipeDescriptor? Get<TRequest, TResponse>()
         where TRequest : class, IRequest<TResponse>
         where TResponse : class;
+    
+    /// <summary>
+    /// Get a pipe configuration from the cache.
+    /// </summary>
+    /// <param name="requestType">The request type.</param>
+    /// <param name="responseType">The response type.</param>
+    /// <returns>The pipe descriptor if found, otherwise null.</returns>
+    PipeDescriptor? Get(Type requestType, Type responseType);
 }

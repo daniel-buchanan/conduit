@@ -1,7 +1,7 @@
-using System;
+using conduit.common;
 using conduit.Pipes.Stages;
 
-namespace conduit.validation;
+namespace conduit.validation.Rules;
 
 public interface IRule<TRequest> where TRequest : class
 {
@@ -18,16 +18,12 @@ public class Rule<TRequest> : IRule<TRequest>
     public Rule(Func<TRequest, ValidationResult<TRequest>> validator) 
         => _validator = r => Task.FromResult(validator(r));
 
-    public Rule(Func<TRequest, Task<ValidationResult<TRequest>>> validator) => 
-        _validator = validator;
+    public Rule(Func<TRequest, Task<ValidationResult<TRequest>>> validator) 
+        => _validator = validator;
 
-    public ValidationResult<TRequest> Validate(TRequest request)
-    {
-        var t = ValidateAsync(request);
-        t.Wait();
-        return t.Result;
-    }
-    
+    public ValidationResult<TRequest> Validate(TRequest request) 
+        => ValidateAsync(request).Await();
+
     public async Task<ValidationResult<TRequest>> ValidateAsync(TRequest request)
         => await _validator(request);
 }

@@ -19,8 +19,21 @@ public interface IConduitConfiguration
     /// <typeparam name="TStage">The type of the pipe stage to add.</typeparam>
     /// <typeparam name="TRequest">The type of the request handled by the pipe stage.</typeparam>
     /// <typeparam name="TResponse">The type of the response produced by the pipe stage.</typeparam>
-    void AddPipeStage<TStage, TRequest, TResponse>()
+    void AddStage<TStage, TRequest, TResponse>()
         where TStage : IPipeStage<TRequest, TResponse>
+        where TRequest : class, IRequest<TResponse>
+        where TResponse : class;
+
+    /// <summary>
+    /// Adds a pipe stage to the Conduit configuration.
+    /// </summary>
+    /// <typeparam name="TStageInterface">The type of the stage interface.</typeparam>
+    /// <typeparam name="TStage">The implementation type of the stage.</typeparam>
+    /// <typeparam name="TRequest">The type of the request.</typeparam>
+    /// <typeparam name="TResponse">The type of the response.</typeparam>
+    void AddStage<TStageInterface, TStage, TRequest, TResponse>()
+        where TStageInterface : IPipeStage<TRequest, TResponse>
+        where TStage : TStageInterface
         where TRequest : class, IRequest<TResponse>
         where TResponse : class;
 
@@ -31,5 +44,21 @@ public interface IConduitConfiguration
     /// <param name="responseType">The type of the response.</param>
     /// <param name="implementationType">The concrete implementation type of the pipe stage.</param>
     /// <param name="interfaceType">The interface type of the pipe stage (optional).</param>
-    void AddPipeStage(Type requestType, Type responseType, Type implementationType, Type? interfaceType = null);
+    void AddStage(Type requestType, Type responseType, Type implementationType, Type? interfaceType = null);
+    
+    /// <summary>
+    /// Add a pipe to the Conduit configuration.
+    /// </summary>
+    /// <typeparam name="TRequest">The type of the request.</typeparam>
+    /// <typeparam name="TResponse">The type of the response.</typeparam>
+    void AddPipe<TRequest, TResponse>()
+        where TRequest : class, IRequest<TResponse>
+        where TResponse : class;
+
+    /// <summary>
+    /// Add a pipe to the Conduit configuration.
+    /// </summary>
+    /// <param name="requestType">The type of the request.</param>
+    /// <param name="responseType">The type of the response.</param>
+    void AddPipe(Type requestType, Type responseType);
 }

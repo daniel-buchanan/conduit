@@ -1,4 +1,5 @@
 using System.Reflection;
+using conduit.Configuration;
 using conduit.Pipes;
 using conduit.Pipes.Stages;
 using Microsoft.Extensions.DependencyInjection;
@@ -94,6 +95,7 @@ public static class ReflectionHelper
     public static ServiceDescriptor[] GetServiceDescriptorsForHandler(Type request, Type response, Type handler)
     {
         var genericPipeInterface = typeof(IPipe<,>);
+        var genericPipeConfiguration = typeof(DefaultPipeConfiguration<,,>);
         var genericPipeImpl = typeof(DefaultPipe<,>);
         var genericHandlerStage = typeof(HandleRequestStage<,>);
         var genericPreStage = typeof(DebugPreExecutionStage<,>);
@@ -106,13 +108,15 @@ public static class ReflectionHelper
         var preStage = genericPreStage.MakeGenericType(request, response);
         var postStage = genericPostStage.MakeGenericType(request, response);
         var handlerInterface = genericHandlerInterface.MakeGenericType(request, response);
+        var defaultConfiguration = genericPipeConfiguration.MakeGenericType(request, response, handlerInterface);
         
         var pipeDescriptor = new ServiceDescriptor(pipeInterface, pipeImpl, ServiceLifetime.Scoped);
         var handlerStageDescriptor = new ServiceDescriptor(handlerStage, handlerStage, ServiceLifetime.Scoped);
         var preStageDescriptor = new  ServiceDescriptor(preStage, preStage, ServiceLifetime.Scoped);
         var postStageDescriptor = new ServiceDescriptor(postStage, postStage, ServiceLifetime.Scoped);
         var handlerDescriptor =  new ServiceDescriptor(handlerInterface, handler, ServiceLifetime.Scoped);
+        var defaultConfigurationDescriptor = new ServiceDescriptor(defaultConfiguration, defaultConfiguration, ServiceLifetime.Scoped);
         
-        return [pipeDescriptor, handlerStageDescriptor, preStageDescriptor, postStageDescriptor, handlerDescriptor];
+        return [pipeDescriptor, handlerStageDescriptor, preStageDescriptor, postStageDescriptor, handlerDescriptor, defaultConfigurationDescriptor];
     }
 }
