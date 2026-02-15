@@ -91,8 +91,9 @@ public abstract class ModelValidator<TRequest, TResponse> : IModelValidator<TReq
     /// <typeparam name="TProperty">The type of the property.</typeparam>
     /// <param name="prop">A function that selects the property from the request.</param>
     /// <returns>A rule builder for the selected property.</returns>
-    protected IRuleBuilder<TRequest> Property<TProperty>(Func<TRequest, TProperty> prop)
+    protected IShouldBuilder<TRequest, TProperty> Property<TProperty>(Func<TRequest, TProperty> prop)
     {
-        throw new NotImplementedException();
+        var builder = new RuleBuilder<TRequest>();
+        return builder.Should(prop);
     }
 }

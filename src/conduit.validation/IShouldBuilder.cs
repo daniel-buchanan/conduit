@@ -1,7 +1,7 @@
 namespace conduit.validation;
 
 /// <summary>
-/// Defines the contract for selecting a validation rule condition (Should or ShouldNot).
+/// Defines the contract for selecting a validation rule condition (Be or ShouldNot).
 /// </summary>
 /// <typeparam name="TRequest">The type of request being validated.</typeparam>
 /// <typeparam name="in TProperty">The type of the property being validated.</typeparam>
@@ -11,7 +11,7 @@ public interface IShouldBuilder<TRequest, in TProperty> where TRequest : class
     /// Specifies that the property should match the following validation conditions.
     /// </summary>
     /// <returns>A builder for defining positive validation conditions.</returns>
-    IShouldBeBuilder<TRequest, TProperty> Should();
+    IShouldBeBuilder<TRequest, TProperty> Be();
     
     /// <summary>
     /// Specifies that the property should NOT match the following validation conditions.
@@ -31,7 +31,7 @@ public class ShouldBuilder<TRequest, TProperty>(
     IShouldBuilder<TRequest, TProperty> where TRequest : class
 {
     /// <inheritdoc/>
-    public IShouldBeBuilder<TRequest, TProperty> Should()
+    public IShouldBeBuilder<TRequest, TProperty> Be()
         => new ShouldBeBuilder<TRequest, TProperty>(builder, property);
 
     /// <inheritdoc/>

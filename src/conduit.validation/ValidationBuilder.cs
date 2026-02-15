@@ -69,7 +69,7 @@ public class ValidationBuilder : IValidationBuilder
         var types = ReflectionHelper.GetTypesFromAssembly(assembly,t => t == typeof(IModelValidator));
         foreach (var t in types)
         {
-            var baseType = t.BaseType;
+            var baseType = t.BaseType ?? t;
             var request = baseType.GetGenericArguments()[0];
             var response = baseType.GetGenericArguments()[1];
             var interfaceType = typeof(IModelValidator<,>).MakeGenericType(request, response);

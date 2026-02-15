@@ -4,7 +4,7 @@ namespace conduit.validation;
 /// Defines the contract for building validation rules for properties in a request.
 /// </summary>
 /// <typeparam name="TRequest">The type of request being validated.</typeparam>
-/// <typeparam name="in TProperty">The type of the property being validated.</typeparam>
+/// <typeparam name="TProperty">The type of the property being validated.</typeparam>
 public interface IShouldBeBuilder<TRequest, in TProperty> where TRequest : class
 {
     /// <summary>

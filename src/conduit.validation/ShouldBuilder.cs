@@ -37,7 +37,7 @@ public abstract class AbstractShouldBuilder<TRequest, TProperty>(
     
     /// <inheritdoc/>
     public IRuleBuilder<TRequest> Null(string? message = null) 
-        => AddRule(r => property(r) != null, message);
+        => AddRule(r => property(r) is null, message);
 
     /// <inheritdoc/>
     public IRuleBuilder<TRequest> NullOrWhitespace(string? message = null) 

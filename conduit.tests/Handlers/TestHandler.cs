@@ -4,7 +4,7 @@ namespace conduit.tests.Handlers;
 
 public class TestRequest : IRequest<TestResponse>
 {
-    public string Message { get; set; } = string.Empty;
+    public string? Message { get; set; } = string.Empty;
 }
 
 public class TestResponse
