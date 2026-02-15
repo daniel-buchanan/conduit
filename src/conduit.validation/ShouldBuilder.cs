@@ -3,12 +3,20 @@ using conduit.validation.Rules;
 
 namespace conduit.validation;
 
+/// <summary>
+/// Provides an abstract base class for building validation conditions for properties.
+/// </summary>
+/// <typeparam name="TRequest">The type of request being validated.</typeparam>
+/// <typeparam name="TProperty">The type of the property being validated.</typeparam>
 public abstract class AbstractShouldBuilder<TRequest, TProperty>(
     IRuleBuilder<TRequest> builder, 
     Func<TRequest, TProperty> property) : 
     IShouldBeBuilder<TRequest, TProperty>
     where TRequest : class
 {
+    /// <summary>
+    /// Gets a value indicating whether the validation results should be inverted.
+    /// </summary>
     protected abstract bool InvertResults { get; }
     
     private IRuleBuilder<TRequest> AddRule(Func<TRequest, bool> validator, string? message = null)
@@ -60,16 +68,29 @@ public abstract class AbstractShouldBuilder<TRequest, TProperty>(
         => In(message, values);
 }
 
+/// <summary>
+/// Provides a concrete implementation of <see cref="AbstractShouldBuilder{TRequest, TProperty}"/> for negative validation conditions.
+/// This builder inverts the results of validation conditions.
+/// </summary>
+/// <typeparam name="TRequest">The type of request being validated.</typeparam>
+/// <typeparam name="TProperty">The type of the property being validated.</typeparam>
 public class ShouldNotBeBuilder<TRequest, TProperty>(IRuleBuilder<TRequest> builder, Func<TRequest, TProperty> property) : 
     AbstractShouldBuilder<TRequest, TProperty>(builder, property)
     where TRequest : class
 {
+    /// <inheritdoc/>
     protected override bool InvertResults => true;
 }
 
+/// <summary>
+/// Provides a concrete implementation of <see cref="AbstractShouldBuilder{TRequest, TProperty}"/> for positive validation conditions.
+/// </summary>
+/// <typeparam name="TRequest">The type of request being validated.</typeparam>
+/// <typeparam name="TProperty">The type of the property being validated.</typeparam>
 public class ShouldBeBuilder<TRequest, TProperty>(IRuleBuilder<TRequest> builder, Func<TRequest, TProperty> property) : 
     AbstractShouldBuilder<TRequest, TProperty>(builder, property)
     where TRequest : class
 {
+    /// <inheritdoc/>
     protected override bool InvertResults => false;
 }

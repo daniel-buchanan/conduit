@@ -21,6 +21,7 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddConduit(this IServiceCollection services, ILog? logger = null)
     {
         services.AddSingleton<IConduit, Conduit>();
+        services.AddSingleton<IStdConsole, StdConsole>();
         if(logger != null) services.AddSingleton(logger);
         else services.AddScoped<ILog, ConsoleLog>();
         services.AddSingleton<IEnvironment, EnvironmentImpl>();

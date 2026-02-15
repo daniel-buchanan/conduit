@@ -5,6 +5,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace conduit.Configuration;
 
+/// <summary>
+/// Provides a concrete implementation of <see cref="IConduitConfigurationBuilder"/> for configuring the Conduit system.
+/// </summary>
 public class ConduitConfigurationBuilder : IConduitConfigurationBuilder
 {
     private readonly DefaultPipeConfiguration _defaultPipeConfiguration = new();
@@ -12,10 +15,9 @@ public class ConduitConfigurationBuilder : IConduitConfigurationBuilder
     private readonly IPipeConfigurationCache _pipeConfigurationCache = new PipeConfigurationCache(HashUtil.Instance);
 
     /// <summary>
-    /// Builds the Conduit configuration and registers it as a singleton service.
+    /// Builds the Conduit configuration and registers all configured services.
     /// </summary>
-    /// <param name="services">The service collection to add to.</param>
-    /// <returns>The configured Conduit configuration.</returns>
+    /// <param name="services">The service collection to add configured services to.</param>
     public void Build(IServiceCollection services)
     {
         services.AddRange(_descriptors.ToArray());
@@ -25,19 +27,31 @@ public class ConduitConfigurationBuilder : IConduitConfigurationBuilder
         services.AddSingleton(_pipeConfigurationCache);
     }
 
+    /// <summary>
+    /// Adds a service descriptor to the configuration.
+    /// </summary>
+    /// <param name="descriptor">The service descriptor to add.</param>
     public void AddDescriptor(ServiceDescriptor descriptor)
         => _descriptors.Add(descriptor);
 
     private void AddDescriptors(params ServiceDescriptor[] descriptors)
         => _descriptors.AddRange(descriptors);
     
+    /// <summary>
+    /// Adds a pre-execution stage to be applied to all pipes by default.
+    /// </summary>
+    /// <param name="stage">The type of the pre-execution stage.</param>
     public void AddDefaultPreExecutionStage(Type stage)
         => _defaultPipeConfiguration.PreExecutionStages.Add(stage);
     
+    /// <summary>
+    /// Adds a post-execution stage to be applied to all pipes by default.
+    /// </summary>
+    /// <param name="stage">The type of the post-execution stage.</param>
     public void AddDefaultPostExecutionStage(Type stage)
         => _defaultPipeConfiguration.PostExecutionStages.Add(stage);
     
-    /// <inheritdoc />
+    /// <inheritdoc/>
     public IConduitConfigurationBuilder RegisterHandler<TRequest, TResponse, THandler>() 
         where TRequest : class, IRequest<TResponse>
         where TResponse : class
@@ -48,7 +62,7 @@ public class ConduitConfigurationBuilder : IConduitConfigurationBuilder
         return this;
     }
 
-    /// <inheritdoc />
+    /// <inheritdoc/>
     public IConduitConfigurationBuilder RegisterHandlersAsImplementedFrom<TLocator>()
     {
         var types = ReflectionHelper.GetTypesFromAssembly<TLocator>(t => t == typeof(IRequestHandler));
@@ -68,7 +82,7 @@ public class ConduitConfigurationBuilder : IConduitConfigurationBuilder
         return this;
     }
 
-    /// <inheritdoc />
+    /// <inheritdoc/>
     public IConduitConfigurationBuilder RegisterPipe<TRequest, TResponse>(Action<IConduitPipeBuilder<TRequest, TResponse>> configure) 
         where TRequest : class, IRequest<TResponse> 
         where TResponse : class
@@ -101,7 +115,7 @@ public class ConduitConfigurationBuilder : IConduitConfigurationBuilder
         return factory.Create<TRequest, TResponse>();
     }
 
-    /// <inheritdoc />
+    /// <inheritdoc/>
     public IConduitConfigurationBuilder RegisterPipesAsImplementedFrom<TLocator>()
     {
         var descriptors = ReflectionHelper.GetRegistrationsAsImplementedFrom<TLocator, IPipe>();

@@ -3,28 +3,31 @@ using conduit.Exceptions;
 
 namespace conduit.Pipes;
 
+/// <summary>
+/// Defines the contract for a cache that stores pipe configurations.
+/// </summary>
 public interface IPipeConfigurationCache
 {
     /// <summary>
-    /// Lock the cache to prevent further modifications.
+    /// Locks the cache to prevent further modifications.
     /// </summary>
     void Lock();
     
     /// <summary>
-    /// Add a new pipe configuration to the cache.
+    /// Adds a new pipe configuration to the cache.
     /// </summary>
     /// <param name="descriptor">The descriptor to add.</param>
     /// <typeparam name="TRequest">The request type.</typeparam>
     /// <typeparam name="TResponse">The response type.</typeparam>
     /// <exception cref="PipeAlreadyRegisteredException">
-    /// If a pipe has already been registered for the request and response types, this exception will be thrown.
+    /// Thrown if a pipe has already been registered for the request and response types.
     /// </exception>
     void Add<TRequest, TResponse>(PipeDescriptor descriptor)
         where TRequest : class, IRequest<TResponse>
         where TResponse : class;
     
     /// <summary>
-    /// Get a pipe configuration from the cache.
+    /// Gets a pipe configuration from the cache.
     /// </summary>
     /// <typeparam name="TRequest">The request type.</typeparam>
     /// <typeparam name="TResponse">The response type.</typeparam>
@@ -34,7 +37,7 @@ public interface IPipeConfigurationCache
         where TResponse : class;
     
     /// <summary>
-    /// Get a pipe configuration from the cache.
+    /// Gets a pipe configuration from the cache.
     /// </summary>
     /// <param name="requestType">The request type.</param>
     /// <param name="responseType">The response type.</param>

@@ -49,5 +49,5 @@ public class ConduitPipeBuilder<TRequest, TResponse>
     /// <summary>
     /// Exclude this pipeline from Model Validation
     /// </summary>
-    internal void ExcludeFromValidation() => _descriptor.ExcludeFromValidation();
+    public void ExcludeFromValidation() => _descriptor.ExcludeFromValidation();
 }

@@ -7,7 +7,11 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace conduit.validation;
 
-// ReSharper disable once ClassNeverInstantiated.Global
+/// <summary>
+/// Provides ASP.NET Core middleware for handling Conduit validation and stage exceptions.
+/// Catches validation and stage failures and converts them to appropriate HTTP responses.
+/// </summary>
+/// <param name="next">The next middleware in the request pipeline.</param>
 public class ConduitValidationExceptionHandler(RequestDelegate next)
 {
     private const string ContentTypeJson = "application/json";
@@ -17,6 +21,10 @@ public class ConduitValidationExceptionHandler(RequestDelegate next)
         { typeof(StageFailedException), HandleStageFailedException },
     };
     
+    /// <summary>
+    /// Invokes the middleware to handle exceptions in the request pipeline.
+    /// </summary>
+    /// <param name="context">The HTTP context for the current request.</param>
     public async Task InvokeAsync(HttpContext context)
     {
         var logger = context.RequestServices.GetRequiredService<ILog>();
@@ -43,6 +51,9 @@ public class ConduitValidationExceptionHandler(RequestDelegate next)
         return true;
     }
     
+    /// <summary>
+    /// Handles validation exceptions by returning a 400 Bad Request response with validation errors.
+    /// </summary>
     private static async Task HandleValidationException(Exception ex, HttpContext context)
     {
         ProblemDetails problemDetails;
@@ -71,6 +82,9 @@ public class ConduitValidationExceptionHandler(RequestDelegate next)
         await WriteResponse(context, StatusCodes.Status400BadRequest, problemDetails);
     }
     
+    /// <summary>
+    /// Handles stage failures by returning a 500 Internal Server Error response.
+    /// </summary>
     private static async Task HandleStageFailedException(Exception ex, HttpContext context)
     {
         var details = new ProblemDetails
@@ -84,6 +98,9 @@ public class ConduitValidationExceptionHandler(RequestDelegate next)
         await WriteResponse(context, StatusCodes.Status500InternalServerError, details);
     }
     
+    /// <summary>
+    /// Writes a JSON response to the HTTP context.
+    /// </summary>
     private static async Task WriteResponse(HttpContext context, int statusCode, object details)
     {
         context.Response.StatusCode = statusCode;

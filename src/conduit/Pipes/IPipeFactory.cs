@@ -1,5 +1,8 @@
 namespace conduit.Pipes;
 
+/// <summary>
+/// Defines the contract for creating pipe instances from registered pipe configurations.
+/// </summary>
 public interface IPipeFactory
 {
     /// <summary>

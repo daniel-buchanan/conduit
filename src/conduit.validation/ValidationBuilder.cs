@@ -4,14 +4,25 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace conduit.validation;
 
+/// <summary>
+/// Provides a concrete implementation of <see cref="IValidationBuilder"/> for configuring validators in the Conduit system.
+/// </summary>
 public class ValidationBuilder : IValidationBuilder
 {
     private readonly List<ServiceDescriptor> _descriptors = new();
     
+    /// <summary>
+    /// Gets a value indicating whether to throw an exception if a validator is not found.
+    /// </summary>
     public bool ThrowExceptionIfValidatorNotFound { get; private set; }
     
+    /// <summary>
+    /// Builds and returns the configured service descriptors.
+    /// </summary>
+    /// <returns>An enumerable collection of service descriptors.</returns>
     public IEnumerable<ServiceDescriptor> Build() => _descriptors;
     
+    /// <inheritdoc/>
     public IValidationBuilder WithValidatorFor<TRequest, TResponse>(IModelValidator<TRequest, TResponse> validator)
         where TRequest : class, IRequest<TResponse>
         where TResponse : class
@@ -27,6 +38,7 @@ public class ValidationBuilder : IValidationBuilder
         return this;
     }
 
+    /// <inheritdoc/>
     public IValidationBuilder WithValidatorFor<TRequest, TResponse, TModelValidator>() 
         where TRequest : class, IRequest<TResponse>
         where TResponse : class
@@ -43,6 +55,7 @@ public class ValidationBuilder : IValidationBuilder
         return this;
     }
 
+    /// <inheritdoc/>
     public IValidationBuilder WithValidatorsFromAssembly<TLocator>()
     {
         var locatorType = typeof(TLocator);
@@ -50,6 +63,7 @@ public class ValidationBuilder : IValidationBuilder
         return WithValidatorsFromAssembly(assembly);
     }
 
+    /// <inheritdoc/>
     public IValidationBuilder WithValidatorsFromAssembly(Assembly assembly)
     {
         var types = ReflectionHelper.GetTypesFromAssembly(assembly,t => t == typeof(IModelValidator));
@@ -67,6 +81,7 @@ public class ValidationBuilder : IValidationBuilder
         return this;
     }
 
+    /// <inheritdoc/>
     public IValidationBuilder ThrowIfValidatorNotFound()
     {
         ThrowExceptionIfValidatorNotFound = true;
