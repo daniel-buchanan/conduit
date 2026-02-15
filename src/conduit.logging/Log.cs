@@ -5,7 +5,7 @@ namespace conduit.logging;
 
 public abstract class Log(IEnvironment environment) : ILog
 {
-    protected class Levels
+    private static class Levels
     {
         public const string Debug = "DEBUG";
         public const string Verbose = "VERB";
@@ -13,6 +13,8 @@ public abstract class Log(IEnvironment environment) : ILog
         public const string Warning = "WARN";
         public const string Error = "ERR";
     }
+    
+    private const string ErrorMessageTemplate = "Error occurred! {0}";
     
     protected readonly IEnvironment Environment = environment;
 
@@ -24,8 +26,11 @@ public abstract class Log(IEnvironment environment) : ILog
 
     public ILog Debug(string message, Exception ex)
     {
-        Debug("Error occurred! {0}", ex.Message);
-        return Debug("{0}", ex.StackTrace);
+        Debug(message);
+        Debug(ErrorMessageTemplate, ex.Message);
+        return ex.StackTrace != null 
+            ? Debug("{0}", ex.StackTrace) 
+            : this;
     }
 
     public ILog Verbose(string message)
@@ -35,7 +40,7 @@ public abstract class Log(IEnvironment environment) : ILog
         => WriteMessage(LoggingLevel.Verbose, messageTemplate, propertyValues);
 
     public ILog Verbose(string message, Exception ex)
-        => Verbose("Error occurred! {0}", ex.Message);
+        => Verbose(ErrorMessageTemplate, ex.Message);
 
     public ILog Info(string message)
         => Info(message, propertyValues: []);
@@ -44,7 +49,7 @@ public abstract class Log(IEnvironment environment) : ILog
         => WriteMessage(LoggingLevel.Info, messageTemplate, propertyValues);
 
     public ILog Info(string message, Exception ex)
-        => Info("Error occurred! {0}", ex.Message);
+        => Info(ErrorMessageTemplate, ex.Message);
 
     public ILog Warn(string message)
         => Warn(message, propertyValues: []);
@@ -53,7 +58,7 @@ public abstract class Log(IEnvironment environment) : ILog
         => WriteMessage(LoggingLevel.Warning, messageTemplate, propertyValues);
 
     public ILog Warn(string message, Exception ex)
-        => Warn("Error occurred! {0}", ex.Message);
+        => Warn(ErrorMessageTemplate, ex.Message);
 
     public ILog Error(string message)
         => Error(message, propertyValues: []);
@@ -64,11 +69,11 @@ public abstract class Log(IEnvironment environment) : ILog
     public ILog Error(string message, Exception ex)
     {
         Error(message);
-        return Error("Error occurred! {0}", ex.Message);
+        return Error(ErrorMessageTemplate, ex.Message);
     }
 
     public ILog Error(Exception ex)
-        => Error("Error occurred! {0}", ex.Message);
+        => Error(ErrorMessageTemplate, ex.Message);
 
     public ILog Error(Exception ex, string messageTemplate, params object[] propertyValues)
     {
@@ -77,7 +82,7 @@ public abstract class Log(IEnvironment environment) : ILog
     }
 
     private bool AllowedToLog(LoggingLevel level)
-        => Environment.LogLevel >= level;
+        => level >= Environment.LogLevel;
 
     private ILog WriteMessage(LoggingLevel level, string messageTemplate, params object[] propertyValues)
     {
@@ -97,7 +102,8 @@ public abstract class Log(IEnvironment environment) : ILog
             logLevelStr = logLevelStr.PadRight(remainingSpace);
         }
         
-        return !AllowedToLog(level)
+        var allowedToLog = AllowedToLog(level);
+        return !allowedToLog
             ? this
             : WriteMessageInternal(logLevelStr, string.Format(messageTemplate, propertyValues));
     }
