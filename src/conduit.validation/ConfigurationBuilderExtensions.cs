@@ -38,11 +38,19 @@ public static class ConfigurationBuilderExtensions
 
         var descriptors = validationBuilder.Build();
         var conduitBuilder = builder as ConduitConfigurationBuilder;
-    
+
         foreach (var descriptor in descriptors)
         {
             conduitBuilder!.AddDescriptor(descriptor);
         }
+
+        // Registered once, as an open generic: DI can construct ValidationStage<TRequest, TResponse> for
+        // ANY request/response pair on demand, regardless of whether a specific IModelValidator<,> was
+        // discovered for that pair. Without this, ValidationStage<,> would only resolve for pairs that
+        // happen to have a validator, and every other request type's default validation stage would fail
+        // to resolve at all (StageNotFoundException) instead of reaching the "no validator found" handling
+        // inside ValidationStage itself.
+        conduitBuilder!.AddDescriptor(new ServiceDescriptor(typeof(ValidationStage<,>), typeof(ValidationStage<,>), ServiceLifetime.Transient));
 
         var configInstance = new ConduitValidationConfiguration(validationBuilder.ThrowExceptionIfValidatorNotFound);
         conduitBuilder!.AddDescriptor(new ServiceDescriptor(typeof(ConduitValidationConfiguration), configInstance));

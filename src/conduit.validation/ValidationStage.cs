@@ -1,4 +1,5 @@
 using conduit.logging;
+using conduit.Pipes;
 using conduit.Pipes.Stages;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -15,8 +16,8 @@ namespace conduit.validation;
 public class ValidationStage<TRequest, TResponse>(
     ILog logger,
     ConduitValidationConfiguration configuration,
-    IServiceProvider provider) : PipeStage<TRequest, TResponse>(logger) 
-    where TRequest : class, IRequest<TResponse> 
+    IServiceProvider provider) : PipeStage<TRequest, TResponse>(logger), IValidationPipeStage
+    where TRequest : class, IRequest<TResponse>
     where TResponse : class
 {
     /// <inheritdoc/>
@@ -31,7 +32,4 @@ public class ValidationStage<TRequest, TResponse>(
         var result = await validator.ValidateAsync(request);
         return StageResult.WithValidationResult<TRequest, TResponse>(result, this.GetType());
     }
-
-    /// <inheritdoc/>
-    public override int Order => 0;
 }

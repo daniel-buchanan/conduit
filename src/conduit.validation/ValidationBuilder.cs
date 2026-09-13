@@ -1,6 +1,9 @@
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using conduit.Helpers;
 using Microsoft.Extensions.DependencyInjection;
+
+[assembly: InternalsVisibleTo("conduit.tests")]
 
 namespace conduit.validation;
 
@@ -28,13 +31,8 @@ public class ValidationBuilder : IValidationBuilder
         where TResponse : class
     {
         _descriptors.Add(new ServiceDescriptor(
-            typeof(TRequest), 
-            validator, 
-            ServiceLifetime.Singleton));
-        _descriptors.Add(new ServiceDescriptor(
-            typeof(ValidationStage<TRequest, TResponse>), 
-            typeof(ValidationStage<TRequest, TResponse>), 
-            ServiceLifetime.Transient));
+            typeof(IModelValidator<TRequest, TResponse>),
+            validator));
         return this;
     }
 
@@ -45,12 +43,8 @@ public class ValidationBuilder : IValidationBuilder
         where TModelValidator : IModelValidator<TRequest, TResponse>
     {
         _descriptors.Add(new ServiceDescriptor(
-            typeof(IModelValidator<TRequest, TResponse>), 
-            typeof(TModelValidator), 
-            ServiceLifetime.Transient));
-        _descriptors.Add(new ServiceDescriptor(
-            typeof(ValidationStage<TRequest, TResponse>), 
-            typeof(ValidationStage<TRequest, TResponse>), 
+            typeof(IModelValidator<TRequest, TResponse>),
+            typeof(TModelValidator),
             ServiceLifetime.Transient));
         return this;
     }
@@ -69,15 +63,11 @@ public class ValidationBuilder : IValidationBuilder
         var types = ReflectionHelper.GetTypesFromAssembly(assembly,t => t == typeof(IModelValidator));
         foreach (var t in types)
         {
-            var baseType = t.BaseType ?? t;
-            var request = baseType.GetGenericArguments()[0];
-            var response = baseType.GetGenericArguments()[1];
+            var (request, response) = GetRequestResponseTypes(t);
             var interfaceType = typeof(IModelValidator<,>).MakeGenericType(request, response);
-            var stageType = typeof(ValidationStage<,>).MakeGenericType(request, response);
             _descriptors.Add(new ServiceDescriptor(interfaceType, t, ServiceLifetime.Transient));
-            _descriptors.Add(new ServiceDescriptor(stageType, stageType, ServiceLifetime.Transient));
         }
-        
+
         return this;
     }
 
@@ -86,5 +76,21 @@ public class ValidationBuilder : IValidationBuilder
     {
         ThrowExceptionIfValidatorNotFound = true;
         return this;
+    }
+
+    /// <summary>
+    /// Extracts the TRequest/TResponse type arguments from a discovered validator's <see cref="ModelValidator{TRequest, TResponse}"/>
+    /// base type. Internal (rather than private) so its guard behavior can be unit tested directly without needing
+    /// an assembly that contains an intentionally-invalid validator type.
+    /// </summary>
+    internal static (Type Request, Type Response) GetRequestResponseTypes(Type validatorType)
+    {
+        var baseType = validatorType.BaseType;
+        if (baseType is null || baseType.GetGenericArguments().Length < 2)
+            throw new InvalidOperationException(
+                $"'{validatorType.FullName}' implements {nameof(IModelValidator)} directly. " +
+                $"Validators discovered via {nameof(WithValidatorsFromAssembly)} must derive from ModelValidator<TRequest, TResponse>.");
+
+        return (baseType.GetGenericArguments()[0], baseType.GetGenericArguments()[1]);
     }
 }
