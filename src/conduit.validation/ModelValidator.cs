@@ -81,19 +81,8 @@ public abstract class ModelValidator<TRequest, TResponse> : IModelValidator<TReq
 
     /// <summary>
     /// When overridden in a derived class, configures the validation rules for this validator.
+    /// Runs synchronously as part of the constructor, so implementations must not perform real asynchronous work.
     /// </summary>
     /// <param name="ruleBuilder">The rule builder to use for configuring validation rules.</param>
-    protected abstract Task AddRules(IRuleBuilder<TRequest> ruleBuilder);
-
-    /// <summary>
-    /// Helper method to select a property for validation configuration.
-    /// </summary>
-    /// <typeparam name="TProperty">The type of the property.</typeparam>
-    /// <param name="prop">A function that selects the property from the request.</param>
-    /// <returns>A rule builder for the selected property.</returns>
-    protected IShouldBuilder<TRequest, TProperty> Property<TProperty>(Func<TRequest, TProperty> prop)
-    {
-        var builder = new RuleBuilder<TRequest>();
-        return builder.Should(prop);
-    }
+    protected abstract void AddRules(IRuleBuilder<TRequest> ruleBuilder);
 }

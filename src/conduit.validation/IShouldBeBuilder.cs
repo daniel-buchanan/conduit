@@ -13,14 +13,7 @@ public interface IShouldBeBuilder<TRequest, in TProperty> where TRequest : class
     /// <param name="message">An optional custom error message.</param>
     /// <returns>The rule builder for method chaining.</returns>
     IRuleBuilder<TRequest> Null(string? message = null);
-    
-    /// <summary>
-    /// Validates that the property is null or consists of whitespace only.
-    /// </summary>
-    /// <param name="message">An optional custom error message.</param>
-    /// <returns>The rule builder for method chaining.</returns>
-    IRuleBuilder<TRequest> NullOrWhitespace(string? message = null);
-    
+
     /// <summary>
     /// Validates that the property value equals the specified value.
     /// </summary>

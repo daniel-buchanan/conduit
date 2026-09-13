@@ -15,10 +15,9 @@ public class ValidatingResponse
 
 public class ValidatingRequestValidator : ModelValidator<ValidatingRequest, ValidatingResponse>
 {
-    protected override Task AddRules(IRuleBuilder<ValidatingRequest> ruleBuilder)
+    protected override void AddRules(IRuleBuilder<ValidatingRequest> ruleBuilder)
     {
         ruleBuilder.Should(m => m.Message).NotBe().NullOrWhitespace();
-        return Task.CompletedTask;
     }
 }
 

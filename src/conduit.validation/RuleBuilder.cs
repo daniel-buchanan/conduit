@@ -15,7 +15,15 @@ public interface IRuleBuilder<TRequest> where TRequest : class
     /// <param name="property">A function that selects the property to validate.</param>
     /// <returns>A builder for defining validation conditions for the property.</returns>
     IShouldBuilder<TRequest, TProperty> Should<TProperty>(Func<TRequest, TProperty> property);
-    
+
+    /// <summary>
+    /// Starts defining a validation rule for the specified string property, exposing string-specific conditions
+    /// (such as <see cref="IShouldBeStringBuilder{TRequest}.NullOrWhitespace"/>) that don't make sense for other types.
+    /// </summary>
+    /// <param name="property">A function that selects the string property to validate.</param>
+    /// <returns>A builder for defining validation conditions for the property.</returns>
+    IShouldStringBuilder<TRequest> Should(Func<TRequest, string> property);
+
     /// <summary>
     /// When implemented, builds and returns the configured rules.
     /// </summary>
@@ -40,6 +48,10 @@ public class RuleBuilder<TRequest> : IRuleBuilder<TRequest> where TRequest : cla
     /// <inheritdoc/>
     public IShouldBuilder<TRequest, TProperty> Should<TProperty>(Func<TRequest, TProperty> property)
         => new ShouldBuilder<TRequest, TProperty>(this, property);
+
+    /// <inheritdoc/>
+    public IShouldStringBuilder<TRequest> Should(Func<TRequest, string> property)
+        => new ShouldStringBuilder<TRequest>(this, property);
 
     /// <inheritdoc/>
     public Rule<TRequest>[] Build()
