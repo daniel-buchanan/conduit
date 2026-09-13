@@ -40,7 +40,4 @@ public abstract class RequestHandler<TRequest, TResponse>(ILog logger) : PipeSta
     /// <param name="cancellationToken">A cancellation token to observe while waiting for the task to complete.</param>
     /// <returns>A task that represents the asynchronous operation, returning the response.</returns>
     public abstract Task<TResponse> HandleAsync(TRequest request, CancellationToken cancellationToken = default);
-
-    /// <inheritdoc/>
-    public override int Order => int.MaxValue / 2;
 }

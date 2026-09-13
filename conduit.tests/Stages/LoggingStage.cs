@@ -13,6 +13,4 @@ public class LoggingStage<TRequest, TResponse>(ILog logger) : PipeStage<TRequest
         var result = StageResult.WithIndeterminateResult<TRequest, TResponse>(this.GetType());
         return Task.FromResult(result);
     }
-    
-    public override int Order => 1;
 }

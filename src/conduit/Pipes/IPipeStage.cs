@@ -5,13 +5,7 @@ namespace conduit.Pipes;
 /// <summary>
 /// Marker interface for all pipe stages in the Conduit system.
 /// </summary>
-public interface IPipeStage
-{
-    /// <summary>
-    /// The order in the pipeline this stage should run.
-    /// </summary>
-    int Order { get; }
-}
+public interface IPipeStage;
 
 /// <summary>
 /// Defines the contract for a stage within a Conduit pipe that processes a request and potentially returns a response.

@@ -31,7 +31,4 @@ public class HandleRequestStage<TRequest, TResponse>(
         var result=  await handler.HandleAsync(request, cancellationToken);
         return new StageResult<TRequest, TResponse>(result, this.GetType());
     }
-
-    /// <inheritdoc/>
-    public override int Order => int.MaxValue / 2;
 }

@@ -59,6 +59,4 @@ public abstract class PipeStage<TRequest, TResponse>(ILog logger) :
         await next(instanceId, request, cancellationToken);
         return result;
     }
-
-    public abstract int Order { get; }
 }
