@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Linq;
 using conduit.Exceptions;
 using conduit.logging;
 using Microsoft.AspNetCore.Mvc;
@@ -15,11 +16,11 @@ namespace conduit.validation;
 public class ConduitValidationExceptionHandler(RequestDelegate next)
 {
     private const string ContentTypeJson = "application/json";
-    private static readonly Dictionary<Type, Func<Exception, HttpContext, Task>> KnownExceptionMap = new()
-    {
-        { typeof(ValidationFailedException), HandleValidationException },
-        { typeof(StageFailedException), HandleStageFailedException },
-    };
+    private static readonly (Func<Exception, bool> Matches, Func<Exception, HttpContext, Task> Handle)[] KnownExceptionHandlers =
+    [
+        (ex => ex is ValidationFailedException, HandleValidationException),
+        (ex => ex is StageFailedException, HandleStageFailedException),
+    ];
     
     /// <summary>
     /// Invokes the middleware to handle exceptions in the request pipeline.
@@ -42,12 +43,12 @@ public class ConduitValidationExceptionHandler(RequestDelegate next)
     
     private static async Task<bool> HandleException(ILog logger, Exception ex, HttpContext context)
     {
-        var type = ex.GetType();
-        if (!KnownExceptionMap.TryGetValue(type, out var value)) return false;
-        
-        logger.Error("Exception Type: {0}", type.Name);
-        await value.Invoke(ex, context);
-        
+        var handler = KnownExceptionHandlers.FirstOrDefault(h => h.Matches(ex));
+        if (handler.Handle is null) return false;
+
+        logger.Error("Exception Type: {0}", ex.GetType().Name);
+        await handler.Handle.Invoke(ex, context);
+
         return true;
     }
     
