@@ -36,27 +36,8 @@ public abstract class PipeStage<TRequest, TResponse>(ILog logger) :
     /// <param name="cancellationToken">A cancellation token to observe while waiting for the task to complete.</param>
     /// <returns>A task that represents the asynchronous operation, returning the response.</returns>
     public async Task<StageResult<TRequest, TResponse>> ExecuteAsync(
-        Guid instanceId, 
-        TRequest request, 
+        Guid instanceId,
+        TRequest request,
         CancellationToken cancellationToken = default)
         => await ExecuteInternalAsync(instanceId, request, cancellationToken);
-    
-    /// <summary>
-    /// Executes the pipe stage asynchronously with a 'next' delegate to pass control to the subsequent stage.
-    /// </summary>
-    /// <param name="instanceId">A unique identifier for the current pipe instance.</param>
-    /// <param name="request">The request to process.</param>
-    /// <param name="next">A delegate to invoke the next stage in the pipe.</param>
-    /// <param name="cancellationToken">A cancellation token to observe while waiting for the task to complete.</param>
-    /// <returns>A task that represents the asynchronous operation, returning the response.</returns>
-    public async Task<StageResult<TRequest, TResponse>> ExecuteAsync(
-        Guid instanceId, 
-        TRequest request, 
-        Func<Guid, TRequest, CancellationToken, Task<TResponse>> next, 
-        CancellationToken cancellationToken = default)
-    {
-        var result = await ExecuteAsync(instanceId, request, cancellationToken);
-        await next(instanceId, request, cancellationToken);
-        return result;
-    }
 }

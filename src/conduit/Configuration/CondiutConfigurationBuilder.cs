@@ -12,7 +12,7 @@ public class ConduitConfigurationBuilder : IConduitConfigurationBuilder
 {
     private readonly DefaultPipeConfiguration _defaultPipeConfiguration = new();
     private readonly List<ServiceDescriptor> _descriptors = new();
-    private readonly IPipeConfigurationCache _pipeConfigurationCache = new PipeConfigurationCache(HashUtil.Instance);
+    private readonly IPipeConfigurationRegistry _pipeConfigurationRegistry = new PipeConfigurationRegistry(HashUtil.Instance);
 
     /// <summary>
     /// Builds the Conduit configuration and registers all configured services.
@@ -23,8 +23,8 @@ public class ConduitConfigurationBuilder : IConduitConfigurationBuilder
         services.AddRange(_descriptors.ToArray());
         services.AddSingleton(_defaultPipeConfiguration);
         
-        _pipeConfigurationCache.Lock();
-        services.AddSingleton(_pipeConfigurationCache);
+        _pipeConfigurationRegistry.Lock();
+        services.AddSingleton(_pipeConfigurationRegistry);
     }
 
     /// <summary>
@@ -97,7 +97,7 @@ public class ConduitConfigurationBuilder : IConduitConfigurationBuilder
         var pipeServiceDescriptor = GetConfiguredPipeDescriptor<TRequest, TResponse>();
         _descriptors.Add(pipeServiceDescriptor);
         
-        _pipeConfigurationCache.Add<TRequest, TResponse>(pipeDef);
+        _pipeConfigurationRegistry.Add<TRequest, TResponse>(pipeDef);
         
         return this;
     }

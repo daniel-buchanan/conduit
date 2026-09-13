@@ -97,26 +97,23 @@ public static class ReflectionHelper
         var genericPipeInterface = typeof(IPipe<,>);
         var genericPipeConfiguration = typeof(DefaultPipeConfiguration<,,>);
         var genericPipeImpl = typeof(DefaultPipe<,>);
-        var genericHandlerStage = typeof(HandleRequestStage<,>);
         var genericPreStage = typeof(DebugPreExecutionStage<,>);
         var genericPostStage = typeof(DebugPostExecutionStage<,>);
         var genericHandlerInterface = typeof(IRequestHandler<,>);
-        
+
         var pipeInterface = genericPipeInterface.MakeGenericType(request, response);
         var pipeImpl = genericPipeImpl.MakeGenericType(request, response);
-        var handlerStage = genericHandlerStage.MakeGenericType(request, response);
         var preStage = genericPreStage.MakeGenericType(request, response);
         var postStage = genericPostStage.MakeGenericType(request, response);
         var handlerInterface = genericHandlerInterface.MakeGenericType(request, response);
         var defaultConfiguration = genericPipeConfiguration.MakeGenericType(request, response, handlerInterface);
-        
+
         var pipeDescriptor = new ServiceDescriptor(pipeInterface, pipeImpl, ServiceLifetime.Scoped);
-        var handlerStageDescriptor = new ServiceDescriptor(handlerStage, handlerStage, ServiceLifetime.Scoped);
         var preStageDescriptor = new  ServiceDescriptor(preStage, preStage, ServiceLifetime.Scoped);
         var postStageDescriptor = new ServiceDescriptor(postStage, postStage, ServiceLifetime.Scoped);
         var handlerDescriptor =  new ServiceDescriptor(handlerInterface, handler, ServiceLifetime.Scoped);
         var defaultConfigurationDescriptor = new ServiceDescriptor(defaultConfiguration, defaultConfiguration, ServiceLifetime.Scoped);
-        
-        return [pipeDescriptor, handlerStageDescriptor, preStageDescriptor, postStageDescriptor, handlerDescriptor, defaultConfigurationDescriptor];
+
+        return [pipeDescriptor, preStageDescriptor, postStageDescriptor, handlerDescriptor, defaultConfigurationDescriptor];
     }
 }

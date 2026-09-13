@@ -10,18 +10,18 @@ namespace conduit.Pipes;
 /// </summary>
 /// <param name="serviceProvider">The service provider for resolving pipe stages.</param>
 /// <param name="logger">The logger instance for debugging.</param>
-/// <param name="pipeCache">The cache containing pipe configurations.</param>
+/// <param name="pipeConfigurationRegistry">The registry containing pipe configurations.</param>
 public class PipeFactory(
     IServiceProvider serviceProvider,
     ILog logger,
-    IPipeConfigurationCache pipeCache) : IPipeFactory
+    IPipeConfigurationRegistry pipeConfigurationRegistry) : IPipeFactory
 {
     /// <inheritdoc/>
     public IPipe<TRequest, TResponse> Create<TRequest, TResponse>()
         where TRequest : class, IRequest<TResponse>
         where TResponse : class
     {
-        var config = pipeCache.Get<TRequest, TResponse>();
+        var config = pipeConfigurationRegistry.Get<TRequest, TResponse>();
         if (config is null) throw new PipeNotFoundException();
 
         var stages = BuildStages(config, typeof(TRequest), typeof(TResponse));
@@ -32,7 +32,7 @@ public class PipeFactory(
     /// <inheritdoc/>
     public IPipe Create(Type requestType, Type responseType)
     {
-        var config = pipeCache.Get(requestType, responseType);
+        var config = pipeConfigurationRegistry.Get(requestType, responseType);
         if (config is null) throw new PipeNotFoundException();
 
         var stages = BuildStages(config, requestType, responseType);

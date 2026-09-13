@@ -4,17 +4,17 @@ using conduit.Exceptions;
 namespace conduit.Pipes;
 
 /// <summary>
-/// Defines the contract for a cache that stores pipe configurations.
+/// Defines the contract for a registry that stores pipe configurations.
 /// </summary>
-public interface IPipeConfigurationCache
+public interface IPipeConfigurationRegistry
 {
     /// <summary>
-    /// Locks the cache to prevent further modifications.
+    /// Locks the registry to prevent further modifications.
     /// </summary>
     void Lock();
-    
+
     /// <summary>
-    /// Adds a new pipe configuration to the cache.
+    /// Adds a new pipe configuration to the registry.
     /// </summary>
     /// <param name="descriptor">The descriptor to add.</param>
     /// <typeparam name="TRequest">The request type.</typeparam>
@@ -25,9 +25,9 @@ public interface IPipeConfigurationCache
     void Add<TRequest, TResponse>(PipeDescriptor descriptor)
         where TRequest : class, IRequest<TResponse>
         where TResponse : class;
-    
+
     /// <summary>
-    /// Gets a pipe configuration from the cache.
+    /// Gets a pipe configuration from the registry.
     /// </summary>
     /// <typeparam name="TRequest">The request type.</typeparam>
     /// <typeparam name="TResponse">The response type.</typeparam>
@@ -35,9 +35,9 @@ public interface IPipeConfigurationCache
     PipeDescriptor? Get<TRequest, TResponse>()
         where TRequest : class, IRequest<TResponse>
         where TResponse : class;
-    
+
     /// <summary>
-    /// Gets a pipe configuration from the cache.
+    /// Gets a pipe configuration from the registry.
     /// </summary>
     /// <param name="requestType">The request type.</param>
     /// <param name="responseType">The response type.</param>

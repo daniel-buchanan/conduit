@@ -25,7 +25,7 @@ public static class ServiceCollectionExtensions
         if(logger != null) services.AddSingleton(logger);
         else services.AddScoped<ILog, ConsoleLog>();
         services.AddSingleton<IEnvironment, EnvironmentImpl>();
-        services.AddSingleton<IPipeConfigurationCache, PipeConfigurationCache>();
+        services.AddSingleton<IPipeConfigurationRegistry, PipeConfigurationRegistry>();
         services.AddSingleton<IPipeFactory, PipeFactory>();
         services.AddTransient<IHashUtil, HashUtil>();
         return services;
