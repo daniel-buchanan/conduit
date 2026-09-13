@@ -16,7 +16,7 @@ public class TestRequestHandler(ILog logger) : RequestHandler<TestRequest, TestR
 {
     public override Task<TestResponse> HandleAsync(TestRequest testRequest, CancellationToken cancellationToken = default)
     {
-        Logger.Info(testRequest.Message);
-        return Task.FromResult(new TestResponse() { Value = testRequest.Message });
+        Logger.Info(testRequest.Message ?? string.Empty);
+        return Task.FromResult(new TestResponse() { Value = testRequest.Message ?? string.Empty });
     }
 }

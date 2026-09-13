@@ -18,19 +18,19 @@ public class ModelValidatorTests
 
         // Assert
         Assert.False(result.IsValid);
-        Assert.Single(result.Errors);
-        Assert.Equal("Message cannot be Null.", result.Errors[0].Message);
+        Assert.Single(result.Errors!);
+        Assert.Equal("Message cannot be Null.", result.Errors![0].Message);
     }
 
     public class TestModelValidator : ModelValidator<TestRequest, TestResponse>
     {
         protected override void AddRules(IRuleBuilder<TestRequest> ruleBuilder)
         {
-            ruleBuilder.Should(x => x.Message)
+            ruleBuilder.Should(x => x.Message!)
                 .NotBe()
                 .Null("Message cannot be Null.");
 
-            ruleBuilder.Should(x => x.Message)
+            ruleBuilder.Should(x => x.Message!)
                 .Be()
                 .Null("Message should be null");
         }
@@ -57,8 +57,8 @@ public class ModelValidatorTests
     {
         protected override void AddRules(IRuleBuilder<TestRequest> ruleBuilder)
         {
-            ruleBuilder.Should(x => x.Message).Be().Null("Message must be null.");
-            ruleBuilder.Should(x => x.Message).Be().EqualTo("Hello", "Message must equal Hello.");
+            ruleBuilder.Should(x => x.Message!).Be().Null("Message must be null.");
+            ruleBuilder.Should(x => x.Message!).Be().EqualTo("Hello", "Message must equal Hello.");
         }
     }
 
@@ -82,7 +82,7 @@ public class ModelValidatorTests
     public class InRuleValidator : ModelValidator<TestRequest, TestResponse>
     {
         protected override void AddRules(IRuleBuilder<TestRequest> ruleBuilder)
-            => ruleBuilder.Should(x => x.Message).Be().In("Message must be a or b.", ["a", "b"]);
+            => ruleBuilder.Should(x => x.Message!).Be().In("Message must be a or b.", ["a", "b"]);
     }
 
     [Theory]
@@ -104,7 +104,7 @@ public class ModelValidatorTests
     public class OneOfRuleValidator : ModelValidator<TestRequest, TestResponse>
     {
         protected override void AddRules(IRuleBuilder<TestRequest> ruleBuilder)
-            => ruleBuilder.Should(x => x.Message).Be().OneOf("Message must be a or b.", ["a", "b"]);
+            => ruleBuilder.Should(x => x.Message!).Be().OneOf("Message must be a or b.", ["a", "b"]);
     }
 
     [Fact]
@@ -125,6 +125,6 @@ public class ModelValidatorTests
     public class EqualToValidator : ModelValidator<TestRequest, TestResponse>
     {
         protected override void AddRules(IRuleBuilder<TestRequest> ruleBuilder)
-            => ruleBuilder.Should(x => x.Message).Be().EqualTo("Hello", "Message must equal Hello.");
+            => ruleBuilder.Should(x => x.Message!).Be().EqualTo("Hello", "Message must equal Hello.");
     }
 }

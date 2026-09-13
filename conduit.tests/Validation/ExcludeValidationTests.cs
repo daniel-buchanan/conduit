@@ -29,7 +29,7 @@ public class ExcludeValidationTests
     public class ExcludableRequestValidator : ModelValidator<ExcludableRequest, ExcludableResponse>
     {
         protected override void AddRules(IRuleBuilder<ExcludableRequest> ruleBuilder)
-            => ruleBuilder.Should(x => x.Message).NotBe().NullOrWhitespace("Message is required.");
+            => ruleBuilder.Should(x => x.Message!).NotBe().NullOrWhitespace("Message is required.");
     }
 
     [Fact]

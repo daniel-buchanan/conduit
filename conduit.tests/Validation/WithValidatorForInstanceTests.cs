@@ -28,7 +28,7 @@ public class WithValidatorForInstanceTests
     public class InstanceValidator : ModelValidator<InstanceValidatedRequest, InstanceValidatedResponse>
     {
         protected override void AddRules(IRuleBuilder<InstanceValidatedRequest> ruleBuilder)
-            => ruleBuilder.Should(x => x.Message).NotBe().NullOrWhitespace("Message is required.");
+            => ruleBuilder.Should(x => x.Message!).NotBe().NullOrWhitespace("Message is required.");
     }
 
     [Fact]
