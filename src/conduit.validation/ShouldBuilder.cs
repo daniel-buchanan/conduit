@@ -9,8 +9,9 @@ namespace conduit.validation;
 /// <typeparam name="TRequest">The type of request being validated.</typeparam>
 /// <typeparam name="TProperty">The type of the property being validated.</typeparam>
 public abstract class AbstractShouldBuilder<TRequest, TProperty>(
-    IRuleBuilder<TRequest> builder, 
-    Func<TRequest, TProperty> property) : 
+    IRuleBuilder<TRequest> builder,
+    Func<TRequest, TProperty> property,
+    string propertyName) :
     IShouldBeBuilder<TRequest, TProperty>
     where TRequest : class
 {
@@ -37,14 +38,14 @@ public abstract class AbstractShouldBuilder<TRequest, TProperty>(
             if (InvertResults) result = !result;
             return result
                 ? ValidationResult.WithSuccess(r)
-                : ValidationResult.WithFailure(r, [new ValidationError(r.ToString() ?? string.Empty, message)]);
+                : ValidationResult.WithFailure(r, [new ValidationError(propertyName, message)]);
         }
 
         var rule = new Rule<TRequest>(Execute);
         builder.AddRule(rule);
         return builder;
     }
-    
+
     /// <inheritdoc/>
     public IRuleBuilder<TRequest> Null(string? message = null)
         => AddRule(r => property(r) is null, message);
@@ -76,8 +77,9 @@ public abstract class AbstractShouldBuilder<TRequest, TProperty>(
 /// </summary>
 /// <typeparam name="TRequest">The type of request being validated.</typeparam>
 /// <typeparam name="TProperty">The type of the property being validated.</typeparam>
-public class ShouldNotBeBuilder<TRequest, TProperty>(IRuleBuilder<TRequest> builder, Func<TRequest, TProperty> property) : 
-    AbstractShouldBuilder<TRequest, TProperty>(builder, property)
+public class ShouldNotBeBuilder<TRequest, TProperty>(
+    IRuleBuilder<TRequest> builder, Func<TRequest, TProperty> property, string propertyName) :
+    AbstractShouldBuilder<TRequest, TProperty>(builder, property, propertyName)
     where TRequest : class
 {
     /// <inheritdoc/>
@@ -89,8 +91,9 @@ public class ShouldNotBeBuilder<TRequest, TProperty>(IRuleBuilder<TRequest> buil
 /// </summary>
 /// <typeparam name="TRequest">The type of request being validated.</typeparam>
 /// <typeparam name="TProperty">The type of the property being validated.</typeparam>
-public class ShouldBeBuilder<TRequest, TProperty>(IRuleBuilder<TRequest> builder, Func<TRequest, TProperty> property) : 
-    AbstractShouldBuilder<TRequest, TProperty>(builder, property)
+public class ShouldBeBuilder<TRequest, TProperty>(
+    IRuleBuilder<TRequest> builder, Func<TRequest, TProperty> property, string propertyName) :
+    AbstractShouldBuilder<TRequest, TProperty>(builder, property, propertyName)
     where TRequest : class
 {
     /// <inheritdoc/>

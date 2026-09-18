@@ -24,7 +24,7 @@ public interface IShouldStringBuilder<TRequest> where TRequest : class
 /// on top of <see cref="IShouldBeBuilder{TRequest, TProperty}"/>.
 /// </summary>
 /// <typeparam name="TRequest">The type of request being validated.</typeparam>
-public interface IShouldBeStringBuilder<TRequest> : IShouldBeBuilder<TRequest, string> where TRequest : class
+public interface IShouldBeStringBuilder<TRequest> : IShouldBeBuilder<TRequest, string?> where TRequest : class
 {
     /// <summary>
     /// Validates that the property is null or consists of whitespace only.
