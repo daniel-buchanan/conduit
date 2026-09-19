@@ -32,4 +32,11 @@ public interface IConduitPipeBuilder<TRequest, TResponse>
     /// <returns>The current pipe builder instance.</returns>
     IConduitPipeBuilder<TRequest, TResponse> AddHandler<THandler>()
         where THandler : IRequestHandler<TRequest, TResponse>;
+
+    /// <summary>
+    /// Excludes the current pipe from any default stage that implements <see cref="IValidationPipeStage"/>
+    /// (e.g. the validation stage registered by the conduit.validation package).
+    /// </summary>
+    /// <returns>The current pipe builder instance.</returns>
+    IConduitPipeBuilder<TRequest, TResponse> ExcludeValidation();
 }

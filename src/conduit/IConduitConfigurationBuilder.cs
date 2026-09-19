@@ -1,3 +1,5 @@
+using Microsoft.Extensions.DependencyInjection;
+
 namespace conduit;
 
 /// <summary>
@@ -5,6 +7,24 @@ namespace conduit;
 /// </summary>
 public interface IConduitConfigurationBuilder
 {
+    /// <summary>
+    /// Adds a service descriptor to the configuration.
+    /// </summary>
+    /// <param name="descriptor">The service descriptor to add.</param>
+    void AddDescriptor(ServiceDescriptor descriptor);
+
+    /// <summary>
+    /// Adds a pre-execution stage to be applied to all pipes by default.
+    /// </summary>
+    /// <param name="stage">The type of the pre-execution stage.</param>
+    void AddDefaultPreExecutionStage(Type stage);
+
+    /// <summary>
+    /// Adds a post-execution stage to be applied to all pipes by default.
+    /// </summary>
+    /// <param name="stage">The type of the post-execution stage.</param>
+    void AddDefaultPostExecutionStage(Type stage);
+
     /// <summary>
     /// Registers a request handler with the Conduit system.
     /// </summary>
@@ -23,7 +43,7 @@ public interface IConduitConfigurationBuilder
     /// <typeparam name="TLocator">A type from the assembly to scan for handlers.</typeparam>
     /// <returns>The current configuration builder instance.</returns>
     IConduitConfigurationBuilder RegisterHandlersAsImplementedFrom<TLocator>();
-    
+
     /// <summary>
     /// Registers a custom pipe for a specific request and response type.
     /// </summary>
@@ -35,7 +55,7 @@ public interface IConduitConfigurationBuilder
         Action<IConduitPipeBuilder<TRequest, TResponse>> configure)
         where TRequest : class, IRequest<TResponse>
         where TResponse : class;
-    
+
     /// <summary>
     /// Registers all pipes found in the assembly of the specified locator type.
     /// </summary>

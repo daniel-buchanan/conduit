@@ -45,9 +45,11 @@ public class ConduitPipeBuilder<TRequest, TResponse>
     /// </summary>
     /// <returns>The pipe descriptor built by this builder.</returns>
     public PipeDescriptor GetDescriptor() => _descriptor;
-    
-    /// <summary>
-    /// Exclude this pipeline from Model Validation
-    /// </summary>
-    public void ExcludeFromValidation() => _descriptor.ExcludeFromValidation();
+
+    /// <inheritdoc />
+    public IConduitPipeBuilder<TRequest, TResponse> ExcludeValidation()
+    {
+        _descriptor.ExcludeFromValidation();
+        return this;
+    }
 }

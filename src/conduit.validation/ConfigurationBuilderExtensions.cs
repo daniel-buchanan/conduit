@@ -1,4 +1,3 @@
-using conduit.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace conduit.validation;
@@ -37,11 +36,10 @@ public static class ConfigurationBuilderExtensions
         options(validationBuilder);
 
         var descriptors = validationBuilder.Build();
-        var conduitBuilder = builder as ConduitConfigurationBuilder;
 
         foreach (var descriptor in descriptors)
         {
-            conduitBuilder!.AddDescriptor(descriptor);
+            builder.AddDescriptor(descriptor);
         }
 
         // Registered once, as an open generic: DI can construct ValidationStage<TRequest, TResponse> for
@@ -50,13 +48,13 @@ public static class ConfigurationBuilderExtensions
         // happen to have a validator, and every other request type's default validation stage would fail
         // to resolve at all (StageNotFoundException) instead of reaching the "no validator found" handling
         // inside ValidationStage itself.
-        conduitBuilder!.AddDescriptor(new ServiceDescriptor(typeof(ValidationStage<,>), typeof(ValidationStage<,>), ServiceLifetime.Transient));
+        builder.AddDescriptor(new ServiceDescriptor(typeof(ValidationStage<,>), typeof(ValidationStage<,>), ServiceLifetime.Transient));
 
         var configInstance = new ConduitValidationConfiguration(validationBuilder.ThrowExceptionIfValidatorNotFound);
-        conduitBuilder!.AddDescriptor(new ServiceDescriptor(typeof(ConduitValidationConfiguration), configInstance));
-        
-        conduitBuilder.AddDefaultPreExecutionStage(typeof(ValidationStage<,>));
-        
+        builder.AddDescriptor(new ServiceDescriptor(typeof(ConduitValidationConfiguration), configInstance));
+
+        builder.AddDefaultPreExecutionStage(typeof(ValidationStage<,>));
+
         return builder;
     }
 }

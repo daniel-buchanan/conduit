@@ -21,22 +21,4 @@ public static class ConduitPipeBuilderExtensions
         self.AddStage<ValidationStage<TRequest, TResponse>>();
         return self;
     }
-
-    /// <summary>
-    /// Specifically excludes the specified pipeline from any global model validation.
-    /// </summary>
-    /// <typeparam name="TRequest">The request type.</typeparam>
-    /// <typeparam name="TResponse">The response type.</typeparam>
-    /// <param name="self">The pipe builder.</param>
-    /// <returns>The pipe builder for method chaining.</returns>
-    public static IConduitPipeBuilder<TRequest, TResponse> ExcludeValidation<TRequest, TResponse>(this IConduitPipeBuilder<TRequest, TResponse> self)
-        where TRequest : class, IRequest<TResponse> 
-        where TResponse : class
-    {
-        if (self is ConduitPipeBuilder<TRequest, TResponse> builder)
-        {
-            builder.ExcludeFromValidation();
-        }
-        return self;
-    }
 }
