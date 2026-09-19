@@ -10,9 +10,18 @@ public class PropertyNameExtractionTests
         public string? City { get; set; }
     }
 
+    // Kept separate from the validators' own request types below: this one backs only the direct
+    // RuleBuilder expression test (no ModelValidator involved), while each validator gets its own request
+    // type so a WithValidatorsFromAssembly scan elsewhere in the suite never sees two of them target the
+    // same (TRequest, TResponse) pair and trips the ValidatorAlreadyRegisteredException guard from ADR-0003.
     public class RequestWithAddress : IRequest<object>
     {
         public string? Name { get; set; }
+        public Address? Address { get; set; }
+    }
+
+    public class TopLevelRequest : IRequest<object>
+    {
         public Address? Address { get; set; }
     }
 
@@ -21,7 +30,7 @@ public class PropertyNameExtractionTests
     {
         // Arrange
         var validator = new TopLevelValidator();
-        var request = new RequestWithAddress { Address = null };
+        var request = new TopLevelRequest { Address = null };
 
         // Act
         var result = validator.Validate(request);
@@ -31,10 +40,15 @@ public class PropertyNameExtractionTests
         Assert.Equal("Address", result.Errors![0].PropertyName);
     }
 
-    public class TopLevelValidator : ModelValidator<RequestWithAddress, object>
+    public class TopLevelValidator : ModelValidator<TopLevelRequest, object>
     {
-        protected override void AddRules(IRuleBuilder<RequestWithAddress> ruleBuilder)
+        protected override void AddRules(IRuleBuilder<TopLevelRequest> ruleBuilder)
             => ruleBuilder.Should(x => x.Address).NotBe().Null();
+    }
+
+    public class NestedRequest : IRequest<object>
+    {
+        public Address? Address { get; set; }
     }
 
     [Fact]
@@ -42,7 +56,7 @@ public class PropertyNameExtractionTests
     {
         // Arrange
         var validator = new NestedValidator();
-        var request = new RequestWithAddress { Address = new Address { City = null } };
+        var request = new NestedRequest { Address = new Address { City = null } };
 
         // Act
         var result = validator.Validate(request);
@@ -52,9 +66,9 @@ public class PropertyNameExtractionTests
         Assert.Equal("Address.City", result.Errors![0].PropertyName);
     }
 
-    public class NestedValidator : ModelValidator<RequestWithAddress, object>
+    public class NestedValidator : ModelValidator<NestedRequest, object>
     {
-        protected override void AddRules(IRuleBuilder<RequestWithAddress> ruleBuilder)
+        protected override void AddRules(IRuleBuilder<NestedRequest> ruleBuilder)
             => ruleBuilder.Should(x => x.Address!.City).NotBe().Null();
     }
 
@@ -71,12 +85,17 @@ public class PropertyNameExtractionTests
         Assert.Throws<ArgumentException>(act);
     }
 
+    public class NullableStringRequest : IRequest<object>
+    {
+        public string? Name { get; set; }
+    }
+
     [Fact]
     public void Should_String_Overload_Accepts_Nullable_Property_Without_Null_Forgiving_Operator()
     {
         // Arrange
         var validator = new NullableStringValidator();
-        var request = new RequestWithAddress { Name = null };
+        var request = new NullableStringRequest { Name = null };
 
         // Act
         var result = validator.Validate(request);
@@ -86,9 +105,9 @@ public class PropertyNameExtractionTests
         Assert.Equal("Name", result.Errors![0].PropertyName);
     }
 
-    public class NullableStringValidator : ModelValidator<RequestWithAddress, object>
+    public class NullableStringValidator : ModelValidator<NullableStringRequest, object>
     {
-        protected override void AddRules(IRuleBuilder<RequestWithAddress> ruleBuilder)
+        protected override void AddRules(IRuleBuilder<NullableStringRequest> ruleBuilder)
             => ruleBuilder.Should(x => x.Name).NotBe().Null();
     }
 }

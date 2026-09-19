@@ -35,13 +35,19 @@ public interface IValidationBuilder
     /// </summary>
     /// <typeparam name="TLocator">A type from the assembly to scan for validators.</typeparam>
     /// <returns>The current validation builder instance for method chaining.</returns>
+    /// <exception cref="ValidatorAlreadyRegisteredException">
+    /// Two assembly-scan discoveries (in this call or a prior one) collide on the same (TRequest, TResponse) pair.
+    /// </exception>
     IValidationBuilder WithValidatorsFromAssembly<TLocator>();
-    
+
     /// <summary>
     /// Registers all validators found in the specified assembly.
     /// </summary>
     /// <param name="assembly">The assembly to scan for validators.</param>
     /// <returns>The current validation builder instance for method chaining.</returns>
+    /// <exception cref="ValidatorAlreadyRegisteredException">
+    /// Two assembly-scan discoveries (in this call or a prior one) collide on the same (TRequest, TResponse) pair.
+    /// </exception>
     IValidationBuilder WithValidatorsFromAssembly(Assembly assembly);
     
     /// <summary>

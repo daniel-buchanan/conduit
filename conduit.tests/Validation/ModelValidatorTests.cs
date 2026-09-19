@@ -6,12 +6,22 @@ namespace conduit.tests.Validation;
 
 public class ModelValidatorTests
 {
+    // Each validator below gets its own request type (rather than sharing the common TestRequest fixture)
+    // so that a WithValidatorsFromAssembly scan elsewhere in the suite never sees two of these target the
+    // same (TRequest, TResponse) pair and trips the ValidatorAlreadyRegisteredException guard from ADR-0003
+    // — these validators are only ever constructed directly with `new`, never resolved via scan.
+
+    public class NullCheckRequest : IRequest<TestResponse>
+    {
+        public string? Message { get; set; }
+    }
+
     [Fact]
     public void ModelValidator_Should_Have_Rules()
     {
         // Arrange
         var validator = new TestModelValidator();
-        var request = new TestRequest { Message = null };
+        var request = new NullCheckRequest { Message = null };
 
         // Act
         var result = validator.Validate(request);
@@ -22,9 +32,9 @@ public class ModelValidatorTests
         Assert.Equal("Message cannot be Null.", result.Errors![0].Message);
     }
 
-    public class TestModelValidator : ModelValidator<TestRequest, TestResponse>
+    public class TestModelValidator : ModelValidator<NullCheckRequest, TestResponse>
     {
-        protected override void AddRules(IRuleBuilder<TestRequest> ruleBuilder)
+        protected override void AddRules(IRuleBuilder<NullCheckRequest> ruleBuilder)
         {
             ruleBuilder.Should(x => x.Message)
                 .NotBe()
@@ -36,12 +46,17 @@ public class ModelValidatorTests
         }
     }
 
+    public class MultiRuleRequest : IRequest<TestResponse>
+    {
+        public string? Message { get; set; }
+    }
+
     [Fact]
     public void ModelValidator_Should_Aggregate_Errors_From_Multiple_Failing_Rules()
     {
         // Arrange
         var validator = new MultiRuleValidator();
-        var request = new TestRequest { Message = "not-hello" };
+        var request = new MultiRuleRequest { Message = "not-hello" };
 
         // Act
         var result = validator.Validate(request);
@@ -53,13 +68,18 @@ public class ModelValidatorTests
         Assert.Contains(result.Errors, e => e.Message == "Message must equal Hello.");
     }
 
-    public class MultiRuleValidator : ModelValidator<TestRequest, TestResponse>
+    public class MultiRuleValidator : ModelValidator<MultiRuleRequest, TestResponse>
     {
-        protected override void AddRules(IRuleBuilder<TestRequest> ruleBuilder)
+        protected override void AddRules(IRuleBuilder<MultiRuleRequest> ruleBuilder)
         {
             ruleBuilder.Should(x => x.Message).Be().Null("Message must be null.");
             ruleBuilder.Should(x => x.Message).Be().EqualTo("Hello", "Message must equal Hello.");
         }
+    }
+
+    public class InRuleRequest : IRequest<TestResponse>
+    {
+        public string? Message { get; set; }
     }
 
     [Theory]
@@ -70,7 +90,7 @@ public class ModelValidatorTests
     {
         // Arrange
         var validator = new InRuleValidator();
-        var request = new TestRequest { Message = message };
+        var request = new InRuleRequest { Message = message };
 
         // Act
         var result = validator.Validate(request);
@@ -79,10 +99,15 @@ public class ModelValidatorTests
         Assert.Equal(expectValid, result.IsValid);
     }
 
-    public class InRuleValidator : ModelValidator<TestRequest, TestResponse>
+    public class InRuleValidator : ModelValidator<InRuleRequest, TestResponse>
     {
-        protected override void AddRules(IRuleBuilder<TestRequest> ruleBuilder)
+        protected override void AddRules(IRuleBuilder<InRuleRequest> ruleBuilder)
             => ruleBuilder.Should(x => x.Message).Be().In("Message must be a or b.", ["a", "b"]);
+    }
+
+    public class OneOfRuleRequest : IRequest<TestResponse>
+    {
+        public string? Message { get; set; }
     }
 
     [Theory]
@@ -92,7 +117,7 @@ public class ModelValidatorTests
     {
         // Arrange
         var validator = new OneOfRuleValidator();
-        var request = new TestRequest { Message = message };
+        var request = new OneOfRuleRequest { Message = message };
 
         // Act
         var result = validator.Validate(request);
@@ -101,10 +126,15 @@ public class ModelValidatorTests
         Assert.Equal(expectValid, result.IsValid);
     }
 
-    public class OneOfRuleValidator : ModelValidator<TestRequest, TestResponse>
+    public class OneOfRuleValidator : ModelValidator<OneOfRuleRequest, TestResponse>
     {
-        protected override void AddRules(IRuleBuilder<TestRequest> ruleBuilder)
+        protected override void AddRules(IRuleBuilder<OneOfRuleRequest> ruleBuilder)
             => ruleBuilder.Should(x => x.Message).Be().OneOf("Message must be a or b.", ["a", "b"]);
+    }
+
+    public class EqualToRequest : IRequest<TestResponse>
+    {
+        public string? Message { get; set; }
     }
 
     [Fact]
@@ -112,7 +142,7 @@ public class ModelValidatorTests
     {
         // Arrange
         var validator = new EqualToValidator();
-        var request = new TestRequest { Message = "not-hello" };
+        var request = new EqualToRequest { Message = "not-hello" };
 
         // Act
         var result = validator.Validate(request);
@@ -122,9 +152,9 @@ public class ModelValidatorTests
         Assert.Equal("Message must equal Hello.", result.Errors![0].Message);
     }
 
-    public class EqualToValidator : ModelValidator<TestRequest, TestResponse>
+    public class EqualToValidator : ModelValidator<EqualToRequest, TestResponse>
     {
-        protected override void AddRules(IRuleBuilder<TestRequest> ruleBuilder)
+        protected override void AddRules(IRuleBuilder<EqualToRequest> ruleBuilder)
             => ruleBuilder.Should(x => x.Message).Be().EqualTo("Hello", "Message must equal Hello.");
     }
 }

@@ -13,6 +13,7 @@ namespace conduit.validation;
 public class ValidationBuilder : IValidationBuilder
 {
     private readonly List<ServiceDescriptor> _descriptors = new();
+    private readonly HashSet<Type> _scannedValidatorInterfaces = new();
     
     /// <summary>
     /// Gets a value indicating whether to throw an exception if a validator is not found.
@@ -58,6 +59,10 @@ public class ValidationBuilder : IValidationBuilder
     }
 
     /// <inheritdoc/>
+    /// <exception cref="ValidatorAlreadyRegisteredException">
+    /// Two assembly-scan discoveries (in this call or a prior one) collide on the same (TRequest, TResponse) pair.
+    /// See ADR-0003.
+    /// </exception>
     public IValidationBuilder WithValidatorsFromAssembly(Assembly assembly)
     {
         var types = ReflectionHelper.GetTypesFromAssembly(assembly,t => t == typeof(IModelValidator));
@@ -65,6 +70,12 @@ public class ValidationBuilder : IValidationBuilder
         {
             var (request, response) = GetRequestResponseTypes(t);
             var interfaceType = typeof(IModelValidator<,>).MakeGenericType(request, response);
+
+            if (!_scannedValidatorInterfaces.Add(interfaceType))
+                throw new ValidatorAlreadyRegisteredException(
+                    $"A validator for '{request.Name}' -> '{response.Name}' was already discovered by an assembly scan. " +
+                    $"Use {nameof(WithValidatorFor)} to explicitly override a scanned validator.");
+
             _descriptors.Add(new ServiceDescriptor(interfaceType, t, ServiceLifetime.Transient));
         }
 
