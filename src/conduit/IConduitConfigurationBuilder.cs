@@ -31,8 +31,9 @@ public interface IConduitConfigurationBuilder
     /// <typeparam name="TRequest">The type of the request.</typeparam>
     /// <typeparam name="TResponse">The type of the response.</typeparam>
     /// <typeparam name="THandler">The interface type of the handler.</typeparam>
+    /// <param name="configure">An optional action to configure this registration, e.g. to exclude it from default validation.</param>
     /// <returns>The current configuration builder instance.</returns>
-    IConduitConfigurationBuilder RegisterHandler<TRequest, TResponse, THandler>()
+    IConduitConfigurationBuilder RegisterHandler<TRequest, TResponse, THandler>(Action<IHandlerRegistrationOptions>? configure = null)
         where TRequest : class, IRequest<TResponse>
         where TResponse : class
         where THandler : IRequestHandler<TRequest, TResponse>;

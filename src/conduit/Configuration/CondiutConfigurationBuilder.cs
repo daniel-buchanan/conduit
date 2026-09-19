@@ -22,7 +22,7 @@ public class ConduitConfigurationBuilder : IConduitConfigurationBuilder
     {
         services.AddRange(_descriptors.ToArray());
         services.AddSingleton(_defaultPipeConfiguration);
-        
+
         _pipeConfigurationRegistry.Lock();
         services.AddSingleton(_pipeConfigurationRegistry);
     }
@@ -36,28 +36,31 @@ public class ConduitConfigurationBuilder : IConduitConfigurationBuilder
 
     private void AddDescriptors(params ServiceDescriptor[] descriptors)
         => _descriptors.AddRange(descriptors);
-    
+
     /// <summary>
     /// Adds a pre-execution stage to be applied to all pipes by default.
     /// </summary>
     /// <param name="stage">The type of the pre-execution stage.</param>
     public void AddDefaultPreExecutionStage(Type stage)
         => _defaultPipeConfiguration.PreExecutionStages.Add(stage);
-    
+
     /// <summary>
     /// Adds a post-execution stage to be applied to all pipes by default.
     /// </summary>
     /// <param name="stage">The type of the post-execution stage.</param>
     public void AddDefaultPostExecutionStage(Type stage)
         => _defaultPipeConfiguration.PostExecutionStages.Add(stage);
-    
+
     /// <inheritdoc/>
-    public IConduitConfigurationBuilder RegisterHandler<TRequest, TResponse, THandler>() 
+    public IConduitConfigurationBuilder RegisterHandler<TRequest, TResponse, THandler>(Action<IHandlerRegistrationOptions>? configure = null)
         where TRequest : class, IRequest<TResponse>
         where TResponse : class
         where THandler : IRequestHandler<TRequest, TResponse>
     {
-        var defs = ReflectionHelper.GetServiceDescriptorsForHandler<TRequest, TResponse, THandler>();
+        var options = new HandlerRegistrationOptions();
+        configure?.Invoke(options);
+
+        var defs = ReflectionHelper.GetServiceDescriptorsForHandler<TRequest, TResponse, THandler>(options.IsValidationExcluded);
         AddDescriptors(defs);
         return this;
     }
@@ -71,42 +74,42 @@ public class ConduitConfigurationBuilder : IConduitConfigurationBuilder
             var genericParameters = t.GetGenericArguments();
             if (genericParameters.Length == 0 && t.BaseType != null) genericParameters = t.BaseType.GetGenericArguments();
             if (genericParameters.Length == 0) continue;
-            
+
             var request = genericParameters[0];
             var response = genericParameters[1];
 
             var defs = ReflectionHelper.GetServiceDescriptorsForHandler(request, response, t);
             AddDescriptors(defs);
         }
-        
+
         return this;
     }
 
     /// <inheritdoc/>
-    public IConduitConfigurationBuilder RegisterPipe<TRequest, TResponse>(Action<IConduitPipeBuilder<TRequest, TResponse>> configure) 
-        where TRequest : class, IRequest<TResponse> 
+    public IConduitConfigurationBuilder RegisterPipe<TRequest, TResponse>(Action<IConduitPipeBuilder<TRequest, TResponse>> configure)
+        where TRequest : class, IRequest<TResponse>
         where TResponse : class
     {
         var builder = new ConduitPipeBuilder<TRequest, TResponse>();
         configure(builder);
-        
+
         var pipeDef = builder.GetDescriptor();
-        
+
         AddDescriptors(pipeDef.Stages.Select(s => s.Descriptor).ToArray());
-        
+
         var pipeServiceDescriptor = GetConfiguredPipeDescriptor<TRequest, TResponse>();
         _descriptors.Add(pipeServiceDescriptor);
-        
+
         _pipeConfigurationRegistry.Add<TRequest, TResponse>(pipeDef);
-        
+
         return this;
     }
-    
+
     private static ServiceDescriptor GetConfiguredPipeDescriptor<TRequest, TResponse>()
         where TRequest : class, IRequest<TResponse>
         where TResponse : class
         => new (typeof(IPipe<TRequest, TResponse>), PipeFactory<TRequest, TResponse>, ServiceLifetime.Scoped);
-    
+
     private static IPipe<TRequest, TResponse> PipeFactory<TRequest, TResponse>(IServiceProvider provider)
         where TRequest : class, IRequest<TResponse>
         where TResponse : class

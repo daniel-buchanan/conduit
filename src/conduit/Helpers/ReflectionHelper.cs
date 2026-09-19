@@ -89,10 +89,10 @@ public static class ReflectionHelper
         return descriptors.ToArray();
     }
 
-    public static ServiceDescriptor[] GetServiceDescriptorsForHandler<TRequest, TResponse, THandler>()
-        => GetServiceDescriptorsForHandler(typeof(TRequest), typeof(TResponse), typeof(THandler));
-    
-    public static ServiceDescriptor[] GetServiceDescriptorsForHandler(Type request, Type response, Type handler)
+    public static ServiceDescriptor[] GetServiceDescriptorsForHandler<TRequest, TResponse, THandler>(bool excludeValidation = false)
+        => GetServiceDescriptorsForHandler(typeof(TRequest), typeof(TResponse), typeof(THandler), excludeValidation);
+
+    public static ServiceDescriptor[] GetServiceDescriptorsForHandler(Type request, Type response, Type handler, bool excludeValidation = false)
     {
         var genericPipeInterface = typeof(IPipe<,>);
         var genericPipeConfiguration = typeof(DefaultPipeConfiguration<,,>);
@@ -112,7 +112,17 @@ public static class ReflectionHelper
         var preStageDescriptor = new  ServiceDescriptor(preStage, preStage, ServiceLifetime.Scoped);
         var postStageDescriptor = new ServiceDescriptor(postStage, postStage, ServiceLifetime.Scoped);
         var handlerDescriptor =  new ServiceDescriptor(handlerInterface, handler, ServiceLifetime.Scoped);
-        var defaultConfigurationDescriptor = new ServiceDescriptor(defaultConfiguration, defaultConfiguration, ServiceLifetime.Scoped);
+
+        // A factory rather than a type-to-type map: excludeValidation is per-registration data that has to be
+        // baked in at configuration time, not something the container can supply by resolving the closed type
+        // on its own (see DefaultPipeConfiguration<TRequest,TResponse,THandler>'s excludeValidation parameter).
+        var defaultConfigurationDescriptor = new ServiceDescriptor(
+            defaultConfiguration,
+            provider => Activator.CreateInstance(
+                defaultConfiguration,
+                provider.GetRequiredService<DefaultPipeConfiguration>(),
+                excludeValidation)!,
+            ServiceLifetime.Scoped);
 
         return [pipeDescriptor, preStageDescriptor, postStageDescriptor, handlerDescriptor, defaultConfigurationDescriptor];
     }

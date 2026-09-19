@@ -29,6 +29,12 @@ The config-time recipe for something the `Conduit` will construct or register (`
 The locked, startup-time store of `PipeDescriptor`s keyed by `(TRequest, TResponse)` (`IPipeConfigurationRegistry`). Populated once during `Build()` and then `Lock()`ed — it never evicts, expires, or recomputes entries, so it's a registry, not a cache.
 _Avoid_: Cache — reads as transient/re-derivable data, which this isn't.
 
+**RegisterHandler / RegisterPipe**:
+The two ways to register a `Pipe`. `RegisterHandler` is the simple path: give it a `Handler`, and the default pre-/post-execution Stages are wrapped around it automatically. `RegisterPipe` is the full path: build the Stage list yourself via `IConduitPipeBuilder`, for custom stage ordering or non-default stages. Both support `ExcludeValidation`; `RegisterPipe` exists for stage-list control, not because it can do anything `RegisterHandler` can't with validation.
+
+**ExcludeValidation**:
+Per-`Pipe` opt-out from the globally registered default `ValidationStage`, available on both `RegisterHandler` (its `configure` callback) and `RegisterPipe` (`IConduitPipeBuilder`). Implemented by skipping any default stage that implements `IValidationPipeStage` — a marker interface, not a hardcoded reference to `ValidationStage`, so core `conduit` never needs to know the validation package exists.
+
 **ModelValidator**:
 The per-`(TRequest, TResponse)` validation contract (`IModelValidator<TRequest, TResponse>`) an app registers to validate a request before it reaches its `Handler`. Runs inside `ValidationStage`, one of the default pipe stages. Resolved from DI by request/response type pair; if none is registered, either passes silently or throws `ValidatorNotFoundException`, depending on `ThrowIfValidatorNotFound`.
 
@@ -54,7 +60,7 @@ _Avoid_: OneOf — identical behavior, kept only as a pre-existing alias for cal
 The outcome of running a `ModelValidator` (or a single `Rule`) against a request: `IsValid`, plus on failure one `ValidationError` (`PropertyName` + `Message`) per failed `Condition` — a `ModelValidator` with several failing Rules produces one error per failure, not just the first.
 
 **ValidationStage**:
-The default pre-execution `Stage` that resolves and runs the registered `ModelValidator` for a `Pipe`'s `(TRequest, TResponse)` pair. Implements `IValidationPipeStage` so `PipeFactory` can skip it for Pipes configured with `ExcludeValidation`.
+The default pre-execution `Stage` that resolves and runs the registered `ModelValidator` for a `Pipe`'s `(TRequest, TResponse)` pair. Implements `IValidationPipeStage` so a `Pipe` configured with `ExcludeValidation` skips it, on either registration path.
 
 **Notification**:
 Not yet implemented. A future one-event-to-many-handlers concept (MediatR's `INotification`/`Publish`), distinct from the strict 1:1 `Pipe`. Known gap, not yet designed — when it lands, its vocabulary must not collide with `Pipe`/`Stage`.

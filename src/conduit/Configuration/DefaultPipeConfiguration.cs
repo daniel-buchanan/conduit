@@ -1,3 +1,5 @@
+using conduit.Pipes;
+
 namespace conduit.Configuration;
 
 /// <summary>
@@ -35,23 +37,29 @@ public class DefaultPipeConfiguration
 /// <typeparam name="TRequest">The type of the request.</typeparam>
 /// <typeparam name="TResponse">The type of the response.</typeparam>
 /// <typeparam name="THandler">The type of the request handler.</typeparam>
-public sealed class DefaultPipeConfiguration<TRequest, TResponse, THandler>(DefaultPipeConfiguration configuration)
-    where TRequest : class, IRequest<TResponse> 
+/// <param name="configuration">The shared default pre/post-execution stage configuration.</param>
+/// <param name="excludeValidation">Whether to skip default stages that implement <see cref="IValidationPipeStage"/>.</param>
+public sealed class DefaultPipeConfiguration<TRequest, TResponse, THandler>(DefaultPipeConfiguration configuration, bool excludeValidation = false)
+    where TRequest : class, IRequest<TResponse>
     where TResponse : class
     where THandler : IRequestHandler<TRequest, TResponse>
 {
     /// <summary>
     /// Gets the complete list of stages for this pipe configuration, including pre-execution, handler, and post-execution stages.
+    /// Skips any default stage that implements <see cref="IValidationPipeStage"/> when this registration excludes validation.
     /// </summary>
     /// <returns>An array of stage types in execution order.</returns>
     public Type[] GetStages()
     {
         var all = new List<Type>();
-        all.AddRange(configuration.PreExecutionStages.Select(MaterializeTypes));
+        all.AddRange(configuration.PreExecutionStages.Where(IsIncluded).Select(MaterializeTypes));
         all.Add(typeof(THandler));
-        all.AddRange(configuration.PostExecutionStages.Select(MaterializeTypes));
+        all.AddRange(configuration.PostExecutionStages.Where(IsIncluded).Select(MaterializeTypes));
         return all.ToArray();
     }
+
+    private bool IsIncluded(Type stageType)
+        => !excludeValidation || !typeof(IValidationPipeStage).IsAssignableFrom(stageType);
 
     private Type MaterializeTypes(Type incoming)
     {
