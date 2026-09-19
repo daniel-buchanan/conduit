@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Builder.Internal;
 
 namespace conduit.validation;
 
@@ -14,7 +13,7 @@ public static class ApplicationBuilderExtensions
     /// </summary>
     /// <param name="builder">The application builder.</param>
     /// <returns>The application builder for method chaining.</returns>
-    public static ApplicationBuilder AddConduitValidation(this ApplicationBuilder builder)
+    public static IApplicationBuilder AddConduitValidation(this IApplicationBuilder builder)
     {
         builder.UseMiddleware<ConduitValidationExceptionHandler>();
         return builder;
