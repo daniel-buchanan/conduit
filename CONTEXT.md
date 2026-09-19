@@ -29,5 +29,32 @@ The config-time recipe for something the `Conduit` will construct or register (`
 The locked, startup-time store of `PipeDescriptor`s keyed by `(TRequest, TResponse)` (`IPipeConfigurationRegistry`). Populated once during `Build()` and then `Lock()`ed — it never evicts, expires, or recomputes entries, so it's a registry, not a cache.
 _Avoid_: Cache — reads as transient/re-derivable data, which this isn't.
 
+**ModelValidator**:
+The per-`(TRequest, TResponse)` validation contract (`IModelValidator<TRequest, TResponse>`) an app registers to validate a request before it reaches its `Handler`. Runs inside `ValidationStage`, one of the default pipe stages. Resolved from DI by request/response type pair; if none is registered, either passes silently or throws `ValidatorNotFoundException`, depending on `ThrowIfValidatorNotFound`.
+
+**Rule**:
+One property's full validation spec, built through `RuleBuilder.Should(...)` and stored as a `Rule<TRequest>` inside a `ModelValidator`. A single property can carry multiple Rules (e.g. `NotBe().Null()` and `Be().EqualTo(...)` on the same property), and a `ModelValidator` runs all its Rules, aggregating every failure into `ValidationResult.Errors` rather than stopping at the first one.
+_Avoid_: Condition, for this level — a Rule *contains* a Condition, it isn't one.
+
+**Condition**:
+The terminal check inside a `Rule` — `Null`, `EqualTo`, `In`, `NullOrWhitespace`, etc. Selected via `Be()` (assert the condition holds) or `NotBe()` (assert it doesn't).
+_Avoid_: Rule, for this level (see Rule).
+
+**RuleBuilder**:
+Fluent entry point (`IRuleBuilder<TRequest>`) a `ModelValidator` uses inside `AddRules` to declare its Rules: `Should(property)` → `Be()`/`NotBe()` → a terminal `Condition` method.
+
+**Should**:
+The verb that starts a `Rule`, selecting the property via a member-access expression tree so `PropertyName` on a resulting `ValidationError` is the real member name, not a guess (see [ADR-0006](docs/adr/0006-property-name-via-expression-trees.md)). Must be a pure member-access chain (`x => x.Foo` or `x => x.Foo.Bar`); anything else (a method call, an indexer) throws `ArgumentException` at registration time.
+
+**In**:
+The `Condition` asserting a property's value is contained in a supplied set.
+_Avoid_: OneOf — identical behavior, kept only as a pre-existing alias for callers already using it. New Rules should use `In`.
+
+**ValidationResult / ValidationError**:
+The outcome of running a `ModelValidator` (or a single `Rule`) against a request: `IsValid`, plus on failure one `ValidationError` (`PropertyName` + `Message`) per failed `Condition` — a `ModelValidator` with several failing Rules produces one error per failure, not just the first.
+
+**ValidationStage**:
+The default pre-execution `Stage` that resolves and runs the registered `ModelValidator` for a `Pipe`'s `(TRequest, TResponse)` pair. Implements `IValidationPipeStage` so `PipeFactory` can skip it for Pipes configured with `ExcludeValidation`.
+
 **Notification**:
 Not yet implemented. A future one-event-to-many-handlers concept (MediatR's `INotification`/`Publish`), distinct from the strict 1:1 `Pipe`. Known gap, not yet designed — when it lands, its vocabulary must not collide with `Pipe`/`Stage`.

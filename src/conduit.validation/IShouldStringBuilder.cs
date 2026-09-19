@@ -1,7 +1,7 @@
 namespace conduit.validation;
 
 /// <summary>
-/// Defines the contract for selecting a validation rule condition (Be or NotBe) for a string property.
+/// Defines the contract for selecting a condition (Be or NotBe) for the current rule on a string property.
 /// </summary>
 /// <typeparam name="TRequest">The type of request being validated.</typeparam>
 public interface IShouldStringBuilder<TRequest> where TRequest : class

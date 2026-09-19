@@ -3,7 +3,7 @@ using System.Linq.Expressions;
 namespace conduit.validation;
 
 /// <summary>
-/// Defines the contract for selecting a validation rule condition (Be or ShouldNot).
+/// Defines the contract for selecting a condition (Be or NotBe) for the current rule.
 /// </summary>
 /// <typeparam name="TRequest">The type of request being validated.</typeparam>
 /// <typeparam name="in TProperty">The type of the property being validated.</typeparam>

@@ -1,7 +1,7 @@
 namespace conduit.validation;
 
 /// <summary>
-/// Defines the contract for building validation rules for properties in a request.
+/// Defines the contract for the terminal conditions of a validation rule for a property in a request.
 /// </summary>
 /// <typeparam name="TRequest">The type of request being validated.</typeparam>
 /// <typeparam name="TProperty">The type of the property being validated.</typeparam>
@@ -38,14 +38,17 @@ public interface IShouldBeBuilder<TRequest, in TProperty> where TRequest : class
     IRuleBuilder<TRequest> In(string message, IEnumerable<TProperty> values);
     
     /// <summary>
-    /// Validates that the property value is one of the specified values (alias for In).
+    /// Validates that the property value is one of the specified values. Identical to <see cref="In(IEnumerable{TProperty})"/>;
+    /// kept only as a pre-existing alias. Prefer <see cref="In(IEnumerable{TProperty})"/> in new rules.
     /// </summary>
     /// <param name="values">The collection of allowed values.</param>
     /// <returns>The rule builder for method chaining.</returns>
     IRuleBuilder<TRequest> OneOf(IEnumerable<TProperty> values);
-    
+
     /// <summary>
-    /// Validates that the property value is one of the specified values with a custom error message (alias for In).
+    /// Validates that the property value is one of the specified values, with a custom error message. Identical to
+    /// <see cref="In(string, IEnumerable{TProperty})"/>; kept only as a pre-existing alias. Prefer
+    /// <see cref="In(string, IEnumerable{TProperty})"/> in new rules.
     /// </summary>
     /// <param name="message">The custom error message.</param>
     /// <param name="values">The collection of allowed values.</param>
