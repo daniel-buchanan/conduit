@@ -1,6 +1,7 @@
 using conduit.common;
 using conduit.Helpers;
 using conduit.Pipes;
+using conduit.Pipes.Stages;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace conduit.Configuration;
@@ -13,6 +14,32 @@ public class ConduitConfigurationBuilder : IConduitConfigurationBuilder
     private readonly DefaultPipeConfiguration _defaultPipeConfiguration = new();
     private readonly List<ServiceDescriptor> _descriptors = new();
     private readonly IPipeConfigurationRegistry _pipeConfigurationRegistry = new PipeConfigurationRegistry(HashUtil.Instance);
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ConduitConfigurationBuilder"/> class.
+    /// Wires in the default debug pre-/post-execution stages only when the log level is Debug — at any
+    /// other level the logger already suppresses their output, so running them would only add
+    /// pipe-execution overhead for a stage that writes nothing.
+    /// </summary>
+    /// <param name="environment">
+    /// The environment used to read the configured log level. Defaults to <see cref="EnvironmentImpl"/>
+    /// (reads the <c>LOG_LEVEL</c> environment variable) when not supplied.
+    /// </param>
+    public ConduitConfigurationBuilder(IEnvironment? environment = null)
+    {
+        environment ??= new EnvironmentImpl();
+        if (environment.LogLevel != LoggingLevel.Debug) return;
+
+        AddDefaultPreExecutionStage(typeof(DebugPreExecutionStage<,>));
+        AddDefaultPostExecutionStage(typeof(DebugPostExecutionStage<,>));
+
+        // Registered as open generics, the same way AddValidation registers ValidationStage<,>, so DI can
+        // construct a debug stage for ANY (TRequest, TResponse) pair on demand — including pipes built via
+        // RegisterPipe, which (unlike RegisterHandler's GetServiceDescriptorsForHandler) never registers a
+        // closed DebugPreExecutionStage/DebugPostExecutionStage for its own pair.
+        AddDescriptor(new ServiceDescriptor(typeof(DebugPreExecutionStage<,>), typeof(DebugPreExecutionStage<,>), ServiceLifetime.Transient));
+        AddDescriptor(new ServiceDescriptor(typeof(DebugPostExecutionStage<,>), typeof(DebugPostExecutionStage<,>), ServiceLifetime.Transient));
+    }
 
     /// <summary>
     /// Builds the Conduit configuration and registers all configured services.
