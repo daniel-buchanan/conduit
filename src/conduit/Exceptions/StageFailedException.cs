@@ -3,7 +3,7 @@ namespace conduit.Exceptions;
 /// <summary>
 /// The exception that is thrown when a pipeline stage fails during execution.
 /// </summary>
-public class StageFailedException : Exception
+public class StageFailedException : Exception, IPassthroughException
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="StageFailedException"/> class with a default message.

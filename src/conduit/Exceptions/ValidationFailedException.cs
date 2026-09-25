@@ -5,7 +5,7 @@ namespace conduit.Exceptions;
 /// <summary>
 /// The exception that is thrown when model validation fails during pipeline execution.
 /// </summary>
-public class ValidationFailedException(ValidationResult validationResult) : Exception(GetMessage(validationResult))
+public class ValidationFailedException(ValidationResult validationResult) : Exception(GetMessage(validationResult)), IPassthroughException
 {
     /// <summary>
     /// Gets the validation errors that caused this exception.
