@@ -47,4 +47,44 @@ public class ShouldStringBuilderTests
         // Assert
         Assert.True(result.IsValid);
     }
+
+    public class BeWhitespaceRequest : IRequest<object>
+    {
+        public string? Message { get; set; }
+    }
+
+    public class BeWhitespaceValidator : ModelValidator<BeWhitespaceRequest, object>
+    {
+        protected override void AddRules(IRuleBuilder<BeWhitespaceRequest> ruleBuilder)
+            => ruleBuilder.Should(x => x.Message).Be().NullOrWhitespace("Message must be blank.");
+    }
+
+    [Fact]
+    public void Be_NullOrWhitespace_Should_Fail_For_Non_Whitespace_Input()
+    {
+        // Arrange: existing coverage only exercised the inverted NotBe().NullOrWhitespace direction.
+        var validator = new BeWhitespaceValidator();
+        var request = new BeWhitespaceRequest { Message = "hello" };
+
+        // Act
+        var result = validator.Validate(request);
+
+        // Assert
+        Assert.False(result.IsValid);
+        Assert.Equal("Message must be blank.", result.Errors![0].Message);
+    }
+
+    [Fact]
+    public void Be_NullOrWhitespace_Should_Succeed_For_Null_Input()
+    {
+        // Arrange
+        var validator = new BeWhitespaceValidator();
+        var request = new BeWhitespaceRequest { Message = null };
+
+        // Act
+        var result = validator.Validate(request);
+
+        // Assert
+        Assert.True(result.IsValid);
+    }
 }

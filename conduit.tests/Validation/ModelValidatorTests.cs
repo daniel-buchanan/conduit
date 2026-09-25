@@ -186,4 +186,111 @@ public class ModelValidatorTests
             // pass every request through, not fail-closed.
         }
     }
+
+    public class NotBeInRuleRequest : IRequest<TestResponse>
+    {
+        public string? Message { get; set; }
+    }
+
+    [Theory]
+    [InlineData("a", false)]
+    [InlineData("c", true)]
+    public void NotBe_In_Should_Fail_When_Value_Is_A_Member_Of_The_Provided_Values(string message, bool expectValid)
+    {
+        // Arrange: existing coverage only exercised Be().In, never the inverted NotBe().In.
+        var validator = new NotBeInRuleValidator();
+        var request = new NotBeInRuleRequest { Message = message };
+
+        // Act
+        var result = validator.Validate(request);
+
+        // Assert
+        Assert.Equal(expectValid, result.IsValid);
+    }
+
+    public class NotBeInRuleValidator : ModelValidator<NotBeInRuleRequest, TestResponse>
+    {
+        protected override void AddRules(IRuleBuilder<NotBeInRuleRequest> ruleBuilder)
+            => ruleBuilder.Should(x => x.Message).NotBe().In("Message must not be a or b.", ["a", "b"]);
+    }
+
+    public class NotBeOneOfRuleRequest : IRequest<TestResponse>
+    {
+        public string? Message { get; set; }
+    }
+
+    [Theory]
+    [InlineData("a", false)]
+    [InlineData("c", true)]
+    public void NotBe_OneOf_Should_Behave_As_An_Alias_For_NotBe_In(string message, bool expectValid)
+    {
+        // Arrange
+        var validator = new NotBeOneOfRuleValidator();
+        var request = new NotBeOneOfRuleRequest { Message = message };
+
+        // Act
+        var result = validator.Validate(request);
+
+        // Assert
+        Assert.Equal(expectValid, result.IsValid);
+    }
+
+    public class NotBeOneOfRuleValidator : ModelValidator<NotBeOneOfRuleRequest, TestResponse>
+    {
+        protected override void AddRules(IRuleBuilder<NotBeOneOfRuleRequest> ruleBuilder)
+            => ruleBuilder.Should(x => x.Message).NotBe().OneOf("Message must not be a or b.", ["a", "b"]);
+    }
+
+    public class NotBeEqualToRequest : IRequest<TestResponse>
+    {
+        public string? Message { get; set; }
+    }
+
+    [Fact]
+    public void NotBe_EqualTo_Should_Fail_When_Values_Are_Equal()
+    {
+        // Arrange: existing coverage only exercised the positive Be().EqualTo direction.
+        var validator = new NotBeEqualToValidator();
+        var request = new NotBeEqualToRequest { Message = "Hello" };
+
+        // Act
+        var result = validator.Validate(request);
+
+        // Assert
+        Assert.False(result.IsValid);
+        Assert.Equal("Message must not equal Hello.", result.Errors![0].Message);
+    }
+
+    public class NotBeEqualToValidator : ModelValidator<NotBeEqualToRequest, TestResponse>
+    {
+        protected override void AddRules(IRuleBuilder<NotBeEqualToRequest> ruleBuilder)
+            => ruleBuilder.Should(x => x.Message).NotBe().EqualTo("Hello", "Message must not equal Hello.");
+    }
+
+    public class InRuleNoMessageRequest : IRequest<TestResponse>
+    {
+        public string? Message { get; set; }
+    }
+
+    [Fact]
+    public void In_Without_A_Message_Should_Produce_A_Null_Error_Message()
+    {
+        // Arrange: the no-message overload of In/OneOf never sets ValidationError.Message. Confirm that's
+        // exactly what happens (null, not an empty string or a generated default) rather than assuming it.
+        var validator = new InRuleNoMessageValidator();
+        var request = new InRuleNoMessageRequest { Message = "c" };
+
+        // Act
+        var result = validator.Validate(request);
+
+        // Assert
+        Assert.False(result.IsValid);
+        Assert.Null(result.Errors![0].Message);
+    }
+
+    public class InRuleNoMessageValidator : ModelValidator<InRuleNoMessageRequest, TestResponse>
+    {
+        protected override void AddRules(IRuleBuilder<InRuleNoMessageRequest> ruleBuilder)
+            => ruleBuilder.Should(x => x.Message).Be().In(["a", "b"]);
+    }
 }

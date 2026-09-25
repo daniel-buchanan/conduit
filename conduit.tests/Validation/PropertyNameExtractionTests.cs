@@ -85,6 +85,25 @@ public class PropertyNameExtractionTests
         Assert.Throws<ArgumentException>(act);
     }
 
+    public class RequestWithItems : IRequest<object>
+    {
+        public string[]? Items { get; set; }
+    }
+
+    [Fact]
+    public void Should_Throws_When_Expression_Contains_An_Indexer()
+    {
+        // Arrange: an indexer compiles to a MethodCallExpression (or, for arrays, an ArrayIndex
+        // BinaryExpression) rather than a MemberExpression, so it must be rejected the same as a method call.
+        var ruleBuilder = new RuleBuilder<RequestWithItems>();
+
+        // Act
+        var act = () => ruleBuilder.Should(x => x.Items![0]);
+
+        // Assert
+        Assert.Throws<ArgumentException>(act);
+    }
+
     public class NullableStringRequest : IRequest<object>
     {
         public string? Name { get; set; }

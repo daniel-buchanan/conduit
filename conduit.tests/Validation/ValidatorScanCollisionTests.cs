@@ -1,4 +1,6 @@
+using System.Linq;
 using conduit.validation;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace conduit.tests.Validation;
@@ -37,5 +39,33 @@ public class ValidatorScanCollisionTests
         // Assert
         var exception = Record.Exception(Act);
         Assert.Null(exception);
+    }
+
+    [Fact]
+    public void WithValidatorFor_Called_Twice_For_The_Same_Pair_Should_Let_The_Last_Registration_Win()
+    {
+        // Arrange: two explicit registrations for the same pair are both deliberate overrides per ADR-0003,
+        // so neither call should throw, and standard DI last-registered-wins resolution should surface the
+        // second instance.
+        var builder = new ValidationBuilder();
+        var first = new ExcludeValidationTests.ExcludableRequestValidator();
+        var second = new ExcludeValidationTests.ExcludableRequestValidator();
+
+        // Act
+        void Act()
+        {
+            builder.WithValidatorFor(first);
+            builder.WithValidatorFor(second);
+        }
+
+        // Assert
+        var exception = Record.Exception(Act);
+        Assert.Null(exception);
+
+        var services = new ServiceCollection();
+        foreach (var descriptor in builder.Build()) ((ICollection<ServiceDescriptor>)services).Add(descriptor);
+        var provider = services.BuildServiceProvider();
+        var resolved = provider.GetRequiredService<IModelValidator<ExcludeValidationTests.ExcludableRequest, ExcludeValidationTests.ExcludableResponse>>();
+        Assert.Same(second, resolved);
     }
 }

@@ -1,3 +1,4 @@
+using System.Linq;
 using conduit.validation;
 using Xunit;
 
@@ -17,5 +18,25 @@ public class ValidatorDiscoveryTests
         // Assert: this previously caused an opaque IndexOutOfRangeException instead of a clear error.
         var exception = Assert.Throws<InvalidOperationException>(Act);
         Assert.Contains("String", exception.Message);
+    }
+
+    [Fact]
+    public void WithValidatorsFromAssembly_Generic_Overload_Should_Discover_The_Same_Descriptors_As_The_Assembly_Overload()
+    {
+        // Arrange: the generic <TLocator> overload is documented as delegating to the assembly overload via
+        // typeof(TLocator).Assembly. Confirm that directly rather than only ever exercising it indirectly
+        // through other tests' pipe/handler setups.
+        var byType = new ValidationBuilder();
+        var byAssembly = new ValidationBuilder();
+
+        // Act
+        byType.WithValidatorsFromAssembly<ValidatorDiscoveryTests>();
+        byAssembly.WithValidatorsFromAssembly(typeof(ValidatorDiscoveryTests).Assembly);
+
+        // Assert
+        var byTypeDescriptors = byType.Build().Select(d => (d.ServiceType, d.ImplementationType)).ToArray();
+        var byAssemblyDescriptors = byAssembly.Build().Select(d => (d.ServiceType, d.ImplementationType)).ToArray();
+        Assert.Equal(byAssemblyDescriptors, byTypeDescriptors);
+        Assert.NotEmpty(byTypeDescriptors);
     }
 }
