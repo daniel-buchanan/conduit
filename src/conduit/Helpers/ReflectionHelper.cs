@@ -19,35 +19,40 @@ public static class ReflectionHelper
 
     public static Type[] GetTypesFromAssembly<T>(Func<Type, bool> predicate)
         => GetTypesFromAssembly(typeof(T), predicate);
-    
+
     public static Type[] GetTypesFromAssembly(Type locator, Func<Type, bool> predicate)
-    {
-        var assembly = locator.Assembly;
-        var types = assembly.GetTypes();
-        return types.Where(t => t.GetInterfaces().Any(predicate) && !t.IsInterface).ToArray();
-    }
-    
+        => GetTypesFromAssembly(locator.Assembly, predicate);
+
     public static Type[] GetTypesFromAssembly(Assembly assembly, Func<Type, bool> predicate)
     {
         var types = assembly.GetTypes();
-        return types.Where(t => t.GetInterfaces().Any(predicate) && !t.IsInterface).ToArray();
+        return types.Where(t => t.GetInterfaces().Any(predicate) && !t.IsInterface && !t.IsAbstract).ToArray();
     }
 
-    public static ServiceDescriptor[] GetRegistrationsAsImplementedFrom<TLocator, TBase>(bool includeCtorDeps = false)
+    /// <summary>
+    /// Builds service descriptors for every closed implementation of <typeparamref name="TBase"/> found in
+    /// <typeparamref name="TLocator"/>'s assembly.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">
+    /// A discovered type's closed TRequest/TResponse (or other generic) arguments could not be determined
+    /// from its generic base class. Previously this silently registered the type under itself instead,
+    /// producing a pipe that could never be resolved via <c>IPipe&lt;TRequest,TResponse&gt;</c> — see ADR-0007's
+    /// sibling decisions and the edge-case review (Q7/Q13): failing loud at registration time is preferred
+    /// over shipping an unreachable registration.
+    /// </exception>
+    public static ServiceDescriptor[] GetRegistrationsAsImplementedFrom<TLocator, TBase>()
     {
         var descriptors = new List<ServiceDescriptor>();
         var types = GetTypesFromAssembly<TLocator>(i => i == typeof(TBase));
         foreach (var t in types)
         {
-            if (includeCtorDeps) descriptors.AddRange(GetServiceDescriptorsForCtorDependencies(t, types));
-            
             var genericParameters = GetGenericParameters(t);
 
             if (genericParameters.Length == 0)
-            {
-                descriptors.Add(new ServiceDescriptor(t, t, ServiceLifetime.Scoped));
-                continue;
-            }
+                throw new InvalidOperationException(
+                    $"Could not determine the closed generic type arguments for '{t.FullName}'. " +
+                    $"Types discovered via {nameof(GetRegistrationsAsImplementedFrom)} must derive from a generic base class " +
+                    $"closed over the request/response types (e.g. Pipe<TRequest, TResponse>).");
 
             var interfaceType = Enumerable.First(t.GetInterfaces());
             if (interfaceType.GetGenericArguments().Any() &&
@@ -58,34 +63,10 @@ public static class ReflectionHelper
                 descriptors.Add(new ServiceDescriptor(interfaceGenericType, implementedGenericType, ServiceLifetime.Scoped));
                 continue;
             }
-            
+
             descriptors.Add(new ServiceDescriptor(interfaceType, t, ServiceLifetime.Scoped));
         }
-        
-        return descriptors.ToArray();
-    }
 
-    private static ServiceDescriptor[] GetServiceDescriptorsForCtorDependencies(Type t, Type[] types)
-    {
-        var descriptors = new List<ServiceDescriptor>();
-        var ctors = t.GetConstructors();
-        var injectCtor = ctors.First(c => c.GetParameters().Length > 0);
-        var ctorParameters = injectCtor.GetParameters().Select(p => p.ParameterType).ToArray();
-
-        foreach (var ctorParam in ctorParameters)
-        {
-            if (ctorParam.IsInterface)
-            {
-                var implementations = types.Where(tt => tt.GetInterfaces().Any(i => i == ctorParam));
-                var impl =  implementations.First();
-                descriptors.Add(new ServiceDescriptor(ctorParam, impl, ServiceLifetime.Scoped));
-            }
-            else
-            {
-                descriptors.Add(new ServiceDescriptor(ctorParam, ctorParam, ServiceLifetime.Scoped));
-            }
-        }
-        
         return descriptors.ToArray();
     }
 
