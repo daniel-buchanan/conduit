@@ -20,6 +20,7 @@ public class ConduitValidationExceptionHandler(RequestDelegate next)
     [
         (ex => ex is ValidationFailedException, HandleValidationException),
         (ex => ex is StageFailedException, HandleStageFailedException),
+        (ex => ex is ValidatorNotFoundException, HandleValidatorNotFoundException),
     ];
     
     /// <summary>
@@ -99,6 +100,23 @@ public class ConduitValidationExceptionHandler(RequestDelegate next)
         await WriteResponse(context, StatusCodes.Status500InternalServerError, details);
     }
     
+    /// <summary>
+    /// Handles a missing-validator failure by returning its own 500 Internal Server Error response,
+    /// distinct from a generic pipeline-stage failure.
+    /// </summary>
+    private static async Task HandleValidatorNotFoundException(Exception ex, HttpContext context)
+    {
+        var details = new ProblemDetails
+        {
+            Status = StatusCodes.Status500InternalServerError,
+            Title = "No validator was registered for this request.",
+            Instance = context.Request.Path,
+            Detail = ex.Message
+        };
+
+        await WriteResponse(context, StatusCodes.Status500InternalServerError, details);
+    }
+
     /// <summary>
     /// Writes a JSON response to the HTTP context.
     /// </summary>
