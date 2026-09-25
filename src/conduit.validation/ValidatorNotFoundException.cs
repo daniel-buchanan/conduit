@@ -6,7 +6,7 @@ namespace conduit.validation;
 /// The exception that is thrown when a required validator cannot be found for a request type.
 /// Implements <see cref="IPassthroughException"/> so a Pipe lets it propagate unwrapped rather than
 /// wrapping it in a <see cref="StageFailedException"/> — it should surface as its own distinct error,
-/// not a generic pipeline-stage failure (see ADR-0009).
+/// not a generic pipeline-stage failure (see ADR-0004).
 /// </summary>
 public class ValidatorNotFoundException : Exception, IPassthroughException
 {

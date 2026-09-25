@@ -6,6 +6,7 @@ namespace conduit.Exceptions;
 /// Implemented directly by <see cref="ValidationFailedException"/> and <see cref="StageFailedException"/>
 /// themselves, and by exceptions defined in other packages (e.g. conduit.validation's
 /// ValidatorNotFoundException) that core must recognize without referencing that package's assembly —
-/// the same problem <see cref="conduit.Pipes.IValidationPipeStage"/> solves for stages (see ADR-0007).
+/// the same problem <see cref="conduit.Pipes.IValidationPipeStage"/> solves for stages. See ADR-0004 and
+/// ADR-0007.
 /// </summary>
 public interface IPassthroughException;
