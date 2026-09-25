@@ -14,6 +14,7 @@ public class ValidationBuilder : IValidationBuilder
 {
     private readonly List<ServiceDescriptor> _descriptors = new();
     private readonly HashSet<Type> _scannedValidatorInterfaces = new();
+    private readonly HashSet<Type> _explicitlyRegisteredValidatorInterfaces = new();
     
     /// <summary>
     /// Gets a value indicating whether to throw an exception if a validator is not found.
@@ -31,6 +32,7 @@ public class ValidationBuilder : IValidationBuilder
         where TRequest : class, IRequest<TResponse>
         where TResponse : class
     {
+        _explicitlyRegisteredValidatorInterfaces.Add(typeof(IModelValidator<TRequest, TResponse>));
         _descriptors.Add(new ServiceDescriptor(
             typeof(IModelValidator<TRequest, TResponse>),
             validator));
@@ -38,11 +40,12 @@ public class ValidationBuilder : IValidationBuilder
     }
 
     /// <inheritdoc/>
-    public IValidationBuilder WithValidatorFor<TRequest, TResponse, TModelValidator>() 
+    public IValidationBuilder WithValidatorFor<TRequest, TResponse, TModelValidator>()
         where TRequest : class, IRequest<TResponse>
         where TResponse : class
         where TModelValidator : IModelValidator<TRequest, TResponse>
     {
+        _explicitlyRegisteredValidatorInterfaces.Add(typeof(IModelValidator<TRequest, TResponse>));
         _descriptors.Add(new ServiceDescriptor(
             typeof(IModelValidator<TRequest, TResponse>),
             typeof(TModelValidator),
@@ -70,6 +73,11 @@ public class ValidationBuilder : IValidationBuilder
         {
             var (request, response) = GetRequestResponseTypes(t);
             var interfaceType = typeof(IModelValidator<,>).MakeGenericType(request, response);
+
+            // An explicit registration always wins over a scanned one, regardless of which call happened
+            // first (ADR-0003) — so a scan discovering a pair that's already explicitly registered is
+            // superseded, not a collision, and is skipped silently rather than added or thrown on.
+            if (_explicitlyRegisteredValidatorInterfaces.Contains(interfaceType)) continue;
 
             if (!_scannedValidatorInterfaces.Add(interfaceType))
                 throw new ValidatorAlreadyRegisteredException(

@@ -68,4 +68,47 @@ public class ValidatorScanCollisionTests
         var resolved = provider.GetRequiredService<IModelValidator<ExcludeValidationTests.ExcludableRequest, ExcludeValidationTests.ExcludableResponse>>();
         Assert.Same(second, resolved);
     }
+
+    public class OrderIndependentRequest : IRequest<OrderIndependentResponse>
+    {
+        public string? Message { get; set; }
+    }
+
+    public class OrderIndependentResponse;
+
+    // The only concrete validator in this assembly for (OrderIndependentRequest, OrderIndependentResponse):
+    // WithValidatorsFromAssembly discovers this one class, and the test below separately registers an
+    // explicit instance of it too, so the only collision in play is explicit-vs-scan, not scan-vs-scan.
+    public class ScannedOrderIndependentValidator : ModelValidator<OrderIndependentRequest, OrderIndependentResponse>
+    {
+        protected override void AddRules(IRuleBuilder<OrderIndependentRequest> ruleBuilder) { }
+    }
+
+    [Fact]
+    public void WithValidatorFor_Then_WithValidatorsFromAssembly_Should_Not_Throw_And_Explicit_Should_Still_Win()
+    {
+        // Arrange: ADR-0003 says explicit registration always wins over a scanned one, regardless of order.
+        // WithValidatorFor_Should_Not_Throw_When_Overriding_A_Scanned_Validator_For_The_Same_Pair above only
+        // covers scan-then-explicit; this covers the reverse order, where the explicit call comes first and
+        // a later scan discovers ScannedOrderIndependentValidator for the same pair.
+        var builder = new ValidationBuilder();
+        var explicitValidator = new ScannedOrderIndependentValidator();
+
+        // Act
+        void Act()
+        {
+            builder.WithValidatorFor(explicitValidator);
+            builder.WithValidatorsFromAssembly<ValidatorScanCollisionTests>();
+        }
+
+        // Assert
+        var exception = Record.Exception(Act);
+        Assert.Null(exception);
+
+        var services = new ServiceCollection();
+        foreach (var descriptor in builder.Build()) ((ICollection<ServiceDescriptor>)services).Add(descriptor);
+        var provider = services.BuildServiceProvider();
+        var resolved = provider.GetRequiredService<IModelValidator<OrderIndependentRequest, OrderIndependentResponse>>();
+        Assert.Same(explicitValidator, resolved);
+    }
 }
