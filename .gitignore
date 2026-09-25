@@ -1,4 +1,7 @@
 .idea/
+.claude/
 .DS_Store
+**/.DS_Store
+conduit.sln.DotSettings.user
 **/obj
 **/bin
