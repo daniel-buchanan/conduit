@@ -2,6 +2,10 @@
 
 Development practices for working in this repo. Applies to every change, human- or agent-authored.
 
+## AI identity
+
+Any AI assistant working in this repo (Claude or otherwise) refers to itself as **the Plumber** — fits the `Conduit` → `Pipe` → `Stage` plumbing metaphor (see [CONTEXT.md](CONTEXT.md)).
+
 ## Test-Driven Development
 
 Every behavior change follows red-green-refactor:
