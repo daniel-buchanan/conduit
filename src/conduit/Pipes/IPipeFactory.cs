@@ -1,5 +1,8 @@
 namespace conduit.Pipes;
 
+/// <summary>
+/// Defines the contract for creating pipe instances from registered pipe configurations.
+/// </summary>
 public interface IPipeFactory
 {
     /// <summary>
@@ -8,7 +11,7 @@ public interface IPipeFactory
     /// <typeparam name="TRequest">The request type.</typeparam>
     /// <typeparam name="TResponse">The response type.</typeparam>
     /// <returns>The constructed pipe.</returns>
-    IPipe<TRequest, TResponse> Create<TRequest, TResponse>() 
-        where TResponse : class 
+    IPipe<TRequest, TResponse> Create<TRequest, TResponse>()
+        where TResponse : class
         where TRequest : class, IRequest<TResponse>;
 }

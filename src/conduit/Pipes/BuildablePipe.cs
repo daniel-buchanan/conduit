@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using conduit.common;
 using conduit.logging;
 
 namespace conduit.Pipes;
@@ -49,7 +50,11 @@ public class BuildablePipe<TRequest, TResponse>(ILog logger, IServiceProvider se
         {
             var result = await ExecuteStage(i, instanceId, stages[i], stageTimer, request, cancellationToken, withMetrics);
             metrics?[i] = result.Metric!;
-            response ??= result.Response;
+
+            if (response is not null && result.Response is not null && !Equals(response, result.Response))
+                Logger.Verbose($"[{instanceId}] {stages[i].GetGenericName()} :: Stage response overrode previous stage's response.");
+
+            response = result.Response ?? response;
         }
         
         overallTimer?.Stop();

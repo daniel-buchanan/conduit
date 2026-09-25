@@ -1,0 +1,7 @@
+# `AddValidation()` may only be called once per configuration
+
+`ConfigurationBuilderExtensions.AddValidation` builds a fresh `ValidationBuilder` on every call, with its own scan-collision tracking and its own `ThrowIfValidatorNotFound()` flag. Calling it twice on the same `IConduitConfigurationBuilder` silently registered two independent `ConduitValidationConfiguration` instances and two `ValidationStage<,>` descriptors — the second call's settings would win by ordinary last-registered-wins DI resolution, but the first call's scan-collision guard never saw anything the second call scanned, so a validator registered once in each call for the same `(TRequest, TResponse)` pair would silently collide instead of throwing `ValidatorAlreadyRegisteredException` (ADR-0003).
+
+We treat calling `AddValidation` more than once as a configuration error rather than something to merge or make last-wins: `AddValidation` now checks whether a `ConduitValidationConfiguration` descriptor is already present and throws `ValidationAlreadyConfiguredException` if so, telling the caller to combine their validator registrations into a single call instead.
+
+This required adding `IConduitConfigurationBuilder.HasDescriptor<TService>()` to core: `conduit.validation` needed a way to ask "has this already been configured" without downcasting to the concrete builder, and ADR-0007 already established that cross-assembly checks like this belong on the interface itself rather than behind a cast.

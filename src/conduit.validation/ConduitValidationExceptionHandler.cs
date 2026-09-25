@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Linq;
 using conduit.Exceptions;
 using conduit.logging;
 using Microsoft.AspNetCore.Mvc;
@@ -7,16 +8,25 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace conduit.validation;
 
-// ReSharper disable once ClassNeverInstantiated.Global
+/// <summary>
+/// Provides ASP.NET Core middleware for handling Conduit validation and stage exceptions.
+/// Catches validation and stage failures and converts them to appropriate HTTP responses.
+/// </summary>
+/// <param name="next">The next middleware in the request pipeline.</param>
 public class ConduitValidationExceptionHandler(RequestDelegate next)
 {
     private const string ContentTypeJson = "application/json";
-    private static readonly Dictionary<Type, Func<Exception, HttpContext, Task>> KnownExceptionMap = new()
-    {
-        { typeof(ValidationFailedException), HandleValidationException },
-        { typeof(StageFailedException), HandleStageFailedException },
-    };
+    private static readonly (Func<Exception, bool> Matches, Func<Exception, HttpContext, Task> Handle)[] KnownExceptionHandlers =
+    [
+        (ex => ex is ValidationFailedException, HandleValidationException),
+        (ex => ex is StageFailedException, HandleStageFailedException),
+        (ex => ex is ValidatorNotFoundException, HandleValidatorNotFoundException),
+    ];
     
+    /// <summary>
+    /// Invokes the middleware to handle exceptions in the request pipeline.
+    /// </summary>
+    /// <param name="context">The HTTP context for the current request.</param>
     public async Task InvokeAsync(HttpContext context)
     {
         var logger = context.RequestServices.GetRequiredService<ILog>();
@@ -34,15 +44,18 @@ public class ConduitValidationExceptionHandler(RequestDelegate next)
     
     private static async Task<bool> HandleException(ILog logger, Exception ex, HttpContext context)
     {
-        var type = ex.GetType();
-        if (!KnownExceptionMap.TryGetValue(type, out var value)) return false;
-        
-        logger.Error("Exception Type: {0}", type.Name);
-        await value.Invoke(ex, context);
-        
+        var handler = KnownExceptionHandlers.FirstOrDefault(h => h.Matches(ex));
+        if (handler.Handle is null) return false;
+
+        logger.Error("Exception Type: {0}", ex.GetType().Name);
+        await handler.Handle.Invoke(ex, context);
+
         return true;
     }
     
+    /// <summary>
+    /// Handles validation exceptions by returning a 400 Bad Request response with validation errors.
+    /// </summary>
     private static async Task HandleValidationException(Exception ex, HttpContext context)
     {
         ProblemDetails problemDetails;
@@ -71,6 +84,9 @@ public class ConduitValidationExceptionHandler(RequestDelegate next)
         await WriteResponse(context, StatusCodes.Status400BadRequest, problemDetails);
     }
     
+    /// <summary>
+    /// Handles stage failures by returning a 500 Internal Server Error response.
+    /// </summary>
     private static async Task HandleStageFailedException(Exception ex, HttpContext context)
     {
         var details = new ProblemDetails
@@ -84,6 +100,26 @@ public class ConduitValidationExceptionHandler(RequestDelegate next)
         await WriteResponse(context, StatusCodes.Status500InternalServerError, details);
     }
     
+    /// <summary>
+    /// Handles a missing-validator failure by returning its own 500 Internal Server Error response,
+    /// distinct from a generic pipeline-stage failure.
+    /// </summary>
+    private static async Task HandleValidatorNotFoundException(Exception ex, HttpContext context)
+    {
+        var details = new ProblemDetails
+        {
+            Status = StatusCodes.Status500InternalServerError,
+            Title = "No validator was registered for this request.",
+            Instance = context.Request.Path,
+            Detail = ex.Message
+        };
+
+        await WriteResponse(context, StatusCodes.Status500InternalServerError, details);
+    }
+
+    /// <summary>
+    /// Writes a JSON response to the HTTP context.
+    /// </summary>
     private static async Task WriteResponse(HttpContext context, int statusCode, object details)
     {
         context.Response.StatusCode = statusCode;

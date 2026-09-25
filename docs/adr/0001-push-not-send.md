@@ -1,0 +1,3 @@
+# Use "Push" rather than MediatR's "Send" as the core verb
+
+Conduit's purpose is to provide a MediatR-like request/response experience, which made `SendAsync` the obvious default name for `IConduit`'s entry point. We chose `PushAsync` instead: the library's own vocabulary is a plumbing metaphor (`Conduit` → `Pipe` → `Stage`), and "push a request down the pipe" fits that metaphor, even though "Push" more commonly reads as fire-and-forget in other contexts. Consumers coming from MediatR should expect the same request/response contract (an awaited call that throws `PipeNotFoundException` if nothing handles it) under a different name.

@@ -24,21 +24,7 @@ public interface IPipeStage<TRequest, TResponse> : IPipeStage
     /// <param name="cancellationToken">A cancellation token to observe while waiting for the task to complete.</param>
     /// <returns>A task that represents the asynchronous operation, returning the response.</returns>
     Task<StageResult<TRequest, TResponse>> ExecuteAsync(
-        Guid instanceId, 
-        TRequest request, 
-        CancellationToken cancellationToken = default);
-    
-    /// <summary>
-    /// Executes the pipe stage asynchronously with a 'next' delegate to pass control to the subsequent stage.
-    /// </summary>
-    /// <param name="instanceId">A unique identifier for the current pipe instance.</param>
-    /// <param name="request">The request to process.</param>
-    /// <param name="next">A delegate to invoke the next stage in the pipe.</param>
-    /// <param name="cancellationToken">A cancellation token to observe while waiting for the task to complete.</param>
-    /// <returns>A task that represents the asynchronous operation, returning the response.</returns>
-    Task<StageResult<TRequest, TResponse>> ExecuteAsync(
-        Guid instanceId, 
+        Guid instanceId,
         TRequest request,
-        Func<Guid, TRequest, CancellationToken, Task<TResponse>> next,
         CancellationToken cancellationToken = default);
 }

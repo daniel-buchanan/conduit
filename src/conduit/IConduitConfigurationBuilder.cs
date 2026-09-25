@@ -1,3 +1,5 @@
+using Microsoft.Extensions.DependencyInjection;
+
 namespace conduit;
 
 /// <summary>
@@ -6,13 +8,41 @@ namespace conduit;
 public interface IConduitConfigurationBuilder
 {
     /// <summary>
+    /// Adds a service descriptor to the configuration.
+    /// </summary>
+    /// <param name="descriptor">The service descriptor to add.</param>
+    void AddDescriptor(ServiceDescriptor descriptor);
+
+    /// <summary>
+    /// Determines whether a service descriptor for the specified service type has already been added to this
+    /// configuration, e.g. so a cross-assembly extension method can guard against being applied more than once
+    /// without downcasting to a concrete builder implementation (see ADR-0007, ADR-0011).
+    /// </summary>
+    /// <typeparam name="TService">The service type to check for.</typeparam>
+    /// <returns><c>true</c> if a descriptor for <typeparamref name="TService"/> has already been added; otherwise <c>false</c>.</returns>
+    bool HasDescriptor<TService>();
+
+    /// <summary>
+    /// Adds a pre-execution stage to be applied to all pipes by default.
+    /// </summary>
+    /// <param name="stage">The type of the pre-execution stage.</param>
+    void AddDefaultPreExecutionStage(Type stage);
+
+    /// <summary>
+    /// Adds a post-execution stage to be applied to all pipes by default.
+    /// </summary>
+    /// <param name="stage">The type of the post-execution stage.</param>
+    void AddDefaultPostExecutionStage(Type stage);
+
+    /// <summary>
     /// Registers a request handler with the Conduit system.
     /// </summary>
     /// <typeparam name="TRequest">The type of the request.</typeparam>
     /// <typeparam name="TResponse">The type of the response.</typeparam>
     /// <typeparam name="THandler">The interface type of the handler.</typeparam>
+    /// <param name="configure">An optional action to configure this registration, e.g. to exclude it from default validation.</param>
     /// <returns>The current configuration builder instance.</returns>
-    IConduitConfigurationBuilder RegisterHandler<TRequest, TResponse, THandler>()
+    IConduitConfigurationBuilder RegisterHandler<TRequest, TResponse, THandler>(Action<IHandlerRegistrationOptions>? configure = null)
         where TRequest : class, IRequest<TResponse>
         where TResponse : class
         where THandler : IRequestHandler<TRequest, TResponse>;
@@ -23,7 +53,7 @@ public interface IConduitConfigurationBuilder
     /// <typeparam name="TLocator">A type from the assembly to scan for handlers.</typeparam>
     /// <returns>The current configuration builder instance.</returns>
     IConduitConfigurationBuilder RegisterHandlersAsImplementedFrom<TLocator>();
-    
+
     /// <summary>
     /// Registers a custom pipe for a specific request and response type.
     /// </summary>
@@ -35,7 +65,7 @@ public interface IConduitConfigurationBuilder
         Action<IConduitPipeBuilder<TRequest, TResponse>> configure)
         where TRequest : class, IRequest<TResponse>
         where TResponse : class;
-    
+
     /// <summary>
     /// Registers all pipes found in the assembly of the specified locator type.
     /// </summary>

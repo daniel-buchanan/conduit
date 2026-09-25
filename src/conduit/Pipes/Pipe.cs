@@ -13,6 +13,11 @@ public abstract class Pipe<TRequest, TResponse>(
     where TRequest : class, IRequest<TResponse> 
     where TResponse : class
 {
+    /// <summary>
+    /// Gets the logger instance used by this pipe.
+    /// </summary>
+    protected ILog Logger => logger;
+
     /// <inheritdoc/>
     public abstract Task<TResponse?> PushAsync(TRequest request, CancellationToken cancellationToken = default);
 
@@ -70,7 +75,10 @@ public abstract class Pipe<TRequest, TResponse>(
         {
             stageTimer?.Stop();
             logger.Error($"[{instanceId}] {stageType.GetGenericName()} :: Error while executing stage {stageName}", e);
-            throw;
+
+            if (e is IPassthroughException) throw;
+
+            HandleUnsuccessfulResult(request, StageResult.WithException<TRequest, TResponse>(e, stageType));
         }
         
         return (response, metric);

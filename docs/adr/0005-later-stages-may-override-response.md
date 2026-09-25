@@ -1,0 +1,5 @@
+# Later pipeline stages may override an earlier stage's response
+
+`BuildablePipe.PushInternalAsync` accumulates the response with `response ??= result.Response`, so once any stage sets a non-null response, every later stage's result is discarded. That reads as "first response wins, later stages are observers," but nothing about the stage model actually requires that — a stage array is just an ordered pipeline, and a later stage (e.g. a caching or enrichment stage) may legitimately need to replace what an earlier stage produced.
+
+We change the accumulation to unconditional `response = result.Response ?? response`, so any stage that returns a non-null response replaces the current one; a stage returning null leaves the existing response untouched. To keep this discoverable when it happens, a verbose log fires only on a true override — an earlier stage already produced a non-null response and a later stage supplies a different non-null response that replaces it. The first stage to produce a response is not logged, since nothing was overridden yet.

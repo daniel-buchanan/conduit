@@ -1,42 +1,68 @@
-using conduit.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace conduit.validation;
 
+/// <summary>
+/// Provides extension methods for <see cref="IConduitConfigurationBuilder"/> to add validation support.
+/// </summary>
 public static class ConfigurationBuilderExtensions
 {
-    extension(IConduitConfigurationBuilder builder)
+    /// <summary>
+    /// Adds validation support to the Conduit configuration by automatically discovering and registering validators from all loaded assemblies.
+    /// </summary>
+    /// <param name="builder">The Conduit configuration builder.</param>
+    /// <returns>The configuration builder for method chaining.</returns>
+    public static IConduitConfigurationBuilder AddValidation(this IConduitConfigurationBuilder builder)
     {
-        public IConduitConfigurationBuilder AddValidation()
+        return builder.AddValidation(b =>
         {
-            var x = builder as ConduitConfigurationBuilder;
-            
-            return builder.AddValidation(b =>
+            var loadedAssemblies = AppDomain.CurrentDomain.GetAssemblies();
+            foreach (var loadedAssembly in loadedAssemblies)
             {
-                var loadedAssemblies = AppDomain.CurrentDomain.GetAssemblies();
-                foreach (var loadedAssembly in loadedAssemblies)
-                {
-                    b.WithValidatorsFromAssembly(loadedAssembly);
-                }
-            });
-        }
-
-        public IConduitConfigurationBuilder AddValidation(Action<IValidationBuilder> options)
-        {
-            var validationBuilder = new ValidationBuilder();
-            options(validationBuilder);
-
-            var descriptors = validationBuilder.Build();
-            var conduitBuilder = builder as ConduitConfigurationBuilder;
-        
-            foreach (var descriptor in descriptors)
-            {
-                conduitBuilder!.AddDescriptor(descriptor);
+                b.WithValidatorsFromAssembly(loadedAssembly);
             }
+        });
+    }
 
-            var configInstance = new ConduitValidationConfiguration(validationBuilder.ThrowExceptionIfValidatorNotFound);
-            conduitBuilder!.AddDescriptor(new ServiceDescriptor(typeof(ConduitValidationConfiguration), configInstance));
-            return builder;
+    /// <summary>
+    /// Adds validation support to the Conduit configuration with custom validation builder options.
+    /// </summary>
+    /// <param name="builder">The Conduit configuration builder.</param>
+    /// <param name="options">An action to configure the validation builder.</param>
+    /// <returns>The configuration builder for method chaining.</returns>
+    /// <exception cref="ValidationAlreadyConfiguredException">
+    /// <c>AddValidation</c> was already called on this configuration builder. See ADR-0011.
+    /// </exception>
+    public static IConduitConfigurationBuilder AddValidation(this IConduitConfigurationBuilder builder, Action<IValidationBuilder> options)
+    {
+        if (builder.HasDescriptor<ConduitValidationConfiguration>())
+            throw new ValidationAlreadyConfiguredException(
+                $"{nameof(AddValidation)} was already called on this configuration builder. " +
+                "Combine all validator registrations into a single AddValidation call.");
+
+        var validationBuilder = new ValidationBuilder();
+        options(validationBuilder);
+
+        var descriptors = validationBuilder.Build();
+
+        foreach (var descriptor in descriptors)
+        {
+            builder.AddDescriptor(descriptor);
         }
+
+        // Registered once, as an open generic: DI can construct ValidationStage<TRequest, TResponse> for
+        // ANY request/response pair on demand, regardless of whether a specific IModelValidator<,> was
+        // discovered for that pair. Without this, ValidationStage<,> would only resolve for pairs that
+        // happen to have a validator, and every other request type's default validation stage would fail
+        // to resolve at all (StageNotFoundException) instead of reaching the "no validator found" handling
+        // inside ValidationStage itself.
+        builder.AddDescriptor(new ServiceDescriptor(typeof(ValidationStage<,>), typeof(ValidationStage<,>), ServiceLifetime.Transient));
+
+        var configInstance = new ConduitValidationConfiguration(validationBuilder.ThrowExceptionIfValidatorNotFound);
+        builder.AddDescriptor(new ServiceDescriptor(typeof(ConduitValidationConfiguration), configInstance));
+
+        builder.AddDefaultPreExecutionStage(typeof(ValidationStage<,>));
+
+        return builder;
     }
 }

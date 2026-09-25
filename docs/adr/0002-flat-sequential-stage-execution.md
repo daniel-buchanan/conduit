@@ -1,0 +1,5 @@
+# Stages execute as a flat sequence, not onion-style middleware
+
+`IPipeStage` previously exposed a second `ExecuteAsync` overload taking a `next` delegate, suggesting stages could each decide whether to invoke the next stage (like ASP.NET middleware). In practice `BuildablePipe` never used that overload — it just loops the stage array in order — and the base `PipeStage` implementation of it ran itself, then unconditionally invoked `next` and discarded the result regardless of outcome, so nothing could actually short-circuit the pipeline through it.
+
+We removed the `next`-delegate overload and confirmed flat/sequential execution as the real model: a `Pipe` runs every configured `Stage` in order, and a stage reports success/failure/indeterminate via its `StageResult` rather than controlling flow itself. If per-stage short-circuiting (e.g., skip the handler on validation failure) is needed later, it should be designed as an explicit mechanism on top of this flat model, not revived as a half-implemented `next` delegate.

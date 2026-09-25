@@ -2,8 +2,14 @@ using conduit.Pipes.Stages;
 
 namespace conduit.Exceptions;
 
-public class ValidationFailedException(ValidationResult validationResult) : Exception(GetMessage(validationResult))
+/// <summary>
+/// The exception that is thrown when model validation fails during pipeline execution.
+/// </summary>
+public class ValidationFailedException(ValidationResult validationResult) : Exception(GetMessage(validationResult)), IPassthroughException
 {
+    /// <summary>
+    /// Gets the validation errors that caused this exception.
+    /// </summary>
     public ValidationError[] ValidationErrors { get; } = validationResult.Errors!;
 
     private static string GetMessage(ValidationResult result) => $"Validation Failed for {result.ModelType.Name}";

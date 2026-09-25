@@ -1,28 +1,60 @@
+using conduit.common;
 using conduit.Pipes.Stages;
+using conduit.validation.Rules;
 
 namespace conduit.validation;
 
+/// <summary>
+/// Marker interface for all model validators in the Conduit system.
+/// </summary>
 public interface IModelValidator;
 
-public interface IModelValidator<TRequest> : IModelValidator
+/// <summary>
+/// Defines the contract for a model validator that validates a specific request type.
+/// </summary>
+/// <typeparam name="TRequest">The type of the request being validated.</typeparam>
+/// <typeparam name="TResponse">The type of the response produced by the handler.</typeparam>
+public interface IModelValidator<TRequest, TResponse> : IModelValidator
+    where TRequest : class, IRequest<TResponse>
+    where TResponse : class
 {
+    /// <summary>
+    /// Synchronously validates the specified request.
+    /// </summary>
+    /// <param name="request">The request to validate.</param>
+    /// <returns>A validation result containing any errors that occurred.</returns>
     ValidationResult<TRequest> Validate(TRequest request);
+    
+    /// <summary>
+    /// Asynchronously validates the specified request.
+    /// </summary>
+    /// <param name="request">The request to validate.</param>
+    /// <returns>A task that represents the asynchronous operation, returning a validation result.</returns>
     Task<ValidationResult<TRequest>> ValidateAsync(TRequest request);
 }
 
-public abstract class ModelValidator<TRequest> : IModelValidator<TRequest> where TRequest : class
+/// <summary>
+/// Provides an abstract base class for implementing model validators in the Conduit system.
+/// </summary>
+/// <typeparam name="TRequest">The type of the request being validated.</typeparam>
+/// <typeparam name="TResponse">The type of the response produced by the handler.</typeparam>
+public abstract class ModelValidator<TRequest, TResponse> : IModelValidator<TRequest, TResponse>
+    where TRequest : class, IRequest<TResponse>
+    where TResponse : class
 {
-    private readonly List<Rule<TRequest>> _rules = new();
+    private readonly List<Rule<TRequest>> _rules = [];
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ModelValidator{TRequest, TResponse}"/> class.
+    /// This constructor automatically configures the validator by calling <see cref="AddRules"/>.
+    /// </summary>
     protected ModelValidator() => ConfigureSelf();
 
-    public ValidationResult<TRequest> Validate(TRequest request)
-    {
-        var t = ValidateAsync(request);
-        t.Wait();
-        return t.Result;
-    }
-
+    /// <inheritdoc/>
+    public ValidationResult<TRequest> Validate(TRequest request) 
+        => ValidateAsync(request).Await();
+    
+    /// <inheritdoc/>
     public async Task<ValidationResult<TRequest>> ValidateAsync(TRequest request)
     {
         var isSuccess = true;
@@ -47,5 +79,10 @@ public abstract class ModelValidator<TRequest> : IModelValidator<TRequest> where
         _rules.AddRange(rules);
     }
 
-    protected abstract Task AddRules(IRuleBuilder<TRequest> ruleBuilder);
+    /// <summary>
+    /// When overridden in a derived class, configures the validation rules for this validator.
+    /// Runs synchronously as part of the constructor, so implementations must not perform real asynchronous work.
+    /// </summary>
+    /// <param name="ruleBuilder">The rule builder to use for configuring validation rules.</param>
+    protected abstract void AddRules(IRuleBuilder<TRequest> ruleBuilder);
 }
