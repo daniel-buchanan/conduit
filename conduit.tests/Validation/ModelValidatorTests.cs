@@ -293,4 +293,36 @@ public class ModelValidatorTests
         protected override void AddRules(IRuleBuilder<InRuleNoMessageRequest> ruleBuilder)
             => ruleBuilder.Should(x => x.Message).Be().In(["a", "b"]);
     }
+
+    public class NullValuesRequest : IRequest<TestResponse>
+    {
+        public string? Message { get; set; }
+    }
+
+    [Fact]
+    public async Task In_With_Null_Values_Should_Throw_ArgumentNullException_Naming_The_Values_Parameter()
+    {
+        // Arrange: null `values` previously reached `values.Contains(...)` unguarded, which does throw
+        // ArgumentNullException (Enumerable.Contains null-checks its source) but names LINQ's own "source"
+        // parameter rather than the rule's actual "values" argument — confusing for anyone debugging a
+        // validator. The validator's constructor only registers the rule (AddRules runs synchronously in
+        // ModelValidator's ctor); the null check can only fire once the rule actually executes.
+        // Uses ValidateAsync directly (not the synchronous Validate) since Validate's Task.Wait() wraps any
+        // exception in AggregateException, which is a separate, broader quirk unrelated to this guard.
+        var validator = new NullValuesValidator();
+        var request = new NullValuesRequest { Message = "a" };
+
+        // Act
+        Func<Task> act = () => validator.ValidateAsync(request);
+
+        // Assert
+        var exception = await Assert.ThrowsAsync<ArgumentNullException>(act);
+        Assert.Equal("values", exception.ParamName);
+    }
+
+    public class NullValuesValidator : ModelValidator<NullValuesRequest, TestResponse>
+    {
+        protected override void AddRules(IRuleBuilder<NullValuesRequest> ruleBuilder)
+            => ruleBuilder.Should(x => x.Message).Be().In(null!);
+    }
 }

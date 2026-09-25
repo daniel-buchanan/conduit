@@ -55,12 +55,25 @@ public abstract class AbstractShouldBuilder<TRequest, TProperty>(
         => AddRule(r => Equals(property(r), value), message);
 
     /// <inheritdoc/>
+    /// <exception cref="ArgumentNullException"><paramref name="values"/> is null. Thrown when the rule executes, not here.</exception>
     public IRuleBuilder<TRequest> In(IEnumerable<TProperty> values)
-        => AddRule(r => values.Contains(property(r)));
+        => AddRule(r => CheckedIn(values, property(r)));
 
     /// <inheritdoc/>
+    /// <exception cref="ArgumentNullException"><paramref name="values"/> is null. Thrown when the rule executes, not here.</exception>
     public IRuleBuilder<TRequest> In(string message, IEnumerable<TProperty> values)
-        => AddRule(r => values.Contains(property(r)), message);
+        => AddRule(r => CheckedIn(values, property(r)), message);
+
+    /// <summary>
+    /// Checks membership of <paramref name="value"/> in <paramref name="values"/>, guarding <paramref name="values"/>
+    /// with a clear, rule-specific <see cref="ArgumentNullException"/> rather than letting <see cref="Enumerable.Contains{TSource}"/>
+    /// throw its own, naming a "source" parameter the caller never referred to.
+    /// </summary>
+    private static bool CheckedIn(IEnumerable<TProperty> values, TProperty value)
+    {
+        ArgumentNullException.ThrowIfNull(values, nameof(values));
+        return values.Contains(value);
+    }
 
     /// <inheritdoc/>
     public IRuleBuilder<TRequest> OneOf(IEnumerable<TProperty> values)
