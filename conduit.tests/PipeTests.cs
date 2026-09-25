@@ -46,8 +46,10 @@ public class PipeTests
         var conduit = _provider.GetRequiredService<IConduit>();
         var response = await conduit.PushAsync(new TestRequest(), CancellationToken.None);
 
-        // Assert
-        _loggerMock.Verify(l => l.Debug(It.Is<string>(s => s.Contains("LoggingStage"))), Times.Once);
+        // Assert: matches LoggingStage's own explicit log line specifically — the framework's per-stage
+        // "Executing stage ..." log also mentions the stage's name, so a looser Contains("LoggingStage")
+        // filter would double-count once the stage resolves to its own concrete type (see StageDescriptor).
+        _loggerMock.Verify(l => l.Debug(It.Is<string>(s => s.Contains("[LoggingStage] ::"))), Times.Once);
         response.Should().NotBeNull();
     }
     

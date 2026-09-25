@@ -29,10 +29,15 @@ public class StageDescriptor(Type request, Type response, Type implementationTyp
     public Type ImplementationType { get; } = implementationType;
     
     /// <summary>
-    /// Gets the interface type for this stage.
+    /// Gets the interface (DI service) type for this stage. Defaults to the concrete
+    /// <see cref="ImplementationType"/> — not the shared generic <c>IPipeStage&lt;TRequest,TResponse&gt;</c>
+    /// interface — so two different custom stages added to the same pipe each get their own resolvable DI
+    /// key. Registering both under the shared generic interface would make the container's "last
+    /// registration wins" resolution silently return the same (last-added) stage instance for every
+    /// position that shares that key.
     /// </summary>
-    public Type InterfaceType { get; } = GetInterfaceType(request, response, interfaceType);
-    
+    public Type InterfaceType { get; } = interfaceType ?? implementationType;
+
     /// <summary>
     /// Gets the service lifetime for this stage.
     /// </summary>
@@ -43,14 +48,6 @@ public class StageDescriptor(Type request, Type response, Type implementationTyp
     /// </summary>
     public ServiceDescriptor Descriptor => GetServiceDescriptor();
 
-    private static Type GetInterfaceType(Type request, Type response, Type? interfaceType)
-    {
-        if (interfaceType is not null) return interfaceType;
-        var typeArguments = new[] { request, response };
-        var genericType = typeof(IPipeStage<,>).MakeGenericType(typeArguments);
-        return genericType;
-    }
-    
     private ServiceDescriptor GetServiceDescriptor() => new(InterfaceType, ImplementationType, Lifetime);
 }
 
