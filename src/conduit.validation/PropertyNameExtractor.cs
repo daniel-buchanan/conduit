@@ -36,4 +36,12 @@ internal static class PropertyNameExtractor
 
         return string.Join(".", names);
     }
+
+    /// <summary>
+    /// Extracts the property name (see <see cref="Extract{TRequest,TProperty}"/>) and compiles the
+    /// expression, in one call — the shared shape every <c>Should</c>/<c>ShouldString</c> builder constructor needs.
+    /// </summary>
+    public static (Func<TRequest, TProperty> Compiled, string PropertyName) ExtractAndCompile<TRequest, TProperty>(
+        Expression<Func<TRequest, TProperty>> expression)
+        => (expression.Compile(), Extract(expression));
 }

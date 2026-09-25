@@ -6,7 +6,7 @@ namespace conduit.validation;
 /// Defines the contract for selecting a condition (Be or NotBe) for the current rule.
 /// </summary>
 /// <typeparam name="TRequest">The type of request being validated.</typeparam>
-/// <typeparam name="in TProperty">The type of the property being validated.</typeparam>
+/// <typeparam name="TProperty">The type of the property being validated.</typeparam>
 public interface IShouldBuilder<TRequest, in TProperty> where TRequest : class
 {
     /// <summary>
@@ -44,8 +44,7 @@ public class ShouldBuilder<TRequest, TProperty> : IShouldBuilder<TRequest, TProp
     public ShouldBuilder(IRuleBuilder<TRequest> builder, Expression<Func<TRequest, TProperty>> property)
     {
         _builder = builder;
-        _propertyName = PropertyNameExtractor.Extract(property);
-        _property = property.Compile();
+        (_property, _propertyName) = PropertyNameExtractor.ExtractAndCompile(property);
     }
 
     /// <inheritdoc/>

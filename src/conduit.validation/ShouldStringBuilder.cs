@@ -23,8 +23,7 @@ public class ShouldStringBuilder<TRequest> : IShouldStringBuilder<TRequest> wher
     public ShouldStringBuilder(IRuleBuilder<TRequest> builder, Expression<Func<TRequest, string?>> property)
     {
         _builder = builder;
-        _propertyName = PropertyNameExtractor.Extract(property);
-        _property = property.Compile();
+        (_property, _propertyName) = PropertyNameExtractor.ExtractAndCompile(property);
     }
 
     /// <inheritdoc/>
