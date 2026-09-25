@@ -157,4 +157,33 @@ public class ModelValidatorTests
         protected override void AddRules(IRuleBuilder<EqualToRequest> ruleBuilder)
             => ruleBuilder.Should(x => x.Message).Be().EqualTo("Hello", "Message must equal Hello.");
     }
+
+    public class NoRulesRequest : IRequest<TestResponse>
+    {
+        public string? Message { get; set; }
+    }
+
+    [Fact]
+    public void ModelValidator_With_No_Rules_Should_Be_Valid_By_Default()
+    {
+        // Arrange
+        var validator = new NoRulesValidator();
+        var request = new NoRulesRequest { Message = null };
+
+        // Act
+        var result = validator.Validate(request);
+
+        // Assert
+        Assert.True(result.IsValid);
+        Assert.Null(result.Errors);
+    }
+
+    public class NoRulesValidator : ModelValidator<NoRulesRequest, TestResponse>
+    {
+        protected override void AddRules(IRuleBuilder<NoRulesRequest> ruleBuilder)
+        {
+            // Deliberately empty: a validator registered for a pair with nothing to validate must still
+            // pass every request through, not fail-closed.
+        }
+    }
 }

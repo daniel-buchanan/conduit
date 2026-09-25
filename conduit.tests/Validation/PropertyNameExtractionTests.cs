@@ -110,4 +110,32 @@ public class PropertyNameExtractionTests
         protected override void AddRules(IRuleBuilder<NullableStringRequest> ruleBuilder)
             => ruleBuilder.Should(x => x.Name).NotBe().Null();
     }
+
+    public class ValueTypeRequest : IRequest<object>
+    {
+        public int Count { get; set; }
+    }
+
+    [Fact]
+    public void Should_Extracts_PropertyName_Through_A_Boxing_Convert_Node_For_A_Value_Type_Property()
+    {
+        // Arrange: an explicit TProperty of `object` (narrower than the actual `int` property) forces the
+        // compiler to box the member access in a Convert node, exercising PropertyNameExtractor's
+        // Convert-unwrapping branch.
+        var validator = new ValueTypeValidator();
+        var request = new ValueTypeRequest { Count = 5 };
+
+        // Act
+        var result = validator.Validate(request);
+
+        // Assert
+        Assert.False(result.IsValid);
+        Assert.Equal("Count", result.Errors![0].PropertyName);
+    }
+
+    public class ValueTypeValidator : ModelValidator<ValueTypeRequest, object>
+    {
+        protected override void AddRules(IRuleBuilder<ValueTypeRequest> ruleBuilder)
+            => ruleBuilder.Should<object>(x => x.Count).Be().EqualTo(99, "Count must equal 99.");
+    }
 }

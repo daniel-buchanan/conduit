@@ -3,6 +3,7 @@ using conduit.Configuration;
 using conduit.logging;
 using conduit.Pipes;
 using conduit.tests.Handlers;
+using conduit.validation;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Xunit;
@@ -101,5 +102,28 @@ public class DebugStageWiringTests
         // Assert
         Assert.Contains(result.Metrics, m => m.Name.Contains("DebugPreExecutionStage"));
         Assert.Contains(result.Metrics, m => m.Name.Contains("DebugPostExecutionStage"));
+    }
+
+    [Fact]
+    public async Task RegisterHandler_With_ExcludeValidation_Should_Still_Include_Debug_Stages_When_LogLevel_Is_Debug()
+    {
+        // Arrange: ExcludeValidation only filters default stages that implement IValidationPipeStage —
+        // it must never accidentally filter out the (unrelated) default debug stages too.
+        var services = new ServiceCollection();
+        services.AddConduit(new Mock<ILog>().Object);
+        var builder = new ConduitConfigurationBuilder(MockEnvironment(LoggingLevel.Debug).Object);
+        builder.AddValidation(_ => { });
+        builder.RegisterHandler<TestRequest, TestResponse, TestRequestHandler>(o => o.ExcludeValidation());
+        builder.Build(services);
+        var provider = services.BuildServiceProvider();
+        var pipe = provider.GetRequiredService<IPipe<TestRequest, TestResponse>>();
+
+        // Act
+        var result = await pipe.PushWithDebugAsync(new TestRequest { Message = "hello" });
+
+        // Assert
+        Assert.Contains(result.Metrics, m => m.Name.Contains("DebugPreExecutionStage"));
+        Assert.Contains(result.Metrics, m => m.Name.Contains("DebugPostExecutionStage"));
+        Assert.DoesNotContain(result.Metrics, m => m.Name.Contains("ValidationStage"));
     }
 }
