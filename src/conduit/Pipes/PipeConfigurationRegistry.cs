@@ -26,11 +26,13 @@ public class PipeConfigurationRegistry(IHashUtil hashUtil) : IPipeConfigurationR
     /// <typeparam name="TResponse">The response type.</typeparam>
     /// <param name="descriptor">The pipe descriptor to add.</param>
     /// <exception cref="PipeAlreadyRegisteredException">Thrown if a pipe with the same request and response types is already registered.</exception>
+    /// <exception cref="InvalidOperationException">Thrown if the registry has already been locked (see <see cref="Lock"/>).</exception>
     public void Add<TRequest, TResponse>(PipeDescriptor descriptor)
         where TRequest : class, IRequest<TResponse>
         where TResponse : class
     {
-        if (_isLocked) return;
+        if (_isLocked)
+            throw new InvalidOperationException("Cannot add a pipe descriptor after the registry has been locked.");
 
         if (_registry.ContainsKey(descriptor.GetHash()))
             throw new PipeAlreadyRegisteredException();
