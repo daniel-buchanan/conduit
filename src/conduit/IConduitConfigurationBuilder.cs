@@ -14,6 +14,15 @@ public interface IConduitConfigurationBuilder
     void AddDescriptor(ServiceDescriptor descriptor);
 
     /// <summary>
+    /// Determines whether a service descriptor for the specified service type has already been added to this
+    /// configuration, e.g. so a cross-assembly extension method can guard against being applied more than once
+    /// without downcasting to a concrete builder implementation (see ADR-0007, ADR-0011).
+    /// </summary>
+    /// <typeparam name="TService">The service type to check for.</typeparam>
+    /// <returns><c>true</c> if a descriptor for <typeparamref name="TService"/> has already been added; otherwise <c>false</c>.</returns>
+    bool HasDescriptor<TService>();
+
+    /// <summary>
     /// Adds a pre-execution stage to be applied to all pipes by default.
     /// </summary>
     /// <param name="stage">The type of the pre-execution stage.</param>

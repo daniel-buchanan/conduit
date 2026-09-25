@@ -1,3 +1,4 @@
+using System.Linq;
 using conduit.common;
 using conduit.Helpers;
 using conduit.Pipes;
@@ -60,6 +61,10 @@ public class ConduitConfigurationBuilder : IConduitConfigurationBuilder
     /// <param name="descriptor">The service descriptor to add.</param>
     public void AddDescriptor(ServiceDescriptor descriptor)
         => _descriptors.Add(descriptor);
+
+    /// <inheritdoc/>
+    public bool HasDescriptor<TService>()
+        => _descriptors.Any(d => d.ServiceType == typeof(TService));
 
     private void AddDescriptors(params ServiceDescriptor[] descriptors)
         => _descriptors.AddRange(descriptors);

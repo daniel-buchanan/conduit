@@ -30,8 +30,16 @@ public static class ConfigurationBuilderExtensions
     /// <param name="builder">The Conduit configuration builder.</param>
     /// <param name="options">An action to configure the validation builder.</param>
     /// <returns>The configuration builder for method chaining.</returns>
+    /// <exception cref="ValidationAlreadyConfiguredException">
+    /// <c>AddValidation</c> was already called on this configuration builder. See ADR-0011.
+    /// </exception>
     public static IConduitConfigurationBuilder AddValidation(this IConduitConfigurationBuilder builder, Action<IValidationBuilder> options)
     {
+        if (builder.HasDescriptor<ConduitValidationConfiguration>())
+            throw new ValidationAlreadyConfiguredException(
+                $"{nameof(AddValidation)} was already called on this configuration builder. " +
+                "Combine all validator registrations into a single AddValidation call.");
+
         var validationBuilder = new ValidationBuilder();
         options(validationBuilder);
 
