@@ -73,6 +73,23 @@ public class PropertyNameExtractionTests
     }
 
     [Fact]
+    public void Should_Treats_A_Null_Intermediate_In_A_Nested_Path_As_The_Leaf_Property_Being_Null()
+    {
+        // Arrange: Address itself is null (not just City), so the compiled x => x.Address.City delegate hits
+        // a null intermediate partway down the chain rather than a null leaf. That must be treated the same
+        // as the leaf property being null — not crash the whole validation with a NullReferenceException.
+        var validator = new NestedValidator();
+        var request = new NestedRequest { Address = null };
+
+        // Act
+        var result = validator.Validate(request);
+
+        // Assert
+        Assert.False(result.IsValid);
+        Assert.Equal("Address.City", result.Errors![0].PropertyName);
+    }
+
+    [Fact]
     public void Should_Throws_When_Expression_Contains_A_Method_Call()
     {
         // Arrange

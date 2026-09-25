@@ -40,8 +40,31 @@ internal static class PropertyNameExtractor
     /// <summary>
     /// Extracts the property name (see <see cref="Extract{TRequest,TProperty}"/>) and compiles the
     /// expression, in one call — the shared shape every <c>Should</c>/<c>ShouldString</c> builder constructor needs.
+    /// The compiled delegate is null-safe along the chain: if a member access partway down the path is null
+    /// (e.g. <c>x =&gt; x.Address.City</c> when <c>Address</c> is null), it evaluates to <c>default(TProperty)</c>
+    /// rather than throwing — the same outcome as the leaf property itself being null. See ADR-0013.
     /// </summary>
     public static (Func<TRequest, TProperty> Compiled, string PropertyName) ExtractAndCompile<TRequest, TProperty>(
         Expression<Func<TRequest, TProperty>> expression)
-        => (expression.Compile(), Extract(expression));
+    {
+        var propertyName = Extract(expression);
+        var compiled = expression.Compile();
+
+        TProperty NullSafeCompiled(TRequest request)
+        {
+            try
+            {
+                return compiled(request);
+            }
+            catch (NullReferenceException)
+            {
+                // Extract above already guarantees this expression is a pure member-access chain rooted at
+                // the lambda parameter — the only possible source of an NRE from invoking it is a null
+                // intermediate somewhere in that chain, never arbitrary user code.
+                return default!;
+            }
+        }
+
+        return (NullSafeCompiled, propertyName);
+    }
 }
