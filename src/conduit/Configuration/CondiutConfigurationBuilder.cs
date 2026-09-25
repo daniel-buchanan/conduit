@@ -87,6 +87,8 @@ public class ConduitConfigurationBuilder : IConduitConfigurationBuilder
         var options = new HandlerRegistrationOptions();
         configure?.Invoke(options);
 
+        _pipeConfigurationRegistry.Add<TRequest, TResponse>(new PipeDescriptor<TRequest, TResponse>());
+
         var defs = ReflectionHelper.GetServiceDescriptorsForHandler<TRequest, TResponse, THandler>(options.IsValidationExcluded);
         AddDescriptors(defs);
         return this;
