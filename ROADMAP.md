@@ -42,6 +42,12 @@ MediatR's one-event-to-many-handlers dispatch, pluggable publish strategy (seque
 
 **Follow-on**: once Notification exists, split `IConduit` into a `Push`-only and a `Publish`-only interface (mirroring MediatR's `ISender`/`IPublisher`), so consumers can depend on just the one they need. Not independently prioritized — tied to this item.
 
+### 6. Continuous integration
+
+No CI configuration exists (no `.github/workflows` or equivalent). `dotnet build`/`dotnet test` (with `TreatWarningsAsErrors`) are documented in [CLAUDE.md](CLAUDE.md) as the verification gate, but nothing runs them automatically on push or pull request.
+
+**Status**: not a functional gap against MediatR — tracked here because it's outstanding repo infrastructure, not a code change. Build a GitHub Actions workflow running `dotnet build` + `dotnet test` on push/PR.
+
 ## Not gaps (parity already exists)
 
 - **Pre/post-processors** — Conduit's `Stage` model natively supports pre/post-handler placement (`AddDefaultPreExecutionStage`/`AddDefaultPostExecutionStage`), covering MediatR's `IRequestPreProcessor`/`IRequestPostProcessor` use case.
