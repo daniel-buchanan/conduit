@@ -1,5 +1,6 @@
 using conduit.Configuration;
 using conduit.Exceptions;
+using conduit.Helpers;
 using conduit.logging;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -29,18 +30,6 @@ public class PipeFactory(
         return pipe;
     }
 
-    /// <inheritdoc/>
-    public IPipe Create(Type requestType, Type responseType)
-    {
-        var config = pipeConfigurationRegistry.Get(requestType, responseType);
-        if (config is null) throw new PipeNotFoundException();
-
-        var stages = BuildStages(config, requestType, responseType);
-        var type = typeof(BuildablePipe<,>).MakeGenericType(requestType, responseType);
-        var arguments = new object[] { logger, serviceProvider, stages };
-        return (Activator.CreateInstance(type, arguments) as IPipe)!;
-    }
-
     /// <summary>
     /// Builds the final stage-type array for a pipe, sandwiching the pipe's explicitly configured stages
     /// between the globally registered default pre- and post-execution stages, skipping any default stage
@@ -60,6 +49,6 @@ public class PipeFactory(
     private static IEnumerable<Type> MaterializeDefaultStages(
         IEnumerable<Type> stageTypes, bool excludeValidation, Type requestType, Type responseType)
         => stageTypes
-            .Where(t => !excludeValidation || !typeof(IValidationPipeStage).IsAssignableFrom(t))
-            .Select(t => t.IsGenericTypeDefinition ? t.MakeGenericType(requestType, responseType) : t);
+            .Where(t => StageMaterializer.IsIncluded(t, excludeValidation))
+            .Select(t => StageMaterializer.Materialize(t, requestType, responseType));
 }

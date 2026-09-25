@@ -1,3 +1,4 @@
+using conduit.Helpers;
 using conduit.Pipes;
 
 namespace conduit.Configuration;
@@ -59,17 +60,8 @@ public sealed class DefaultPipeConfiguration<TRequest, TResponse, THandler>(Defa
     }
 
     private bool IsIncluded(Type stageType)
-        => !excludeValidation || !typeof(IValidationPipeStage).IsAssignableFrom(stageType);
+        => StageMaterializer.IsIncluded(stageType, excludeValidation);
 
     private Type MaterializeTypes(Type incoming)
-    {
-        if (!incoming.IsGenericTypeDefinition) return incoming;
-        var countParameters = incoming.GetGenericArguments().Length;
-        if (countParameters < 3)
-        {
-            return incoming.MakeGenericType(typeof(TRequest), typeof(TResponse));
-        }
-        
-        return incoming.MakeGenericType(typeof(TRequest), typeof(TResponse), typeof(THandler));
-    }
+        => StageMaterializer.Materialize(incoming, typeof(TRequest), typeof(TResponse), typeof(THandler));
 }
