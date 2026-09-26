@@ -9,7 +9,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "conduit.logging", "src\cond
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "conduit.common", "src\conduit.common\conduit.common.csproj", "{FC32E322-F071-4FC6-8E80-07F8FDA9B929}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "conduit.tests", "conduit.tests\conduit.tests.csproj", "{B01E74C1-2275-4E3E-9B2B-FF4B61548BB0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "conduit.tests", "test\conduit.tests\conduit.tests.csproj", "{B01E74C1-2275-4E3E-9B2B-FF4B61548BB0}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "conduit.validation", "src\conduit.validation\conduit.validation.csproj", "{D0E91EB0-D2C7-41FB-A527-952917CEEB17}"
 EndProject
