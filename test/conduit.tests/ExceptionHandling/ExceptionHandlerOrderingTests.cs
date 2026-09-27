@@ -80,12 +80,13 @@ public class ExceptionHandlerOrderingTests
     [Fact]
     public async Task Lower_Order_Handler_Runs_First_And_Wins_Later_Handlers_Do_Not_Run()
     {
-        // Arrange
+        // Arrange: SecondHandler (Order 10) is registered BEFORE FirstHandler (Order 0) — Order must
+        // determine execution, not registration order. FirstHandler (Order 0) should still run first and win.
         SecondHandler.InvocationCount = 0;
         var services = new ServiceCollection();
         services.AddConduit(c => c.RegisterPipe<OrderingRequest, OrderingResponse>(p => p.AddHandler<ThrowingHandler>()), new Mock<ILog>().Object);
-        services.AddTransient<IRequestExceptionHandler<OrderingRequest, OrderingResponse, InvalidOperationException>, FirstHandler>();
         services.AddTransient<IRequestExceptionHandler<OrderingRequest, OrderingResponse, InvalidOperationException>, SecondHandler>();
+        services.AddTransient<IRequestExceptionHandler<OrderingRequest, OrderingResponse, InvalidOperationException>, FirstHandler>();
         var provider = services.BuildServiceProvider();
         var pipe = provider.GetRequiredService<IPipe<OrderingRequest, OrderingResponse>>();
 
