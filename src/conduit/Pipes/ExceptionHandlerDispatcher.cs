@@ -1,4 +1,6 @@
 using System.Linq;
+using System.Reflection;
+using System.Runtime.ExceptionServices;
 using conduit.Exceptions.Handling;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -25,8 +27,8 @@ internal static class ExceptionHandlerDispatcher
         var actionInterface = isHandlerStage ? typeof(IRequestExceptionAction<,>) : typeof(IStageExceptionAction<,>);
         var handlerInterface = isHandlerStage ? typeof(IRequestExceptionHandler<,,>) : typeof(IStageExceptionHandler<,,>);
 
-        var actions = new List<(int Order, object Instance, System.Reflection.MethodInfo Method)>();
-        var handlers = new List<(int Order, object Instance, System.Reflection.MethodInfo Method)>();
+        var actions = new List<(int Order, object Instance, MethodInfo Method)>();
+        var handlers = new List<(int Order, object Instance, MethodInfo Method)>();
 
         foreach (var ancestor in ExceptionHierarchy(exception.GetType()))
         {
@@ -49,17 +51,30 @@ internal static class ExceptionHandlerDispatcher
 
         foreach (var (_, instance, method) in actions.OrderBy(a => a.Order))
         {
-            await (Task)method.Invoke(instance, [request, exception, cancellationToken])!;
+            await InvokeAsTask(method, instance, [request, exception, cancellationToken]);
         }
 
         var state = new RequestExceptionHandlerState<TResponse>();
         foreach (var (_, instance, method) in handlers.OrderBy(h => h.Order))
         {
-            await (Task)method.Invoke(instance, [request, exception, state, cancellationToken])!;
+            await InvokeAsTask(method, instance, [request, exception, state, cancellationToken]);
             if (state.Handled) break;
         }
 
         return (state.Handled, state.Response);
+    }
+
+    private static Task InvokeAsTask(MethodInfo method, object instance, object[] args)
+    {
+        try
+        {
+            return (Task)method.Invoke(instance, args)!;
+        }
+        catch (TargetInvocationException tie) when (tie.InnerException is not null)
+        {
+            ExceptionDispatchInfo.Capture(tie.InnerException).Throw();
+            throw; // unreachable — ExceptionDispatchInfo.Throw() always throws, this satisfies the compiler's control-flow analysis
+        }
     }
 
     private static IEnumerable<Type> ExceptionHierarchy(Type exceptionType)
