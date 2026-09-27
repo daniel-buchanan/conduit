@@ -2,7 +2,7 @@
 
 A MediatR-style request/response mediator for .NET. Consumers define `IRequest<TResponse>` messages and `IRequestHandler` implementations; `IConduit` routes each request to its handler through a configurable pipeline, without callers taking a direct dependency on the handler.
 
-Targets `net10.0`.
+`conduit`, `conduit.common`, `conduit.logging`, and `conduit.validation` target `netstandard2.0;net10.0`. `conduit.aspnetcore.validation` targets `net10.0` only.
 
 ## Install
 
@@ -83,6 +83,41 @@ A failing validator throws `ValidationFailedException` (aggregating every failed
 ## Design decisions
 
 Significant design decisions are recorded as ADRs in [docs/adr/](docs/adr/).
+
+## Benchmarks
+
+Measured with [BenchmarkDotNet](https://benchmarkdotnet.org/) v0.14.0 on an Apple M1 (8 cores), .NET 10.0.1, macOS 27.0. Reproduce with:
+
+```
+dotnet run -c Release --project test/conduit.benchmarks -- --filter '*'
+```
+
+**Dispatch path** — cost of each layer between calling code and a handler:
+
+| Method | Mean | Allocated | vs. baseline |
+|---|---:|---:|---:|
+| Direct `Pipe` call (no facade) | 864.2 ns | 1.84 KB | 1.00x |
+| Via `IConduit` facade | 1,184.6 ns | 2.20 KB | 1.37x |
+| One stage, no validation | 1.131 μs | 2.17 KB | 1.00x |
+| + `ValidationStage` | 1.730 μs | 4.17 KB | 1.53x |
+| One stage | 1.100 μs | 2.20 KB | 1.00x |
+| + a second no-op stage | 1.621 μs | 3.50 KB | 1.47x |
+| No default stage wired in | 1.140 μs | 2.17 KB | 1.00x |
+| + a no-op default stage | 1.616 μs | 3.48 KB | 1.42x |
+
+**Configuration** — one-time cost of registering handlers at startup:
+
+| Method | Mean | Allocated |
+|---|---:|---:|
+| `RegisterHandlersAsImplementedFrom` (assembly scan) | 4.062 μs | 12.64 KB |
+| `RegisterHandler` (explicit) | 5.219 μs | 15.24 KB |
+
+**Validation**:
+
+| Method | Mean | Allocated |
+|---|---:|---:|
+| `ValidateAsync` (run rules) | 68.60 ns | 344 B |
+| Construct a validator | 16,615.35 ns | 5.48 KB |
 
 ## Roadmap
 
