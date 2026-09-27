@@ -7,6 +7,15 @@ namespace conduit.Exceptions.Handling;
 /// <see cref="IRequestExceptionHandler{TRequest,TResponse,TException}"/> so a consumer chooses "Handler
 /// failure" vs. "any other stage failure" at the registration/type level, not inside a handler body.
 /// </summary>
+/// <remarks>
+/// Register implementations as <c>Transient</c> or <c>Singleton</c>, not <c>Scoped</c> — Conduit's
+/// pipe-resolution machinery currently resolves stages, handlers, and exception handlers from the root
+/// <see cref="IServiceProvider"/> regardless of which scope requested the pipe, so a <c>Scoped</c>
+/// registration will not behave as a per-scope instance (and can throw if <c>ValidateScopes</c> is
+/// enabled). A handler registered against the base <see cref="Exception"/> type will also intercept
+/// <see cref="OperationCanceledException"/> from a cancelled <see cref="CancellationToken"/> — scope the
+/// registration to a narrower exception type if that's not wanted.
+/// </remarks>
 /// <typeparam name="TRequest">The request type.</typeparam>
 /// <typeparam name="TResponse">The pipe's response type.</typeparam>
 /// <typeparam name="TException">The exception type this handler matches (and its subtypes).</typeparam>

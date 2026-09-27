@@ -64,7 +64,24 @@ public abstract class Pipe<TRequest, TResponse>(
         {
             var stageResponse = await stage.ExecuteAsync(instanceId, request, cancellationToken);
 
-            if (!stageResponse.IsSuccessful) HandleUnsuccessfulResult(request, stageResponse);
+            if (!stageResponse.IsSuccessful)
+            {
+                if (stageResponse.ValidationErrors.Length == 0 && stageResponse.Exception is not null)
+                {
+                    var (handled, handledResponse) = await ExceptionHandlerDispatcher.DispatchAsync<TRequest, TResponse>(
+                        provider, request, stageResponse.Exception, stage is IRequestHandler, cancellationToken);
+
+                    if (handled)
+                    {
+                        stageTimer?.Stop();
+                        if (withMetrics)
+                            metric = new StageMetric(index, stageName, prefetchDuration ?? -1, stageTimer?.ElapsedMilliseconds ?? -1, Success: true, Exception: stageResponse.Exception);
+                        return (handledResponse, metric, true);
+                    }
+                }
+
+                HandleUnsuccessfulResult(request, stageResponse);
+            }
             response ??= stageResponse.Result;
 
             stageTimer?.Stop();

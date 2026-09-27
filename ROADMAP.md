@@ -40,6 +40,14 @@ No CI configuration exists (no `.github/workflows` or equivalent). `dotnet build
 
 **Status**: not a functional gap against MediatR — tracked here because it's outstanding repo infrastructure, not a code change. Build a GitHub Actions workflow running `dotnet build` + `dotnet test` on push/PR.
 
+### 6. Scoped-lifetime stage/handler resolution
+
+`IPipeFactory` is registered as a singleton (`src/conduit/ServiceCollectionExtensions.cs`) and captures the root `IServiceProvider`, so every `Stage`/`IRequestHandler`/exception-handler resolved through `Pipe.ExecuteStage` (`src/conduit/Pipes/Pipe.cs`) comes from the root container, not whichever scope requested the pipe. A consumer registering any of these as `Scoped` gets root-captured behavior instead (and an exception if `ValidateScopes` is on).
+
+**Gap**: not a MediatR-parity gap (this is Conduit's own DI wiring) — tracked here because it's a real, pre-existing architectural limitation that the new exception-handling feature makes more likely to be hit (users are far more likely to register their own request-scoped exception handlers, e.g. holding a per-request `DbContext`, than to write a custom `Scoped` stage).
+
+**Status**: not fixed in this feature — fixing it requires making the whole `Pipe`-resolution chain scope-aware, which affects every existing stage/handler, not just the new exception-handler interfaces, and deserves its own design pass.
+
 ## Not gaps (parity already exists)
 
 - **Pre/post-processors** — Conduit's `Stage` model natively supports pre/post-handler placement (`AddDefaultPreExecutionStage`/`AddDefaultPostExecutionStage`), covering MediatR's `IRequestPreProcessor`/`IRequestPostProcessor` use case.
