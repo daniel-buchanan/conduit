@@ -60,6 +60,6 @@ public class PipeConfigurationRegistry(IHashUtil hashUtil) : IPipeConfigurationR
     public PipeDescriptor? Get(Type requestType, Type responseType)
     {
         var key = hashUtil.TypeNameHash(requestType, responseType);
-        return _registry.GetValueOrDefault(key);
+        return _registry.TryGetValue(key, out var descriptor) ? descriptor : null;
     }
 }
