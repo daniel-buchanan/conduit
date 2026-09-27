@@ -1,8 +1,8 @@
+using conduit.aspnetcore.validation;
 using conduit.Pipes.Stages;
-using conduit.validation;
 using Xunit;
 
-namespace conduit.tests.Validation;
+namespace conduit.tests.Validation.AspNetCore;
 
 public class ValidationErrorsExtensionsTests
 {

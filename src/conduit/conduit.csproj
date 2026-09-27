@@ -1,10 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net10.0</TargetFramework>
-        <Nullable>enable</Nullable>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <LangVersion>preview</LangVersion>
+        <TargetFrameworks>netstandard2.0;net10.0</TargetFrameworks>
+        <PackageId>conduit</PackageId>
+        <Version>0.1.0</Version>
+        <Description>Core pipe/stage request dispatch pipeline for .NET: IConduit, IRequest, IRequestHandler, and pipe/stage/configuration machinery.</Description>
     </PropertyGroup>
 
     <ItemGroup>

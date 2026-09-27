@@ -1,7 +1,7 @@
 using conduit.Pipes.Stages;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 
-namespace conduit.validation;
+namespace conduit.aspnetcore.validation;
 
 /// <summary>
 /// Provides extension methods for working with validation errors in the Conduit system.
@@ -18,7 +18,7 @@ public static class ValidationErrorsExtensions
         var state = new ModelStateDictionary();
         foreach (var error in self)
         {
-            state.AddModelError(error.PropertyName, error.Message);
+            state.AddModelError(error.PropertyName, error.Message ?? string.Empty);
         }
 
         return state;

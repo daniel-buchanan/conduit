@@ -53,7 +53,8 @@ public class HashUtil :  IHashUtil
     
     private static string Hash(string input)
     {
-        var bytes = SHA512.HashData(Encoding.UTF8.GetBytes(input));
+        using var sha512 = SHA512.Create();
+        var bytes = sha512.ComputeHash(Encoding.UTF8.GetBytes(input));
         var builder = new StringBuilder();
         foreach (var b in bytes) builder.Append(b.ToString("x2"));
         return builder.ToString();

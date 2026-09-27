@@ -8,7 +8,7 @@ Policy: an item stays listed here until implemented. Once built, remove its entr
 
 ### 1. General exception handling (real gap)
 
-Conduit's only exception-handling mechanism is `ConduitValidationExceptionHandler` (`src/conduit.validation/ConduitValidationExceptionHandler.cs`) — ASP.NET Core `RequestDelegate` middleware, hardcoded to `ValidationFailedException`/`StageFailedException`, validation-package-scoped.
+Conduit's only exception-handling mechanism is `ConduitValidationExceptionHandler` (`src/conduit.aspnetcore.validation/ConduitValidationExceptionHandler.cs`) — ASP.NET Core `RequestDelegate` middleware, hardcoded to `ValidationFailedException`/`StageFailedException`, validation-package-scoped.
 
 **Gap**: no general per-`(TRequest, TException)` interception point (MediatR's `IRequestExceptionHandler`/`IRequestExceptionAction`). Non-HTTP consumers (worker services, console apps, queue handlers) get no structured exception handling from Conduit at all.
 

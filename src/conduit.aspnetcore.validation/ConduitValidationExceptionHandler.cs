@@ -2,11 +2,12 @@ using System.Text.Json;
 using System.Linq;
 using conduit.Exceptions;
 using conduit.logging;
+using conduit.validation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace conduit.validation;
+namespace conduit.aspnetcore.validation;
 
 /// <summary>
 /// Provides ASP.NET Core middleware for handling Conduit validation and stage exceptions.
@@ -22,7 +23,7 @@ public class ConduitValidationExceptionHandler(RequestDelegate next)
         (ex => ex is StageFailedException, HandleStageFailedException),
         (ex => ex is ValidatorNotFoundException, HandleValidatorNotFoundException),
     ];
-    
+
     /// <summary>
     /// Invokes the middleware to handle exceptions in the request pipeline.
     /// </summary>
@@ -41,7 +42,7 @@ public class ConduitValidationExceptionHandler(RequestDelegate next)
             if (!didWriteResponse) throw;
         }
     }
-    
+
     private static async Task<bool> HandleException(ILog logger, Exception ex, HttpContext context)
     {
         var handler = KnownExceptionHandlers.FirstOrDefault(h => h.Matches(ex));
@@ -52,7 +53,7 @@ public class ConduitValidationExceptionHandler(RequestDelegate next)
 
         return true;
     }
-    
+
     /// <summary>
     /// Handles validation exceptions by returning a 400 Bad Request response with validation errors.
     /// </summary>
@@ -78,12 +79,12 @@ public class ConduitValidationExceptionHandler(RequestDelegate next)
                 Status =  StatusCodes.Status400BadRequest,
                 Instance = context.Request.Path,
                 Title = "Validation Error",
-            };    
+            };
         }
-        
+
         await WriteResponse(context, StatusCodes.Status400BadRequest, problemDetails);
     }
-    
+
     /// <summary>
     /// Handles stage failures by returning a 500 Internal Server Error response.
     /// </summary>
@@ -99,7 +100,7 @@ public class ConduitValidationExceptionHandler(RequestDelegate next)
 
         await WriteResponse(context, StatusCodes.Status500InternalServerError, details);
     }
-    
+
     /// <summary>
     /// Handles a missing-validator failure by returning its own 500 Internal Server Error response,
     /// distinct from a generic pipeline-stage failure.

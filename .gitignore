@@ -5,3 +5,4 @@
 conduit.sln.DotSettings.user
 **/obj
 **/bin
+BenchmarkDotNet.Artifacts/

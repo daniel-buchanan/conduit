@@ -49,7 +49,7 @@ public class ValidationBuilder : IValidationBuilder
         _descriptors.Add(new ServiceDescriptor(
             typeof(IModelValidator<TRequest, TResponse>),
             typeof(TModelValidator),
-            ServiceLifetime.Transient));
+            ServiceLifetime.Singleton));
         return this;
     }
 
@@ -84,7 +84,7 @@ public class ValidationBuilder : IValidationBuilder
                     $"A validator for '{request.Name}' -> '{response.Name}' was already discovered by an assembly scan. " +
                     $"Use {nameof(WithValidatorFor)} to explicitly override a scanned validator.");
 
-            _descriptors.Add(new ServiceDescriptor(interfaceType, t, ServiceLifetime.Transient));
+            _descriptors.Add(new ServiceDescriptor(interfaceType, t, ServiceLifetime.Singleton));
         }
 
         return this;

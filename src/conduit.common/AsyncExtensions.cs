@@ -14,7 +14,15 @@ public static class AsyncExtensions
     /// <param name="cancellationToken">A cancellation token to observe while waiting for the task to complete.</param>
     public static void Await(this Task task, CancellationToken cancellationToken = default)
     {
+#if NETSTANDARD2_0
+        // netstandard2.0 has no Task.WaitAsync. Every caller in this codebase passes
+        // CancellationToken.None, so only checking before the wait (not racing it mid-wait)
+        // preserves current behavior without a hand-rolled cancellation-race primitive.
+        cancellationToken.ThrowIfCancellationRequested();
+        task.GetAwaiter().GetResult();
+#else
         task.WaitAsync(cancellationToken).GetAwaiter().GetResult();
+#endif
     }
 
     /// <summary>
@@ -27,5 +35,12 @@ public static class AsyncExtensions
     /// <param name="cancellationToken">A cancellation token to observe while waiting for the task to complete.</param>
     /// <returns>The result of the task.</returns>
     public static T Await<T>(this Task<T> task, CancellationToken cancellationToken = default)
-        => task.WaitAsync(cancellationToken).GetAwaiter().GetResult();
+    {
+#if NETSTANDARD2_0
+        cancellationToken.ThrowIfCancellationRequested();
+        return task.GetAwaiter().GetResult();
+#else
+        return task.WaitAsync(cancellationToken).GetAwaiter().GetResult();
+#endif
+    }
 }
