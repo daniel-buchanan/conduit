@@ -71,7 +71,7 @@ public abstract class AbstractShouldBuilder<TRequest, TProperty>(
     /// </summary>
     private static bool CheckedIn(IEnumerable<TProperty> values, TProperty value)
     {
-        ArgumentNullException.ThrowIfNull(values, nameof(values));
+        if (values is null) throw new ArgumentNullException(nameof(values));
         return values.Contains(value);
     }
 

@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 
-namespace conduit.validation;
+namespace conduit.aspnetcore.validation;
 
 /// <summary>
 /// Provides extension methods for <see cref="IApplicationBuilder"/> to add Conduit validation middleware.

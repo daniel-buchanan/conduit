@@ -1,4 +1,5 @@
 using System.IO;
+using conduit.aspnetcore.validation;
 using conduit.Exceptions;
 using conduit.logging;
 using conduit.Pipes.Stages;
@@ -8,7 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Xunit;
 
-namespace conduit.tests.Validation;
+namespace conduit.tests.Validation.AspNetCore;
 
 public class ConduitValidationExceptionHandlerTests
 {
