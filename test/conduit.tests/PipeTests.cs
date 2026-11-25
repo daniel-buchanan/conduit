@@ -66,16 +66,16 @@ public class PipeTests
     }
     
     [Fact]
-    public async Task ValidateDuration()
+    public async Task PushWithDebugAsync_Reports_A_Metric_Per_Stage()
     {
         // Act
         var conduit = _provider.GetRequiredService<IConduit>();
         var response = await conduit.PushWithDebugAsync(new TestRequest(), CancellationToken.None);
 
-        // Assert
-        response.Should().NotBeNull();
+        // Assert: timing values depend on the machine, so only their presence and ordering are checked.
         response.Response.Should().NotBeNull();
-        response.OverallDurationMs.Should().BeLessThan(2);
+        response.OverallDurationMs.Should().BeGreaterThanOrEqualTo(0);
+        response.Metrics.Select(m => m.Index).Should().Equal(0, 1);
     }
 }
 

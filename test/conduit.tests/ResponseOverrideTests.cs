@@ -16,10 +16,7 @@ public class ResponseOverrideTests
         public string Value { get; set; } = string.Empty;
     }
 
-    // A default-response stage, then a handler that overrides it: two DIFFERENT stage interfaces
-    // (IPipeStage<,> and IRequestHandler<,>), so each resolves to its own instance. Two AddStage<T>() calls
-    // for different concrete types would instead collide on the shared IPipeStage<,> registration key — a
-    // separate, pre-existing issue this test deliberately avoids rather than exercises.
+    // A default-response stage, then a handler that overrides it.
     public class DefaultResponseStage(ILog logger) : PipeStage<OverrideRequest, OverrideResponse>(logger)
     {
         protected override Task<StageResult<OverrideRequest, OverrideResponse>> ExecuteInternalAsync(
