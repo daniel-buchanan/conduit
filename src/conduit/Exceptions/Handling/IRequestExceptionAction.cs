@@ -19,7 +19,7 @@ public interface IRequestExceptionAction<TRequest, TException> : IOrderedExcepti
 {
     /// <summary>
     /// Observes/reacts to the exception. Cannot suppress it — the pipe still falls through to whatever
-    /// the Handler-flavor dispatch decides afterward.
+    /// the Handler-flavor run decides afterward.
     /// </summary>
     Task ExecuteAsync(TRequest request, TException exception, CancellationToken cancellationToken);
 }

@@ -5,11 +5,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Xunit;
 
-namespace conduit.tests.ExceptionHandling;
+namespace conduit.tests.Exceptions.Handling;
 
 /// <summary>
 /// Mirrors <see cref="ExceptionHandlerRethrowTests"/>, but for an Action rather than a Handler — exercising
-/// the other call site of <c>ExceptionHandlerDispatcher.InvokeAsTask</c> (the actions loop, not the
+/// the other call site of <c>ExceptionHandlerRunner.InvokeAsTask</c> (the actions loop, not the
 /// handlers loop).
 /// </summary>
 public class ActionRethrowTests

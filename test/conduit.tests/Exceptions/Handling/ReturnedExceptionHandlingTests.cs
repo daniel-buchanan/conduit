@@ -6,9 +6,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Xunit;
 
-namespace conduit.tests.ExceptionHandling;
+namespace conduit.tests.Exceptions.Handling;
 
-public class ReturnedExceptionDispatchTests
+public class ReturnedExceptionHandlingTests
 {
     public class ReturnedExceptionRequest : IRequest<ReturnedExceptionResponse>;
 
@@ -64,10 +64,10 @@ public class ReturnedExceptionDispatchTests
     }
 
     [Fact]
-    public async Task A_Stage_That_Returns_StageResult_WithException_Should_Still_Reach_Dispatch_When_Handled()
+    public async Task A_Stage_That_Returns_StageResult_WithException_Should_Still_Reach_Exception_Handlers_When_Handled()
     {
         // Arrange: ReturningStage never throws — it reports its failure via StageResult.WithException, a
-        // legitimate alternate failure-reporting style. Dispatch must still see the ORIGINAL exception.
+        // legitimate alternate failure-reporting style. Exception handlers must still see the ORIGINAL exception.
         BusinessHandler.InvocationCount = 0;
         var services = new ServiceCollection();
         services.AddConduit(c => c.RegisterPipe<ReturnedExceptionRequest, ReturnedExceptionResponse>(p =>

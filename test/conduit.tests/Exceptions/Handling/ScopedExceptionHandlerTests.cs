@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Xunit;
 
-namespace conduit.tests.ExceptionHandling;
+namespace conduit.tests.Exceptions.Handling;
 
 /// <summary>
 /// Exception handlers are resolved from the scope <see cref="IConduit"/> was resolved in (ADR-0017), so a

@@ -6,14 +6,14 @@ using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Xunit;
 
-namespace conduit.tests.ExceptionHandling;
+namespace conduit.tests.Exceptions.Handling;
 
 /// <summary>
-/// Pins that Request-scoped (Handler-only) and Stage-scoped (everything else) exception dispatch are
+/// Pins that Request-scoped (Handler-only) and Stage-scoped (everything else) exception handling are
 /// mutually exclusive: registering the wrong-scope interface for a given stage must never fire, regardless
 /// of exception type match. This guards the <c>stage is IRequestHandler</c> discriminator in
 /// <see cref="Pipe{TRequest,TResponse}.ExecuteStage"/> and the interface selection in
-/// <see cref="ExceptionHandlerDispatcher.DispatchAsync{TRequest,TResponse}"/>.
+/// <see cref="ExceptionHandlerRunner.RunAsync{TRequest,TResponse}"/>.
 /// </summary>
 public class ScopeIsolationTests
 {

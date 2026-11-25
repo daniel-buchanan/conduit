@@ -91,7 +91,7 @@ public abstract class Pipe<TRequest, TResponse>(
 
             if (e is IPassthroughException) throw;
 
-            var (handled, handledResponse) = await ExceptionHandlerDispatcher.DispatchAsync<TRequest, TResponse>(
+            var (handled, handledResponse) = await ExceptionHandlerRunner.RunAsync<TRequest, TResponse>(
                 provider, request, e, stage is IRequestHandler, cancellationToken);
 
             if (!handled)

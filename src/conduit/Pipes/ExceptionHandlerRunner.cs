@@ -13,9 +13,9 @@ namespace conduit.Pipes;
 /// <see cref="IStageExceptionAction{TRequest,TException}"/> (otherwise) for a caught exception, walking the
 /// exception's real type hierarchy up to and including <see cref="Exception"/>.
 /// </summary>
-internal static class ExceptionHandlerDispatcher
+internal static class ExceptionHandlerRunner
 {
-    internal static async Task<(bool Handled, TResponse? Response)> DispatchAsync<TRequest, TResponse>(
+    internal static async Task<(bool Handled, TResponse? Response)> RunAsync<TRequest, TResponse>(
         IServiceProvider provider,
         TRequest request,
         Exception exception,

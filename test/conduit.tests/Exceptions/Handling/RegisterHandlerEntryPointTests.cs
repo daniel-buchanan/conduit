@@ -4,12 +4,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Xunit;
 
-namespace conduit.tests.ExceptionHandling;
+namespace conduit.tests.Exceptions.Handling;
 
 /// <summary>
 /// Every other exception-handling test resolves <c>IPipe&lt;,&gt;</c> directly after <c>RegisterPipe</c>.
 /// This exercises the documented "simple path" instead — <c>RegisterHandler</c> plus <see cref="IConduit"/>
-/// — to prove exception-handler dispatch also works through Conduit's normal entry point, not just the
+/// — to prove exception handlers also work through Conduit's normal entry point, not just the
 /// lower-level pipe API.
 /// </summary>
 public class RegisterHandlerEntryPointTests

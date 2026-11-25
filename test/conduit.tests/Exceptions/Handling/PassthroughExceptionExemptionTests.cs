@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Xunit;
 
-namespace conduit.tests.ExceptionHandling;
+namespace conduit.tests.Exceptions.Handling;
 
 public class PassthroughExceptionExemptionTests
 {
@@ -40,7 +40,7 @@ public class PassthroughExceptionExemptionTests
     }
 
     [Fact]
-    public async Task A_ValidatorNotFoundException_Should_Bypass_Dispatch_Even_When_A_Matching_Handler_Is_Registered()
+    public async Task A_ValidatorNotFoundException_Should_Bypass_Exception_Handlers_Even_When_A_Matching_Handler_Is_Registered()
     {
         // Arrange
         NeverCalledHandler.InvocationCount = 0;

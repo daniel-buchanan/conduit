@@ -17,11 +17,11 @@ scoped to exceptions thrown by any other stage (pre-execution, post-execution, i
 framework stages such as `ValidationStage<,>`). "Handler" and "everything else" are two separate
 mechanisms rather than one, because a Handler-stage failure is a business-logic exception a
 consumer wants to reason about per-request-type (MediatR's exact use case), while a non-Handler
-stage failure is a cross-cutting pipeline concern with different scoping needs — collapsing them
+stage failure is a cross-cutting Pipe concern with different scoping needs — collapsing them
 into one interface would force every consumer to distinguish "which stage" inside the handler body
 instead of at the registration/type level.
 
-Both mechanism pairs are dispatched from `Pipe<TRequest,TResponse>.ExecuteStage`'s existing catch
+Both mechanism pairs are run from `Pipe<TRequest,TResponse>.ExecuteStage`'s existing catch
 block, discriminated by the pre-existing `IRequestHandler` marker interface (`stage is
 IRequestHandler`) — no new marker was needed. This keeps the change entirely inside `Pipe`: no
 change to `IPipeStage`, or to a stage's own ability (still none) to decide whether the next stage
@@ -50,13 +50,13 @@ exact type match.
 
 Exception types already marked `IPassthroughException` (`ValidationFailedException`,
 `StageFailedException`, `ValidatorNotFoundException` — see ADR-0004) are exempt from both new
-mechanisms and continue to propagate unwrapped exactly as before dispatch was added; `ADR-0004`'s
-exemption list now has a second consumer (the new dispatch routine) alongside `ExecuteStage`'s
+mechanisms and continue to propagate unwrapped exactly as before exception handlers were added; `ADR-0004`'s
+exemption list now has a second consumer (the new exception-handler runner) alongside `ExecuteStage`'s
 own wrap-vs-passthrough check, but the list itself, and the reasoning behind it (these are already
 Conduit's own stable, expected-failure types), is unchanged.
 
 We rejected modeling this as a new kind of `Stage` (e.g. `IExceptionHandlingStage` occupying a
-position in the stage list): exception handling applies pipeline-wide per-request-type, not to one
+position in the stage list): exception handling applies Pipe-wide per-request-type, not to one
 position, and the Handler/other-stage split has no natural single slot to hold both. We also
 rejected extending `ConduitValidationExceptionHandler`'s hardcoded array to be user-extensible —
 that mechanism is HTTP-only by construction, which is the exact shape of the gap this ADR closes,
