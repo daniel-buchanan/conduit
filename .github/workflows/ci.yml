@@ -29,4 +29,24 @@ jobs:
       # so a netstandard2.0-only break fails here even though the tests only run on net10.0.
       - run: dotnet build --no-restore --configuration Release
 
-      - run: dotnet test --no-build --configuration Release
+      # Microsoft.NET.Test.Sdk ships Microsoft Code Coverage, so no extra package is needed.
+      - run: dotnet test --no-build --configuration Release --collect "Code Coverage;Format=cobertura" --results-directory coverage
+
+      - name: Coverage report
+        if: ${{ !cancelled() }}
+        uses: danielpalme/ReportGenerator-GitHub-Action@5
+        with:
+          reports: coverage/**/*.cobertura.xml
+          targetdir: coverage-report
+          reporttypes: MarkdownSummaryGithub;Cobertura;HtmlInline
+          assemblyfilters: -conduit.tests
+
+      - name: Publish coverage summary
+        if: ${{ !cancelled() }}
+        run: cat coverage-report/SummaryGithub.md >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: coverage-report
+          path: coverage-report
