@@ -24,7 +24,7 @@ public class DefaultStageBenchmarks
     public void Setup()
     {
         var withoutServices = new ServiceCollection();
-        withoutServices.AddConduit(c => c.RegisterHandlersAsImplementedFrom<BenchmarkAssemblyMarker>(), new NullLog());
+        withoutServices.AddConduit(c => c.RegisterHandlersFromAssemblyContaining<BenchmarkAssemblyMarker>(), new NullLog());
         _withoutDefaultStage = withoutServices.BuildServiceProvider().GetRequiredService<IConduit>();
 
         var withServices = new ServiceCollection();
@@ -32,7 +32,7 @@ public class DefaultStageBenchmarks
         {
             c.AddDescriptor(new ServiceDescriptor(typeof(NoOpStage<,>), typeof(NoOpStage<,>), ServiceLifetime.Transient));
             c.AddDefaultPreExecutionStage(typeof(NoOpStage<,>));
-            c.RegisterHandlersAsImplementedFrom<BenchmarkAssemblyMarker>();
+            c.RegisterHandlersFromAssemblyContaining<BenchmarkAssemblyMarker>();
         }, new NullLog());
         _withDefaultStage = withServices.BuildServiceProvider().GetRequiredService<IConduit>();
 

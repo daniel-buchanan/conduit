@@ -20,14 +20,14 @@ public class DispatchBenchmarks
     public void Setup()
     {
         var plainServices = new ServiceCollection();
-        plainServices.AddConduit(c => c.RegisterHandlersAsImplementedFrom<BenchmarkAssemblyMarker>(), new NullLog());
+        plainServices.AddConduit(c => c.RegisterHandlersFromAssemblyContaining<BenchmarkAssemblyMarker>(), new NullLog());
         _plainConduit = plainServices.BuildServiceProvider().GetRequiredService<IConduit>();
 
         var validatedServices = new ServiceCollection();
         validatedServices.AddConduit(c =>
         {
             c.AddValidation(v => v.WithValidatorsFromAssembly<BenchmarkAssemblyMarker>());
-            c.RegisterHandlersAsImplementedFrom<BenchmarkAssemblyMarker>();
+            c.RegisterHandlersFromAssemblyContaining<BenchmarkAssemblyMarker>();
         }, new NullLog());
         _validatedConduit = validatedServices.BuildServiceProvider().GetRequiredService<IConduit>();
 

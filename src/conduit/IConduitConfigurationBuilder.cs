@@ -52,7 +52,20 @@ public interface IConduitConfigurationBuilder
     /// </summary>
     /// <typeparam name="TLocator">A type from the assembly to scan for handlers.</typeparam>
     /// <returns>The current configuration builder instance.</returns>
-    IConduitConfigurationBuilder RegisterHandlersAsImplementedFrom<TLocator>();
+    IConduitConfigurationBuilder RegisterHandlersFromAssemblyContaining<TLocator>();
+
+    /// <summary>
+    /// Registers, as <c>Scoped</c>, every exception handler and action found in the assembly of the specified
+    /// locator type — each concrete implementation of <c>IRequestExceptionHandler</c>, <c>IRequestExceptionAction</c>,
+    /// <c>IStageExceptionHandler</c> or <c>IStageExceptionAction</c>, under every closed interface it implements.
+    /// </summary>
+    /// <typeparam name="TLocator">A type from the assembly to scan for exception handlers and actions.</typeparam>
+    /// <returns>The current configuration builder instance.</returns>
+    /// <exception cref="InvalidOperationException">
+    /// A discovered type is itself generic (e.g. <c>LogAll&lt;TRequest&gt;</c>). The container cannot register
+    /// it from a scan; register each closed form by hand instead.
+    /// </exception>
+    IConduitConfigurationBuilder RegisterExceptionHandlersFromAssemblyContaining<TLocator>();
 
     /// <summary>
     /// Registers a custom pipe for a specific request and response type.
@@ -71,5 +84,5 @@ public interface IConduitConfigurationBuilder
     /// </summary>
     /// <typeparam name="TLocator">A type from the assembly to scan for pipes.</typeparam>
     /// <returns>The current configuration builder instance.</returns>
-    IConduitConfigurationBuilder RegisterPipesAsImplementedFrom<TLocator>();
+    IConduitConfigurationBuilder RegisterPipesFromAssemblyContaining<TLocator>();
 }

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime.ExceptionServices;
 using conduit.common;
 using conduit.Exceptions;
 using conduit.logging;
@@ -34,11 +35,11 @@ public abstract class Pipe<TRequest, TResponse>(
     /// <param name="request">The request being processed.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <param name="withMetrics">Whether to provide metrics on the stage.</param>
-    /// <returns>A record containing the Respons and optionally the Metrics for the Stage.</returns>
+    /// <returns>A record containing the Response, optionally the Metrics for the Stage, and whether execution short-circuited.</returns>
     /// <exception cref="StageNotFoundException">This exception will be thrown in the stage cannot be found.</exception>
-    protected async Task<(TResponse? Response, StageMetric? Metric)> ExecuteStage(
+    protected async Task<(TResponse? Response, StageMetric? Metric, bool ShortCircuited)> ExecuteStage(
         int index,
-        Guid instanceId, 
+        Guid instanceId,
         Type stageType,
         Stopwatch? stageTimer,
         TRequest request,
@@ -48,28 +49,36 @@ public abstract class Pipe<TRequest, TResponse>(
         stageTimer?.Restart();
         StageMetric? metric = null;
         TResponse? response = null;
-        
+
         var stage = (IPipeStage<TRequest, TResponse>?)provider.GetService(stageType);
         var stageName = stageType.GetGenericName();
         if (stage == null)
             throw new StageNotFoundException($"Could not resolve stage of type {stageName}");
-            
+
         logger.Debug($"[{instanceId}] {stageType.GetGenericName()} :: Executing stage {stageName}");
-        
+
         stageTimer?.Stop();
         var prefetchDuration = stageTimer?.ElapsedMilliseconds;
         stageTimer?.Restart();
-        
+
         try
         {
             var stageResponse = await stage.ExecuteAsync(instanceId, request, cancellationToken);
 
-            if (!stageResponse.IsSuccessful) HandleUnsuccessfulResult(request, stageResponse);
+            if (!stageResponse.IsSuccessful)
+            {
+                // A returned exception is treated exactly like a thrown one: rethrow it (stack trace kept) so
+                // the catch blocks below apply cancellation, passthrough and exception-handler rules once.
+                if (stageResponse.ValidationErrors.Length == 0 && stageResponse.Exception is not null)
+                    ExceptionDispatchInfo.Capture(stageResponse.Exception).Throw();
+
+                HandleUnsuccessfulResult(request, stageResponse);
+            }
             response ??= stageResponse.Result;
-            
+
             stageTimer?.Stop();
-            if(withMetrics)
-                metric = new StageMetric(index, stageType.GetGenericName(), prefetchDuration ?? -1, stageTimer?.ElapsedMilliseconds ?? -1);
+            if (withMetrics)
+                metric = new StageMetric(index, stageName, prefetchDuration ?? -1, stageTimer?.ElapsedMilliseconds ?? -1);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -82,10 +91,22 @@ public abstract class Pipe<TRequest, TResponse>(
 
             if (e is IPassthroughException) throw;
 
-            HandleUnsuccessfulResult(request, StageResult.WithException<TRequest, TResponse>(e, stageType));
+            var (handled, handledResponse) = await ExceptionHandlerRunner.RunAsync<TRequest, TResponse>(
+                provider, request, e, stage is IRequestHandler, cancellationToken);
+
+            if (!handled)
+            {
+                HandleUnsuccessfulResult(request, StageResult.WithException<TRequest, TResponse>(e, stageType));
+            }
+
+            response = handledResponse;
+            if (withMetrics)
+                metric = new StageMetric(index, stageName, prefetchDuration ?? -1, stageTimer?.ElapsedMilliseconds ?? -1);
+
+            return (response, metric, true);
         }
-        
-        return (response, metric);
+
+        return (response, metric, false);
     }
 
     private void HandleUnsuccessfulResult(TRequest request, StageResult<TRequest, TResponse> stageResponse)

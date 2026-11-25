@@ -62,5 +62,16 @@ The outcome of running a `ModelValidator` (or a single `Rule`) against a request
 **ValidationStage**:
 The default pre-execution `Stage` that resolves and runs the registered `ModelValidator` for a `Pipe`'s `(TRequest, TResponse)` pair. Implements `IValidationPipeStage` so a `Pipe` configured with `ExcludeValidation` skips it, on either registration path.
 
+**RequestExceptionHandler / RequestExceptionAction**:
+Per-`(TRequest, TException)` interception points for exceptions thrown specifically by a `Pipe`'s `Handler` stage (`IRequestExceptionHandler<TRequest,TResponse,TException>`/`IRequestExceptionAction<TRequest,TException>`), named to mirror MediatR's equivalents directly. An `Action` observes/reacts and always lets the exception continue; a `Handler` may call `RequestExceptionHandlerState<TResponse>.SetHandled(response)` to supply a response instead, which short-circuits the rest of the `Pipe`. Multiple registrations run in ascending `Order`; matching walks the exception's real inheritance chain.
+_Avoid_: Middleware, pipeline behavior — these intercept exceptions per-type, they do not wrap-and-call-next.
+
+**StageExceptionHandler / StageExceptionAction**:
+The same mechanism as `RequestExceptionHandler`/`RequestExceptionAction`, scoped instead to exceptions thrown by any `Stage` other than the `Handler` (pre-execution, post-execution, including framework stages like `ValidationStage<,>`). Kept as a separate interface pair rather than one shared interface so a consumer chooses "Handler failure" vs. "any other stage failure" at the type level, not inside a handler body.
+
+**Short-circuit**:
+The pipe-level effect of a `RequestExceptionHandler`/`StageExceptionHandler` calling `SetHandled`: the `Pipe` stops immediately and returns that response, running no further `Stage` — uniformly, regardless of which stage threw. This is the explicit, `Pipe`-level mechanism [ADR-0002](docs/adr/0002-flat-sequential-stage-execution.md) anticipated; a `Stage` still cannot decide for itself whether the next one runs.
+_Avoid_: "abort"/"cancel" — unrelated to `CancellationToken`.
+
 **Notification**:
 Not yet implemented. A future one-event-to-many-handlers concept (MediatR's `INotification`/`Publish`), distinct from the strict 1:1 `Pipe`. Known gap, not yet designed — when it lands, its vocabulary must not collide with `Pipe`/`Stage`.

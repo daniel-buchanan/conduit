@@ -1,5 +1,6 @@
 using System.Linq;
 using conduit.common;
+using conduit.Exceptions.Handling;
 using conduit.Helpers;
 using conduit.Pipes;
 using conduit.Pipes.Stages;
@@ -100,7 +101,7 @@ public class ConduitConfigurationBuilder : IConduitConfigurationBuilder
     }
 
     /// <inheritdoc/>
-    public IConduitConfigurationBuilder RegisterHandlersAsImplementedFrom<TLocator>()
+    public IConduitConfigurationBuilder RegisterHandlersFromAssemblyContaining<TLocator>()
     {
         var types = ReflectionHelper.GetTypesFromAssembly<TLocator>(t => t == typeof(IRequestHandler));
         foreach (var t in types)
@@ -118,6 +119,14 @@ public class ConduitConfigurationBuilder : IConduitConfigurationBuilder
             }
         }
 
+        return this;
+    }
+
+    /// <inheritdoc/>
+    public IConduitConfigurationBuilder RegisterExceptionHandlersFromAssemblyContaining<TLocator>()
+    {
+        // IOrderedExceptionParticipant is the shared base of all four handler/action interfaces, so one scan finds them all.
+        AddDescriptors(ReflectionHelper.GetRegistrationsFromAssemblyContaining<TLocator, IOrderedExceptionParticipant>());
         return this;
     }
 
@@ -155,9 +164,9 @@ public class ConduitConfigurationBuilder : IConduitConfigurationBuilder
     }
 
     /// <inheritdoc/>
-    public IConduitConfigurationBuilder RegisterPipesAsImplementedFrom<TLocator>()
+    public IConduitConfigurationBuilder RegisterPipesFromAssemblyContaining<TLocator>()
     {
-        var descriptors = ReflectionHelper.GetRegistrationsAsImplementedFrom<TLocator, IPipe>();
+        var descriptors = ReflectionHelper.GetRegistrationsFromAssemblyContaining<TLocator, IPipe>();
         foreach (var descriptor in descriptors)
         {
             var pair = descriptor.ServiceType.GetGenericArguments();

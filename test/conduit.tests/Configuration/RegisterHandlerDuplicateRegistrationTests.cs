@@ -55,7 +55,7 @@ public class RegisterHandlerDuplicateRegistrationTests
         var services = new ServiceCollection();
         void Configure(IConduitConfigurationBuilder c)
         {
-            c.RegisterHandlersAsImplementedFrom<RegisterHandlerDuplicateRegistrationTests>();
+            c.RegisterHandlersFromAssemblyContaining<RegisterHandlerDuplicateRegistrationTests>();
             c.RegisterHandler<TestRequest, TestResponse, TestRequestHandler>();
         }
 
@@ -86,11 +86,11 @@ public class RegisterHandlerDuplicateRegistrationTests
     }
 
     [Fact]
-    public async Task RegisterHandlersAsImplementedFrom_Should_Register_A_Handler_That_Implements_The_Interface_Directly()
+    public async Task RegisterHandlersFromAssemblyContaining_Should_Register_A_Handler_That_Implements_The_Interface_Directly()
     {
         // Arrange
         var services = new ServiceCollection();
-        services.AddConduit(c => c.RegisterHandlersAsImplementedFrom<RegisterHandlerDuplicateRegistrationTests>(), new Mock<ILog>().Object);
+        services.AddConduit(c => c.RegisterHandlersFromAssemblyContaining<RegisterHandlerDuplicateRegistrationTests>(), new Mock<ILog>().Object);
         using var scope = services.BuildServiceProvider().CreateScope();
         var conduit = scope.ServiceProvider.GetRequiredService<IConduit>();
 

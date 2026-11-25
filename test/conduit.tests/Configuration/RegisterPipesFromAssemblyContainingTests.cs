@@ -7,7 +7,7 @@ using Xunit;
 
 namespace conduit.tests.Configuration;
 
-public class RegisterPipesAsImplementedFromTests
+public class RegisterPipesFromAssemblyContainingTests
 {
     public class ManualPipeRequest : IRequest<ManualPipeResponse>
     {
@@ -20,7 +20,7 @@ public class RegisterPipesAsImplementedFromTests
     }
 
     // A fully hand-written IPipe implementation (rather than one built via RegisterHandler/RegisterPipe),
-    // the scenario RegisterPipesAsImplementedFrom<TLocator> exists for: discovering these by scanning an
+    // the scenario RegisterPipesFromAssemblyContaining<TLocator> exists for: discovering these by scanning an
     // assembly instead of registering each one by hand.
     public class ManualPipe(ILog logger, IServiceProvider provider) : Pipe<ManualPipeRequest, ManualPipeResponse>(logger, provider)
     {
@@ -32,11 +32,11 @@ public class RegisterPipesAsImplementedFromTests
     }
 
     [Fact]
-    public async Task RegisterPipesAsImplementedFrom_Should_Discover_And_Register_A_Manually_Implemented_Pipe()
+    public async Task RegisterPipesFromAssemblyContaining_Should_Discover_And_Register_A_Manually_Implemented_Pipe()
     {
         // Arrange
         var services = new ServiceCollection();
-        services.AddConduit(c => c.RegisterPipesAsImplementedFrom<RegisterPipesAsImplementedFromTests>(), new Mock<ILog>().Object);
+        services.AddConduit(c => c.RegisterPipesFromAssemblyContaining<RegisterPipesFromAssemblyContainingTests>(), new Mock<ILog>().Object);
         var provider = services.BuildServiceProvider();
         var pipe = provider.GetRequiredService<IPipe<ManualPipeRequest, ManualPipeResponse>>();
 
@@ -65,11 +65,11 @@ public class RegisterPipesAsImplementedFromTests
     }
 
     [Fact]
-    public void RegisterPipesAsImplementedFrom_Should_Register_A_Pipe_That_Implements_The_Interface_Directly()
+    public void RegisterPipesFromAssemblyContaining_Should_Register_A_Pipe_That_Implements_The_Interface_Directly()
     {
         // Arrange
         var services = new ServiceCollection();
-        services.AddConduit(c => c.RegisterPipesAsImplementedFrom<RegisterPipesAsImplementedFromTests>(), new Mock<ILog>().Object);
+        services.AddConduit(c => c.RegisterPipesFromAssemblyContaining<RegisterPipesFromAssemblyContainingTests>(), new Mock<ILog>().Object);
         using var scope = services.BuildServiceProvider().CreateScope();
 
         // Act
@@ -84,16 +84,16 @@ public class RegisterPipesAsImplementedFromTests
     public interface IUnresolvableScanRoot;
 
     // A type implementing IUnresolvableScanRoot directly, with no generic base class to recover closed
-    // generic type arguments from — the case GetRegistrationsAsImplementedFrom can never resolve.
+    // generic type arguments from — the case GetRegistrationsFromAssemblyContaining can never resolve.
     public class UnresolvableInvalidPipe : IUnresolvableScanRoot;
 
     [Fact]
-    public void GetRegistrationsAsImplementedFrom_Should_Throw_When_A_Discovered_Types_Generic_Arguments_Cannot_Be_Determined()
+    public void GetRegistrationsFromAssemblyContaining_Should_Throw_When_A_Discovered_Types_Generic_Arguments_Cannot_Be_Determined()
     {
         // Act: previously this silently registered the type under itself instead of failing loud,
         // producing a pipe that could never be resolved via IPipe<TRequest,TResponse> (Q7/Q13 in the
         // edge-case review).
-        void Act() => ReflectionHelper.GetRegistrationsAsImplementedFrom<RegisterPipesAsImplementedFromTests, IUnresolvableScanRoot>();
+        void Act() => ReflectionHelper.GetRegistrationsFromAssemblyContaining<RegisterPipesFromAssemblyContainingTests, IUnresolvableScanRoot>();
 
         // Assert
         var exception = Assert.Throws<InvalidOperationException>(Act);

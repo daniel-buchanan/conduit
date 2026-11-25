@@ -4,7 +4,7 @@ using conduit.validation;
 namespace conduit.benchmarks;
 
 /// <summary>
-/// Locator type for assembly scans (<c>RegisterHandlersAsImplementedFrom</c>, <c>WithValidatorsFromAssembly</c>).
+/// Locator type for assembly scans (<c>RegisterHandlersFromAssemblyContaining</c>, <c>WithValidatorsFromAssembly</c>).
 /// </summary>
 public sealed class BenchmarkAssemblyMarker;
 

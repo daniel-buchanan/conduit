@@ -32,7 +32,7 @@ public static class ReflectionHelper
     /// from <typeparamref name="TBase"/>, so it could never be resolved by its request/response pair. Failing
     /// loud at registration time is preferred over shipping an unreachable registration (edge-case review Q7/Q13).
     /// </exception>
-    public static ServiceDescriptor[] GetRegistrationsAsImplementedFrom<TLocator, TBase>()
+    public static ServiceDescriptor[] GetRegistrationsFromAssemblyContaining<TLocator, TBase>()
     {
         var descriptors = new List<ServiceDescriptor>();
         foreach (var t in GetTypesFromAssembly<TLocator>(i => i == typeof(TBase)))
