@@ -75,7 +75,7 @@ public abstract class Pipe<TRequest, TResponse>(
                     {
                         stageTimer?.Stop();
                         if (withMetrics)
-                            metric = new StageMetric(index, stageName, prefetchDuration ?? -1, stageTimer?.ElapsedMilliseconds ?? -1, Success: true, Exception: stageResponse.Exception);
+                            metric = new StageMetric(index, stageName, prefetchDuration ?? -1, stageTimer?.ElapsedMilliseconds ?? -1);
                         return (handledResponse, metric, true);
                     }
                 }
@@ -109,7 +109,7 @@ public abstract class Pipe<TRequest, TResponse>(
 
             response = handledResponse;
             if (withMetrics)
-                metric = new StageMetric(index, stageName, prefetchDuration ?? -1, stageTimer?.ElapsedMilliseconds ?? -1, Success: true, Exception: e);
+                metric = new StageMetric(index, stageName, prefetchDuration ?? -1, stageTimer?.ElapsedMilliseconds ?? -1);
 
             return (response, metric, true);
         }

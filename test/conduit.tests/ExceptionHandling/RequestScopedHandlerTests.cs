@@ -62,9 +62,12 @@ public class RequestScopedHandlerTests
         }
     }
 
-    public class NonThrowingHandler(ILog logger) : RequestHandler<HandlerExceptionRequest, HandlerExceptionResponse>(logger)
+    // Own request type: an assembly scan rejects two handlers for one request/response pair.
+    public class NormalRequest : IRequest<HandlerExceptionResponse>;
+
+    public class NonThrowingHandler(ILog logger) : RequestHandler<NormalRequest, HandlerExceptionResponse>(logger)
     {
-        public override Task<HandlerExceptionResponse> HandleAsync(HandlerExceptionRequest request, CancellationToken cancellationToken = default)
+        public override Task<HandlerExceptionResponse> HandleAsync(NormalRequest request, CancellationToken cancellationToken = default)
             => Task.FromResult(new HandlerExceptionResponse { Value = "normal" });
     }
 
@@ -157,13 +160,13 @@ public class RequestScopedHandlerTests
     {
         // Arrange: regression guard — introducing ShortCircuited must not make it true by default.
         var services = new ServiceCollection();
-        services.AddConduit(c => c.RegisterPipe<HandlerExceptionRequest, HandlerExceptionResponse>(p =>
+        services.AddConduit(c => c.RegisterPipe<NormalRequest, HandlerExceptionResponse>(p =>
             p.AddHandler<NonThrowingHandler>()), new Mock<ILog>().Object);
         var provider = services.BuildServiceProvider();
-        var pipe = provider.GetRequiredService<IPipe<HandlerExceptionRequest, HandlerExceptionResponse>>();
+        var pipe = provider.GetRequiredService<IPipe<NormalRequest, HandlerExceptionResponse>>();
 
         // Act
-        var result = await pipe.PushWithDebugAsync(new HandlerExceptionRequest());
+        var result = await pipe.PushWithDebugAsync(new NormalRequest());
 
         // Assert
         Assert.Equal("normal", result.Response!.Value);
