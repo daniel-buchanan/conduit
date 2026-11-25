@@ -30,16 +30,9 @@ public class PipeDescriptor(Type request, Type response)
     public Type ResponseType { get; } = response;
 
     /// <summary>
-    /// Gets or sets the list of service descriptors representing the stages in the pipe.
+    /// Gets the list of service descriptors representing the stages in the pipe.
     /// </summary>
-    public List<StageDescriptor> Stages { get; private set; } = new();
-
-    /// <summary>
-    /// Sets the stages for this pipe descriptor.
-    /// </summary>
-    /// <param name="stages">An enumerable collection of service descriptors representing the stages.</param>
-    public void SetStages(IEnumerable<StageDescriptor> stages)
-        => Stages = stages.ToList();
+    public List<StageDescriptor> Stages { get; } = new();
 
     /// <summary>
     /// Get the hash for this pipe descriptor.

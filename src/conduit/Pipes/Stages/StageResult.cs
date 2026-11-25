@@ -29,7 +29,6 @@ public class StageResult<TRequest, TResponse>
     public StageResult(Type stageType, IndeterminateResult _)
     {
         IsSuccessful = true;
-        IsIndeterminate = true;
         ValidationErrors = [];
         Exception = null;
         StageType = stageType;
@@ -43,7 +42,6 @@ public class StageResult<TRequest, TResponse>
     public StageResult(ValidationResult<TRequest> result, Type stageType)
     {
         IsSuccessful = result.IsValid;
-        IsIndeterminate = false;
         ValidationErrors = result.Errors ?? [];
         Exception = null;
         StageType = stageType;
@@ -58,7 +56,6 @@ public class StageResult<TRequest, TResponse>
     {
         Result = default;
         IsSuccessful = false;
-        IsIndeterminate = false;
         ValidationErrors = [];
         Exception = exception;
         StageType = stageType;
@@ -73,11 +70,6 @@ public class StageResult<TRequest, TResponse>
     /// Gets the response produced by the stage.
     /// </summary>
     public TResponse? Result { get; }
-    
-    /// <summary>
-    /// Gets a value indicating whether this stage produced an indeterminate result (neither success nor failure).
-    /// </summary>
-    public bool IsIndeterminate { get; }
     
     /// <summary>
     /// Gets a value indicating whether the stage execution was successful.
