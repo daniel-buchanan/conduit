@@ -174,4 +174,33 @@ public class PropertyNameExtractionTests
         protected override void AddRules(IRuleBuilder<ValueTypeRequest> ruleBuilder)
             => ruleBuilder.Should<object>(x => x.Count).Be().EqualTo(99, "Count must equal 99.");
     }
+
+    public class BuggyGetterRequest : IRequest<object>
+    {
+        private readonly string? _backing = null;
+
+        // A getter with its own bug: a NullReferenceException raised *inside* user code, not by a null
+        // intermediate in the member chain.
+        public string Broken => _backing!.Trim();
+    }
+
+    [Fact]
+    public void Should_Not_Swallow_A_NullReferenceException_Thrown_Inside_A_Property_Getter()
+    {
+        // Arrange: ADR-0013's null-safety covers null intermediates only; a getter's own bug must still
+        // surface instead of being silently treated as a null value.
+        var validator = new BuggyGetterValidator();
+
+        // Act
+        void Act() => validator.Validate(new BuggyGetterRequest());
+
+        // Assert
+        Assert.Throws<NullReferenceException>(Act);
+    }
+
+    public class BuggyGetterValidator : ModelValidator<BuggyGetterRequest, object>
+    {
+        protected override void AddRules(IRuleBuilder<BuggyGetterRequest> ruleBuilder)
+            => ruleBuilder.Should(x => x.Broken).NotBe().Null();
+    }
 }

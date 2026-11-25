@@ -1,0 +1,7 @@
+# `IConduit` resolves pipes from the caller's scope
+
+`AddConduit` registered `IConduit` and `IPipeFactory` as singletons, while every pipe, handler, and stage they resolve is scoped. A singleton `Conduit` is constructed with the root `IServiceProvider`, so every `PushAsync` resolved its `IPipe<TRequest, TResponse>` from the root container. Under `ValidateScopes = true` — which ASP.NET Core turns on in the Development environment — that throws "Cannot resolve scoped service ... from root provider" on every push. Without scope validation it silently promotes every handler and its scoped dependencies (a `DbContext`, a per-request user context) to effective singletons, shared across concurrent requests.
+
+`IConduit` and `IPipeFactory` are now transient. Resolving `IConduit` inside a scope (a controller, a scoped service, an explicit `CreateScope()`) gives it that scope's provider, so pipes and handlers live and die with the scope that pushed the request.
+
+Scoped was the other option. It was rejected because transient matches MediatR's `IMediator` registration and can be injected into transient services as well as scoped ones; `Conduit` holds no state, so constructing one per resolution costs nothing meaningful. The consequence for consumers: a singleton (e.g. a `BackgroundService`) must create a scope and resolve `IConduit` from it, rather than injecting `IConduit` directly — the same rule that already applies to any other scoped dependency.

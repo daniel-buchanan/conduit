@@ -1,3 +1,5 @@
+using System.Collections;
+
 namespace conduit.common;
 
 /// <summary>
@@ -27,15 +29,13 @@ public class EnvironmentImpl : IEnvironment
     /// Parses an environment variable as an enumeration value.
     /// </summary>
     /// <typeparam name="T">The enumeration type to parse to.</typeparam>
-    /// <param name="value">The name of the environment variable.</param>
-    /// <param name="defaultValue">The default value to return if parsing fails.</param>
+    /// <param name="variable">The name of the environment variable.</param>
+    /// <param name="defaultValue">The default value to return if the variable is unset or not a valid name.</param>
     /// <returns>The parsed enumeration value, or the default value if parsing fails.</returns>
-    private static T ParseEnum<T>(string value, T defaultValue) where T : struct
-    {
-        var parsed = Enum.TryParse(value, out T result);
-        if(!parsed) return defaultValue;
-        return result;
-    }
+    private static T ParseEnum<T>(string variable, T defaultValue) where T : struct
+        => Enum.TryParse(System.Environment.GetEnvironmentVariable(variable), ignoreCase: true, out T result)
+            ? result
+            : defaultValue;
     
     /// <inheritdoc/>
     public string? GetEnvironmentVariable(string variable)
@@ -45,11 +45,8 @@ public class EnvironmentImpl : IEnvironment
     public IDictionary<string, string> GetEnvironmentVariables()
     {
         var dict = new Dictionary<string, string>();
-        foreach (var kp in System.Environment.GetEnvironmentVariables())
-        {
-            var t =  kp is KeyValuePair<string, string> pair ? pair : default;
-            dict.Add(t.Key, t.Value);
-        }
+        foreach (DictionaryEntry entry in System.Environment.GetEnvironmentVariables())
+            dict[(string)entry.Key] = (string?)entry.Value ?? string.Empty;
 
         return dict;
     }

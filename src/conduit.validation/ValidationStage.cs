@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace conduit.validation;
 
 /// <summary>
-/// Represents a pipeline stage that performs model validation on incoming requests.
+/// Represents a stage that performs model validation on incoming requests.
 /// </summary>
 /// <typeparam name="TRequest">The type of the request being validated.</typeparam>
 /// <typeparam name="TResponse">The type of the response to be produced.</typeparam>

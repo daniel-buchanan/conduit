@@ -30,16 +30,9 @@ public class PipeDescriptor(Type request, Type response)
     public Type ResponseType { get; } = response;
 
     /// <summary>
-    /// Gets or sets the list of service descriptors representing the stages in the pipe.
+    /// Gets the list of service descriptors representing the stages in the pipe.
     /// </summary>
-    public List<StageDescriptor> Stages { get; private set; } = new();
-
-    /// <summary>
-    /// Sets the stages for this pipe descriptor.
-    /// </summary>
-    /// <param name="stages">An enumerable collection of service descriptors representing the stages.</param>
-    public void SetStages(IEnumerable<StageDescriptor> stages)
-        => Stages = stages.ToList();
+    public List<StageDescriptor> Stages { get; } = new();
 
     /// <summary>
     /// Get the hash for this pipe descriptor.
@@ -48,12 +41,12 @@ public class PipeDescriptor(Type request, Type response)
         => HashUtil.Instance.TypeNameHash(RequestType, ResponseType);
 
     /// <summary>
-    /// Whether this pipeline is excluded from Model Validation.
+    /// Whether this pipe is excluded from Model Validation.
     /// </summary>
     public bool ExcludeValidation { get; private set; } = false;
     
     /// <summary>
-    /// Exclude this pipeline from Model Validation.
+    /// Exclude this pipe from Model Validation.
     /// </summary>
     public void ExcludeFromValidation() => ExcludeValidation = true;
 }

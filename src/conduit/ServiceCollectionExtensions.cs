@@ -20,13 +20,13 @@ public static class ServiceCollectionExtensions
     /// <returns>The <see cref="IServiceCollection"/> so that additional calls can be chained.</returns>
     public static IServiceCollection AddConduit(this IServiceCollection services, ILog? logger = null)
     {
-        services.AddSingleton<IConduit, Conduit>();
+        services.AddTransient<IConduit, Conduit>();
         services.AddSingleton<IStdConsole, StdConsole>();
         if(logger != null) services.AddSingleton(logger);
         else services.AddScoped<ILog, ConsoleLog>();
         services.AddSingleton<IEnvironment, EnvironmentImpl>();
         services.AddSingleton<IPipeConfigurationRegistry, PipeConfigurationRegistry>();
-        services.AddSingleton<IPipeFactory, PipeFactory>();
+        services.AddTransient<IPipeFactory, PipeFactory>();
         services.AddTransient<IHashUtil, HashUtil>();
         return services;
     }

@@ -8,73 +8,46 @@ namespace conduit.tests.Logging;
 
 public class CoreLoggingTests
 {
-    private class MockLogger(IEnvironment environment) : Log(environment)
+    private class CapturingLogger(IEnvironment environment) : Log(environment)
     {
-        public event Action<string>? OnWriteMessageCalled;
+        public List<(string Level, string Message)> Written { get; } = new();
+
         protected override ILog WriteMessageInternal(string level, string message)
         {
-            OnWriteMessageCalled?.Invoke(message);
+            Written.Add((level, message));
             return this;
         }
     }
-    
-    public CoreLoggingTests()
-    {
-        
-    }
-    
-    [Fact]
-    public void WriteMessageInternalCalled()
-    {
-        // Arrange
-        var env = new EnvironmentImpl();
-        var logger = new MockLogger(env);
-        var messageLogged = string.Empty;
-        logger.OnWriteMessageCalled += (msg) => messageLogged = msg;
 
-        // Act
-        logger.Info("Test message");
-
-        // Assert
-        Assert.Equal("Test message", messageLogged);
-    }
-    
-    [Fact]
-    public void MessageNotLogged_WrongLogLevel()
+    private static CapturingLogger CreateLogger(LoggingLevel level)
     {
-        // Arrange
         var envMock = new Mock<IEnvironment>();
-        envMock.Setup(e => e.LogLevel).Returns(LoggingLevel.Error);
-        var logger = new MockLogger(envMock.Object);
-        var messageLogged = string.Empty;
-        logger.OnWriteMessageCalled += (msg) => messageLogged = msg;
+        envMock.Setup(e => e.LogLevel).Returns(level);
+        return new CapturingLogger(envMock.Object);
+    }
 
-        // Act
+    [Fact]
+    public void MessageWritten_AtConfiguredLevel()
+    {
+        var logger = CreateLogger(LoggingLevel.Info);
+
         logger.Info("Test message");
 
-        // Assert
-        Assert.Equal(string.Empty, messageLogged);
+        logger.Written.Should().ContainSingle().Which.Message.Should().Be("Test message");
     }
 
     [Theory]
-    [MemberData(nameof(LogLevelShouldNotLogData))]
-    public void MessageLogged_CorrectLogLevel(LoggingLevel level, Func<ILog, ILog> logFunc)
+    [MemberData(nameof(BelowConfiguredLevelData))]
+    public void MessageNotWritten_BelowConfiguredLevel(LoggingLevel level, Func<ILog, ILog> logFunc)
     {
-        // Arrange
-        var envMock = new Mock<IEnvironment>();
-        envMock.Setup(e => e.LogLevel).Returns(level);
-        var logger = new MockLogger(envMock.Object);
-        var messageLogged = string.Empty;
-        logger.OnWriteMessageCalled += (msg) => messageLogged = msg;
+        var logger = CreateLogger(level);
 
-        // Act
         logFunc(logger);
 
-        // Assert
-        Assert.Equal(string.Empty, messageLogged);
+        logger.Written.Should().BeEmpty();
     }
-    
-    public static TheoryData<LoggingLevel, Func<ILog, ILog>> LogLevelShouldNotLogData => new TheoryData<LoggingLevel, Func<ILog, ILog>>
+
+    public static TheoryData<LoggingLevel, Func<ILog, ILog>> BelowConfiguredLevelData => new()
     {
         { LoggingLevel.Verbose, l => l.Debug("Test message") },
         { LoggingLevel.Info, l => l.Verbose("Test message") },
@@ -89,34 +62,58 @@ public class CoreLoggingTests
     };
 
     [Theory]
-    [MemberData(nameof(ExceptionLoggedCorrectlyData))]
-    public void ExceptionLoggedCorrectly(LoggingLevel level, Func<ILog, string, Exception, ILog> logFunc)
+    [InlineData(LoggingLevel.Debug, "DEBUG")]
+    [InlineData(LoggingLevel.Verbose, "VERB ")]
+    [InlineData(LoggingLevel.Info, "INFO ")]
+    [InlineData(LoggingLevel.Warning, "WARN ")]
+    [InlineData(LoggingLevel.Error, "ERR  ")]
+    public void LevelLabel_PaddedToFiveCharacters(LoggingLevel level, string expectedLabel)
     {
-        // Arrange
-        var envMock = new Mock<IEnvironment>();
-        envMock.Setup(e => e.LogLevel).Returns(level);
-        var logger = new MockLogger(envMock.Object);
-        const string exceptionMessage = "Test exception";
-        var testException = new Exception(exceptionMessage);
-        var messageLogged = string.Empty;
-        logger.OnWriteMessageCalled += (msg) => messageLogged = msg;
-        
-        // Act
-        logFunc(logger, exceptionMessage, testException);
+        var logger = CreateLogger(LoggingLevel.Debug);
 
-        // Assert
-        var failureMessage = $"Error occurred! {exceptionMessage}";
-        messageLogged.Should().Be(failureMessage);
+        Func<string, ILog> log = level switch
+        {
+            LoggingLevel.Debug => logger.Debug,
+            LoggingLevel.Verbose => logger.Verbose,
+            LoggingLevel.Info => logger.Info,
+            LoggingLevel.Warning => logger.Warn,
+            _ => logger.Error,
+        };
+        log("Test message");
+
+        logger.Written.Should().ContainSingle().Which.Level.Should().Be(expectedLabel);
     }
-    
-    public static TheoryData<LoggingLevel, Func<ILog, string, Exception, ILog>> ExceptionLoggedCorrectlyData => new ()
+
+    [Theory]
+    [MemberData(nameof(ExceptionWithMessageData))]
+    public void ExceptionOverload_WritesMessageThenException(LoggingLevel level, Func<ILog, string, Exception, ILog> logFunc)
+    {
+        var logger = CreateLogger(level);
+
+        logFunc(logger, "Context message", new Exception("Test exception"));
+
+        var messages = logger.Written.Select(w => w.Message).ToArray();
+        messages[0].Should().Be("Context message");
+        messages[1].Should().Be("Error occurred! Test exception");
+    }
+
+    public static TheoryData<LoggingLevel, Func<ILog, string, Exception, ILog>> ExceptionWithMessageData => new()
     {
         { LoggingLevel.Debug, (l, s, e) => l.Debug(s, e) },
         { LoggingLevel.Verbose, (l, s, e) => l.Verbose(s, e) },
         { LoggingLevel.Info, (l, s, e) => l.Info(s, e) },
         { LoggingLevel.Warning, (l, s, e) => l.Warn(s, e) },
         { LoggingLevel.Error, (l, s, e) => l.Error(s, e) },
-        { LoggingLevel.Error , (l, s, e) => l.Error(e) },
-        { LoggingLevel.Error , (l, s, e) => l.Error(e, s) },
+        { LoggingLevel.Error, (l, s, e) => l.Error(e, s) },
     };
+
+    [Fact]
+    public void ErrorWithOnlyException_WritesException()
+    {
+        var logger = CreateLogger(LoggingLevel.Error);
+
+        logger.Error(new Exception("Test exception"));
+
+        logger.Written.Should().ContainSingle().Which.Message.Should().Be("Error occurred! Test exception");
+    }
 }

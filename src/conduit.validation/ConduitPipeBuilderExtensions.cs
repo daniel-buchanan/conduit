@@ -8,7 +8,7 @@ namespace conduit.validation;
 public static class ConduitPipeBuilderExtensions
 {
     /// <summary>
-    /// Explicitly adds validation to the specified pipeline for the request model, at this exact position
+    /// Explicitly adds validation to the specified pipe for the request model, at this exact position
     /// in the stage order. Also excludes the pipe from the default pre-execution validation stage (see
     /// <see cref="IConduitPipeBuilder{TRequest,TResponse}.ExcludeValidation"/>), regardless of whether the
     /// caller already called it — otherwise the request would be validated twice: once by the default stage

@@ -22,7 +22,7 @@ MediatR's `IStreamRequest<TResponse>`/`IStreamRequestHandler` returning `IAsyncE
 
 ### 3. Pipeline behaviors (onion-style middleware)
 
-MediatR's `IPipelineBehavior<TRequest,TResponse>` runs code both before and after the handler, and can short-circuit without throwing. Conduit's `Stage` model is flat and sequential (`BuildablePipe.PushInternalAsync`, `src/conduit/Pipes/BuildablePipe.cs:48-52`); the only short-circuit is a thrown exception (`Pipe.HandleUnsuccessfulResult`, `src/conduit/Pipes/Pipe.cs:79-88`).
+MediatR's `IPipelineBehavior<TRequest,TResponse>` runs code both before and after the handler, and can short-circuit without throwing. Conduit's `Stage` model is flat and sequential (`BuildablePipe.PushInternalAsync`, `src/conduit/Pipes/BuildablePipe.cs:49-58`); the only short-circuit is a thrown exception (`Pipe.HandleUnsuccessfulResult`, `src/conduit/Pipes/Pipe.cs:91-101`).
 
 **Status**: intentional per [ADR-0002](docs/adr/0002-flat-sequential-stage-execution.md), which rejected a specific half-working `next`-delegate implementation — not a permanent rejection of wrap-before-and-after behavior in general. ADR-0002 itself notes a short-circuit mechanism should be designed explicitly if needed later. On roadmap, build only if a concrete need arises (e.g. transaction wrapping, logging spans, result-inspecting authorization).
 

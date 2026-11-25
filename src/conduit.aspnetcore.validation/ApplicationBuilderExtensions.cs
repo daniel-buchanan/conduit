@@ -13,7 +13,7 @@ public static class ApplicationBuilderExtensions
     /// </summary>
     /// <param name="builder">The application builder.</param>
     /// <returns>The application builder for method chaining.</returns>
-    public static IApplicationBuilder AddConduitValidation(this IApplicationBuilder builder)
+    public static IApplicationBuilder UseConduitValidation(this IApplicationBuilder builder)
     {
         builder.UseMiddleware<ConduitValidationExceptionHandler>();
         return builder;

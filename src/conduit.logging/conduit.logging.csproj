@@ -3,7 +3,7 @@
     <PropertyGroup>
         <TargetFrameworks>netstandard2.0;net10.0</TargetFrameworks>
         <PackageId>conduit.logging</PackageId>
-        <Version>0.1.0</Version>
+        <Version>1.0.0</Version>
         <Description>Logging abstraction (ILog) and console implementation for Conduit.</Description>
     </PropertyGroup>
 

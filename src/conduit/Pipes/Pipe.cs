@@ -25,10 +25,10 @@ public abstract class Pipe<TRequest, TResponse>(
     public abstract Task<DebugResult<TResponse?>> PushWithDebugAsync(TRequest request, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Execute an individual pipeline stage, with or without metrics.
+    /// Execute an individual stage, with or without metrics.
     /// </summary>
     /// <param name="index">The index of the stage.</param>
-    /// <param name="instanceId">The ID of the pipeline run.</param>
+    /// <param name="instanceId">The ID of the pipe run.</param>
     /// <param name="stageType">The stage to be executed.</param>
     /// <param name="stageTimer">The timer being used for getting stage metrics.</param>
     /// <param name="request">The request being processed.</param>
@@ -88,6 +88,10 @@ public abstract class Pipe<TRequest, TResponse>(
             if (withMetrics)
                 metric = new StageMetric(index, stageName, prefetchDuration ?? -1, stageTimer?.ElapsedMilliseconds ?? -1);
         }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
         catch (Exception e)
         {
             stageTimer?.Stop();
@@ -117,7 +121,7 @@ public abstract class Pipe<TRequest, TResponse>(
     {
         if (stageResponse.ValidationErrors.Length != 0)
         {
-            throw new ValidationFailedException(ValidationResult.WithFailure(stageResponse.Result,
+            throw new ValidationFailedException(ValidationResult.WithFailure(request,
                 stageResponse.ValidationErrors));
         }
         

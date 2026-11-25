@@ -11,7 +11,7 @@ public class ConsoleLog(
     IEnvironment environment, 
     IStdConsole console) : Log(environment)
 {
-    private const string LogFormat = "[{0}] {1:yyyy-MM-ddThh:mm:ss} {2}";
+    internal const string LogFormat = "[{0}] {1:yyyy-MM-ddTHH:mm:ss} {2}";
     
     /// <inheritdoc/>
     protected override ILog WriteMessageInternal(string level, string message)
