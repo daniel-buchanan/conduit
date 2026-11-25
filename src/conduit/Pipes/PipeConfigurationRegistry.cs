@@ -30,6 +30,16 @@ public class PipeConfigurationRegistry(IHashUtil hashUtil) : IPipeConfigurationR
     public void Add<TRequest, TResponse>(PipeDescriptor descriptor)
         where TRequest : class, IRequest<TResponse>
         where TResponse : class
+        => Add(descriptor);
+
+    /// <summary>
+    /// Adds a pipe descriptor to the registry, keyed by its own request and response types — for callers
+    /// that only know those types at runtime (e.g. assembly scanning).
+    /// </summary>
+    /// <param name="descriptor">The pipe descriptor to add.</param>
+    /// <exception cref="PipeAlreadyRegisteredException">Thrown if a pipe with the same request and response types is already registered.</exception>
+    /// <exception cref="InvalidOperationException">Thrown if the registry has already been locked (see <see cref="Lock"/>).</exception>
+    public void Add(PipeDescriptor descriptor)
     {
         if (_isLocked)
             throw new InvalidOperationException("Cannot add a pipe descriptor after the registry has been locked.");

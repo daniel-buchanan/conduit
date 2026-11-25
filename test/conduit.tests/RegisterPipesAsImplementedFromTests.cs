@@ -48,6 +48,37 @@ public class RegisterPipesAsImplementedFromTests
         Assert.Equal("hello", response!.Value);
     }
 
+    public class DirectPipeRequest : IRequest<DirectPipeResponse>;
+
+    public class DirectPipeResponse;
+
+    // Implements IPipe<,> directly with no generic base class, so its request/response types can only be
+    // recovered from its closed generic interface — and it also implements the non-generic IPipe, which
+    // must never be chosen as the registration's service type.
+    public class DirectlyImplementedPipe : IPipe<DirectPipeRequest, DirectPipeResponse>
+    {
+        public Task<DirectPipeResponse?> PushAsync(DirectPipeRequest request, CancellationToken cancellationToken = default)
+            => Task.FromResult<DirectPipeResponse?>(new DirectPipeResponse());
+
+        public Task<DebugResult<DirectPipeResponse?>> PushWithDebugAsync(DirectPipeRequest request, CancellationToken cancellationToken = default)
+            => Task.FromResult(new DebugResult<DirectPipeResponse?>(new DirectPipeResponse(), 0, []));
+    }
+
+    [Fact]
+    public void RegisterPipesAsImplementedFrom_Should_Register_A_Pipe_That_Implements_The_Interface_Directly()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        services.AddConduit(c => c.RegisterPipesAsImplementedFrom<RegisterPipesAsImplementedFromTests>(), new Mock<ILog>().Object);
+        using var scope = services.BuildServiceProvider().CreateScope();
+
+        // Act
+        var pipe = scope.ServiceProvider.GetService<IPipe<DirectPipeRequest, DirectPipeResponse>>();
+
+        // Assert
+        Assert.IsType<DirectlyImplementedPipe>(pipe);
+    }
+
     // A dedicated marker (rather than the real IPipe) so this scan can't also pick up ManualPipe above:
     // GetTypesFromAssembly scans the whole assembly for TBase, not just this class's nested types.
     public interface IUnresolvableScanRoot;
