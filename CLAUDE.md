@@ -27,7 +27,7 @@ dotnet build   # TreatWarningsAsErrors is on repo-wide (Directory.Build.props) â
 dotnet test
 ```
 
-Both must pass clean before a change is considered done. There is no CI yet (tracked in [ROADMAP.md](ROADMAP.md)) â€” this is the only verification gate today.
+Both must pass clean before a change is considered done. CI (`.github/workflows/ci.yml`) runs the same two commands on every pull request and every push to `main`.
 
 ## Commit and documentation conventions
 
