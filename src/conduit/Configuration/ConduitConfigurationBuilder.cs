@@ -14,7 +14,7 @@ public class ConduitConfigurationBuilder : IConduitConfigurationBuilder
 {
     private readonly DefaultPipeConfiguration _defaultPipeConfiguration = new();
     private readonly List<ServiceDescriptor> _descriptors = new();
-    private readonly IPipeConfigurationRegistry _pipeConfigurationRegistry = new PipeConfigurationRegistry(HashUtil.Instance);
+    private readonly PipeConfigurationRegistry _pipeConfigurationRegistry = new(HashUtil.Instance);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ConduitConfigurationBuilder"/> class.
@@ -52,7 +52,7 @@ public class ConduitConfigurationBuilder : IConduitConfigurationBuilder
         services.AddSingleton(_defaultPipeConfiguration);
 
         _pipeConfigurationRegistry.Lock();
-        services.AddSingleton(_pipeConfigurationRegistry);
+        services.AddSingleton<IPipeConfigurationRegistry>(_pipeConfigurationRegistry);
     }
 
     /// <summary>
@@ -105,15 +105,17 @@ public class ConduitConfigurationBuilder : IConduitConfigurationBuilder
         var types = ReflectionHelper.GetTypesFromAssembly<TLocator>(t => t == typeof(IRequestHandler));
         foreach (var t in types)
         {
-            var genericParameters = t.GetGenericArguments();
-            if (genericParameters.Length == 0 && t.BaseType != null) genericParameters = t.BaseType.GetGenericArguments();
-            if (genericParameters.Length == 0) continue;
+            var handlerInterfaces = ReflectionHelper.ClosedInterfacesOf(
+                t, i => i.GetGenericTypeDefinition() == typeof(IRequestHandler<,>));
 
-            var request = genericParameters[0];
-            var response = genericParameters[1];
+            foreach (var handlerInterface in handlerInterfaces)
+            {
+                var request = handlerInterface.GetGenericArguments()[0];
+                var response = handlerInterface.GetGenericArguments()[1];
 
-            var defs = ReflectionHelper.GetServiceDescriptorsForHandler(request, response, t);
-            AddDescriptors(defs);
+                _pipeConfigurationRegistry.Add(new PipeDescriptor(request, response));
+                AddDescriptors(ReflectionHelper.GetServiceDescriptorsForHandler(request, response, t));
+            }
         }
 
         return this;
@@ -156,6 +158,12 @@ public class ConduitConfigurationBuilder : IConduitConfigurationBuilder
     public IConduitConfigurationBuilder RegisterPipesAsImplementedFrom<TLocator>()
     {
         var descriptors = ReflectionHelper.GetRegistrationsAsImplementedFrom<TLocator, IPipe>();
+        foreach (var descriptor in descriptors)
+        {
+            var pair = descriptor.ServiceType.GetGenericArguments();
+            _pipeConfigurationRegistry.Add(new PipeDescriptor(pair[0], pair[1]));
+        }
+
         AddDescriptors(descriptors);
         return this;
     }

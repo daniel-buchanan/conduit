@@ -4,7 +4,7 @@ using conduit.Pipes;
 using conduit.tests.Handlers;
 using Xunit;
 
-namespace conduit.tests;
+namespace conduit.tests.Pipes;
 
 public class PipeConfigurationRegistryTests
 {

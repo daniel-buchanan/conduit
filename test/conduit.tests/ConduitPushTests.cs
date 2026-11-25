@@ -7,21 +7,21 @@ using Xunit;
 
 namespace conduit.tests;
 
-public class SimpleTests
+public class ConduitPushTests
 {
     private readonly IServiceProvider _provider;
     private readonly Mock<ILog> _loggerMock;
 
-    public SimpleTests()
+    public ConduitPushTests()
     {
         _loggerMock = new Mock<ILog>();
         var services = new ServiceCollection();
-        services.AddConduit(c => c.RegisterHandlersAsImplementedFrom<SimpleTests>(), _loggerMock.Object);
+        services.AddConduit(c => c.RegisterHandlersAsImplementedFrom<ConduitPushTests>(), _loggerMock.Object);
         _provider = services.BuildServiceProvider();
     }
     
     [Fact]
-    public async Task ValidResultReturned()
+    public async Task PushAsync_Returns_A_Response_From_A_Scanned_Handler()
     {
         // Act
         var conduit = _provider.GetRequiredService<IConduit>();
@@ -32,7 +32,7 @@ public class SimpleTests
     }
     
     [Fact]
-    public async Task LoggerInfoCalled()
+    public async Task PushAsync_Runs_The_Handler_Once()
     {
         // Act
         var conduit = _provider.GetRequiredService<IConduit>();

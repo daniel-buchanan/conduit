@@ -13,15 +13,15 @@ namespace conduit.aspnetcore.validation;
 /// Provides ASP.NET Core middleware for handling Conduit validation and stage exceptions.
 /// Catches validation and stage failures and converts them to appropriate HTTP responses.
 /// </summary>
-/// <param name="next">The next middleware in the request pipeline.</param>
+/// <param name="next">The next middleware in the ASP.NET Core request pipeline.</param>
 public class ConduitValidationExceptionHandler(RequestDelegate next)
 {
     private const string ContentTypeJson = "application/json";
     private static readonly (Func<Exception, bool> Matches, Func<Exception, HttpContext, Task> Handle)[] KnownExceptionHandlers =
     [
         (ex => ex is ValidationFailedException, HandleValidationException),
-        (ex => ex is StageFailedException, HandleStageFailedException),
-        (ex => ex is ValidatorNotFoundException, HandleValidatorNotFoundException),
+        (ex => ex is StageFailedException, ServerError("A stage failed while processing your request.")),
+        (ex => ex is ValidatorNotFoundException, ServerError("No validator was registered for this request.")),
     ];
 
     /// <summary>
@@ -57,66 +57,28 @@ public class ConduitValidationExceptionHandler(RequestDelegate next)
     /// <summary>
     /// Handles validation exceptions by returning a 400 Bad Request response with validation errors.
     /// </summary>
-    private static async Task HandleValidationException(Exception ex, HttpContext context)
-    {
-        ProblemDetails problemDetails;
-        if (ex is not ValidationFailedException exception)
-        {
-            problemDetails = new ProblemDetails()
+    private static Task HandleValidationException(Exception ex, HttpContext context)
+        => WriteResponse(context, StatusCodes.Status400BadRequest,
+            new ValidationProblemDetails(((ValidationFailedException)ex).ValidationErrors.ToModelState())
             {
                 Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1",
+                Status = StatusCodes.Status400BadRequest,
+                Instance = context.Request.Path,
+                Title = "Validation Error",
+            });
+
+    /// <summary>
+    /// Returns a handler that writes a 500 Internal Server Error response with the given title.
+    /// </summary>
+    private static Func<Exception, HttpContext, Task> ServerError(string title)
+        => (ex, context) => WriteResponse(context, StatusCodes.Status500InternalServerError,
+            new ProblemDetails
+            {
+                Status = StatusCodes.Status500InternalServerError,
+                Title = title,
                 Instance = context.Request.Path,
                 Detail = ex.Message,
-                Title = "Validation Error",
-                Status = StatusCodes.Status400BadRequest
-            };
-        }
-        else
-        {
-            problemDetails = new ValidationProblemDetails(exception.ValidationErrors.ToModelState())
-            {
-                Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1",
-                Status =  StatusCodes.Status400BadRequest,
-                Instance = context.Request.Path,
-                Title = "Validation Error",
-            };
-        }
-
-        await WriteResponse(context, StatusCodes.Status400BadRequest, problemDetails);
-    }
-
-    /// <summary>
-    /// Handles stage failures by returning a 500 Internal Server Error response.
-    /// </summary>
-    private static async Task HandleStageFailedException(Exception ex, HttpContext context)
-    {
-        var details = new ProblemDetails
-        {
-            Status = StatusCodes.Status500InternalServerError,
-            Title = "A pipeline stage failed while processing your request.",
-            Instance = context.Request.Path,
-            Detail = ex.Message
-        };
-
-        await WriteResponse(context, StatusCodes.Status500InternalServerError, details);
-    }
-
-    /// <summary>
-    /// Handles a missing-validator failure by returning its own 500 Internal Server Error response,
-    /// distinct from a generic pipeline-stage failure.
-    /// </summary>
-    private static async Task HandleValidatorNotFoundException(Exception ex, HttpContext context)
-    {
-        var details = new ProblemDetails
-        {
-            Status = StatusCodes.Status500InternalServerError,
-            Title = "No validator was registered for this request.",
-            Instance = context.Request.Path,
-            Detail = ex.Message
-        };
-
-        await WriteResponse(context, StatusCodes.Status500InternalServerError, details);
-    }
+            });
 
     /// <summary>
     /// Writes a JSON response to the HTTP context.

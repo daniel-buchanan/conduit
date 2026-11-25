@@ -6,7 +6,7 @@ namespace conduit;
 
 /// <summary>
 /// Provides an abstract base class for request handlers within the Conduit system.
-/// This class implements <see cref="IRequestHandler{TRequest, TResponse}"/> and provides a base for pipeline stages.
+/// This class implements <see cref="IRequestHandler{TRequest, TResponse}"/> and provides a base for stages.
 /// </summary>
 /// <typeparam name="TRequest">The type of the request handled by this handler.</typeparam>
 /// <typeparam name="TResponse">The type of the response produced by this handler.</typeparam>

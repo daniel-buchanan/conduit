@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace conduit.Configuration;
 
 /// <summary>
-/// Represents the configuration for a pipeline stage, including its types and service lifetime.
+/// Represents the configuration for a stage, including its types and service lifetime.
 /// </summary>
 /// <param name="request">The request type handled by the stage.</param>
 /// <param name="response">The response type produced by the stage.</param>
@@ -51,14 +51,3 @@ public class StageDescriptor(Type request, Type response, Type implementationTyp
     private ServiceDescriptor GetServiceDescriptor() => new(InterfaceType, ImplementationType, Lifetime);
 }
 
-/// <summary>
-/// Provides a strongly-typed version of <see cref="StageDescriptor"/> for specific request and response types.
-/// </summary>
-/// <typeparam name="TRequest">The request type.</typeparam>
-/// <typeparam name="TResponse">The response type.</typeparam>
-/// <typeparam name="TStage">The stage implementation type.</typeparam>
-public class StageDescriptor<TRequest, TResponse, TStage>(Type? interfaceType = null, ServiceLifetime lifetime = ServiceLifetime.Transient) : 
-    StageDescriptor(typeof(TRequest), typeof(TResponse), typeof(TStage), interfaceType, lifetime)
-    where TRequest : class, IRequest<TResponse>
-    where TResponse : class
-    where TStage : IPipeStage<TRequest, TResponse>;

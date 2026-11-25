@@ -5,7 +5,7 @@ using conduit.Pipes;
 namespace conduit;
 
 /// <summary>
-/// Represents the main entry point for sending requests through the Conduit system.
+/// Represents the main entry point for pushing requests through the Conduit system.
 /// This class orchestrates the discovery and execution of appropriate pipes for incoming requests.
 /// </summary>
 /// <param name="provider">The service provider used to resolve pipe instances.</param>
@@ -31,7 +31,7 @@ public class Conduit(IServiceProvider provider) : IConduit
             cancellationToken))!;
 
     private async Task<T?> PushInternalAsync<T, TResponse>(
-        string sendMethod, 
+        string pushMethod, 
         IRequest<TResponse> request, 
         CancellationToken cancellationToken = default)
         where TResponse : class
@@ -45,7 +45,7 @@ public class Conduit(IServiceProvider provider) : IConduit
         if (pipe is null)
             throw new PipeNotFoundException($"Implementation for Pipe {pipeGenericType.GetGenericName()} not found");
 
-        var method = pipeGenericType.GetMethod(sendMethod);
+        var method = pipeGenericType.GetMethod(pushMethod);
         var result = await ((Task<T?>)method?.Invoke(pipe, [request, cancellationToken])!)!;
         return result;
     }

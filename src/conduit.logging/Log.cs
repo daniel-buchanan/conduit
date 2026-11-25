@@ -54,7 +54,10 @@ public abstract class Log(IEnvironment environment) : ILog
 
     /// <inheritdoc/>
     public ILog Verbose(string message, Exception ex)
-        => Verbose(ErrorMessageTemplate, ex.Message);
+    {
+        Verbose(message);
+        return Verbose(ErrorMessageTemplate, ex.Message);
+    }
 
     /// <inheritdoc/>
     public ILog Info(string message)
@@ -66,7 +69,10 @@ public abstract class Log(IEnvironment environment) : ILog
 
     /// <inheritdoc/>
     public ILog Info(string message, Exception ex)
-        => Info(ErrorMessageTemplate, ex.Message);
+    {
+        Info(message);
+        return Info(ErrorMessageTemplate, ex.Message);
+    }
 
     /// <inheritdoc/>
     public ILog Warn(string message)
@@ -78,7 +84,10 @@ public abstract class Log(IEnvironment environment) : ILog
 
     /// <inheritdoc/>
     public ILog Warn(string message, Exception ex)
-        => Warn(ErrorMessageTemplate, ex.Message);
+    {
+        Warn(message);
+        return Warn(ErrorMessageTemplate, ex.Message);
+    }
 
     /// <inheritdoc/>
     public ILog Error(string message)
@@ -121,12 +130,8 @@ public abstract class Log(IEnvironment environment) : ILog
             _ => Levels.Information
         };
 
-        if (logLevelStr.Length < 5)
-        {
-            var remainingSpace = 5 - logLevelStr.Length;
-            logLevelStr = logLevelStr.PadRight(remainingSpace);
-        }
-        
+        logLevelStr = logLevelStr.PadRight(5);
+
         var allowedToLog = AllowedToLog(level);
         return !allowedToLog
             ? this

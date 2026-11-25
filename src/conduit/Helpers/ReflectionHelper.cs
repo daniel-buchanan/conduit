@@ -8,15 +8,6 @@ namespace conduit.Helpers;
 
 public static class ReflectionHelper
 {
-    private static Type[] GetGenericParameters(Type t)
-    {
-        var genericParameters = t.GetGenericArguments();
-        if (genericParameters.Length == 0 && t.BaseType != null)
-            genericParameters = t.BaseType.GetGenericArguments();
-
-        return genericParameters;
-    }
-
     public static Type[] GetTypesFromAssembly<T>(Func<Type, bool> predicate)
         => GetTypesFromAssembly(typeof(T), predicate);
 
@@ -30,44 +21,48 @@ public static class ReflectionHelper
     }
 
     /// <summary>
-    /// Builds service descriptors for every closed implementation of <typeparamref name="TBase"/> found in
-    /// <typeparamref name="TLocator"/>'s assembly.
+    /// Builds a service descriptor for every closed generic interface deriving from <typeparamref name="TBase"/>
+    /// that each concrete implementation in <typeparamref name="TLocator"/>'s assembly implements — e.g.
+    /// <c>IPipe&lt;TRequest,TResponse&gt;</c> for <c>TBase = IPipe</c>. Reading the closed types from the
+    /// interfaces themselves works whether the type derives from a generic base class or implements the
+    /// interface directly, and never depends on <see cref="Type.GetInterfaces"/>'s unspecified order.
     /// </summary>
     /// <exception cref="InvalidOperationException">
-    /// A discovered type's closed TRequest/TResponse (or other generic) arguments could not be determined
-    /// from its generic base class. Previously this silently registered the type under itself instead,
-    /// producing a pipe that could never be resolved via <c>IPipe&lt;TRequest,TResponse&gt;</c> — see ADR-0007's
-    /// sibling decisions and the edge-case review (Q7/Q13): failing loud at registration time is preferred
-    /// over shipping an unreachable registration.
+    /// A discovered type is an open generic definition, or implements no closed generic interface deriving
+    /// from <typeparamref name="TBase"/>, so it could never be resolved by its request/response pair. Failing
+    /// loud at registration time is preferred over shipping an unreachable registration (edge-case review Q7/Q13).
     /// </exception>
     public static ServiceDescriptor[] GetRegistrationsAsImplementedFrom<TLocator, TBase>()
     {
         var descriptors = new List<ServiceDescriptor>();
-        var types = GetTypesFromAssembly<TLocator>(i => i == typeof(TBase));
-        foreach (var t in types)
+        foreach (var t in GetTypesFromAssembly<TLocator>(i => i == typeof(TBase)))
         {
-            var genericParameters = GetGenericParameters(t);
-
-            if (genericParameters.Length == 0)
-                throw new InvalidOperationException(
-                    $"Could not determine the closed generic type arguments for '{t.FullName}'. " +
-                    $"Types discovered via {nameof(GetRegistrationsAsImplementedFrom)} must derive from a generic base class " +
-                    $"closed over the request/response types (e.g. Pipe<TRequest, TResponse>).");
-
-            var interfaceType = Enumerable.First(t.GetInterfaces());
-            if (interfaceType.GetGenericArguments().Any() &&
-                interfaceType.GetGenericArguments().Length == genericParameters.Length)
-            {
-                var interfaceGenericType = interfaceType.IsGenericTypeDefinition ? interfaceType.MakeGenericType(genericParameters) : interfaceType;
-                var implementedGenericType = t.IsGenericTypeDefinition ? t.MakeGenericType(genericParameters) : t;
-                descriptors.Add(new ServiceDescriptor(interfaceGenericType, implementedGenericType, ServiceLifetime.Scoped));
-                continue;
-            }
-
-            descriptors.Add(new ServiceDescriptor(interfaceType, t, ServiceLifetime.Scoped));
+            var serviceTypes = ClosedInterfacesOf(t, i => typeof(TBase).IsAssignableFrom(i));
+            descriptors.AddRange(serviceTypes.Select(s => new ServiceDescriptor(s, t, ServiceLifetime.Scoped)));
         }
 
         return descriptors.ToArray();
+    }
+
+    /// <summary>
+    /// Returns the closed generic interfaces of <paramref name="type"/> matching <paramref name="predicate"/>.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">
+    /// <paramref name="type"/> is an open generic definition, or no closed generic interface matches.
+    /// </exception>
+    public static Type[] ClosedInterfacesOf(Type type, Func<Type, bool> predicate)
+    {
+        var interfaces = type.IsGenericTypeDefinition
+            ? []
+            : type.GetInterfaces().Where(i => i.IsGenericType && predicate(i)).ToArray();
+
+        if (interfaces.Length == 0)
+            throw new InvalidOperationException(
+                $"Could not determine the closed generic type arguments for '{type.FullName}'. " +
+                "Types discovered by assembly scanning must be non-generic and implement a closed generic " +
+                "interface (e.g. IPipe<TRequest, TResponse> or IRequestHandler<TRequest, TResponse>).");
+
+        return interfaces;
     }
 
     public static ServiceDescriptor[] GetServiceDescriptorsForHandler<TRequest, TResponse, THandler>(bool excludeValidation = false)

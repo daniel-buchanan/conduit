@@ -9,7 +9,7 @@ public interface IRequestHandler;
 
 /// <summary>
 /// Defines the contract for a request handler that processes a specific type of request and returns a response.
-/// This interface also acts as a pipe stage for integration into the Conduit pipeline.
+/// This interface also acts as a pipe stage for integration into a Conduit pipe.
 /// </summary>
 /// <typeparam name="TRequest">The type of the request to handle.</typeparam>
 /// <typeparam name="TResponse">The type of the response produced by the handler.</typeparam>

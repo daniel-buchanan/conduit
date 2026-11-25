@@ -22,7 +22,7 @@ public class DebugPostExecutionStage<TRequest, TResponse>(ILog logger) : PipeSta
     /// <returns>A task that represents the asynchronous operation, returning a default response.</returns>
     protected override Task<StageResult<TRequest, TResponse>> ExecuteInternalAsync(Guid instanceId, TRequest request, CancellationToken cancellationToken)
     {
-        Logger.Debug("[POST] ICall<{0}>.ExecuteAsync", typeof(TRequest).Name);
+        Logger.Debug("[POST] {0} :: leaving pipe", typeof(TRequest).Name);
         return Task.FromResult(StageResult.WithIndeterminateResult<TRequest, TResponse>(this.GetType()));
     }
 }

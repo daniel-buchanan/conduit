@@ -17,18 +17,6 @@ public class DefaultPipeConfiguration
     /// Gets the list of post-execution stages that are applied to all pipes by default.
     /// </summary>
     public List<Type> PostExecutionStages { get; } = new();
-    
-    /// <summary>
-    /// Adds a pre-execution stage to the default configuration.
-    /// </summary>
-    /// <param name="stage">The type of the stage to add.</param>
-    public void AddPreExecutionStage(Type stage) => PreExecutionStages.Add(stage);
-    
-    /// <summary>
-    /// Adds a post-execution stage to the default configuration.
-    /// </summary>
-    /// <param name="stage">The type of the stage to add.</param>
-    public void AddPostExecutionStage(Type stage) => PostExecutionStages.Add(stage);
 }
 
 

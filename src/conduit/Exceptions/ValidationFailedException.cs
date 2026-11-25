@@ -3,7 +3,7 @@ using conduit.Pipes.Stages;
 namespace conduit.Exceptions;
 
 /// <summary>
-/// The exception that is thrown when model validation fails during pipeline execution.
+/// The exception that is thrown when model validation fails during pipe execution.
 /// </summary>
 public class ValidationFailedException(ValidationResult validationResult) : Exception(GetMessage(validationResult)), IPassthroughException
 {

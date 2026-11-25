@@ -3,8 +3,8 @@
     <PropertyGroup>
         <TargetFrameworks>netstandard2.0;net10.0</TargetFrameworks>
         <PackageId>conduit</PackageId>
-        <Version>0.1.0</Version>
-        <Description>Core pipe/stage request dispatch pipeline for .NET: IConduit, IRequest, IRequestHandler, and pipe/stage/configuration machinery.</Description>
+        <Version>1.0.0</Version>
+        <Description>Core pipe/stage request mediator for .NET: IConduit, IRequest, IRequestHandler, and pipe/stage/configuration machinery.</Description>
     </PropertyGroup>
 
     <ItemGroup>

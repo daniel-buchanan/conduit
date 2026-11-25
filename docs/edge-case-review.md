@@ -2,10 +2,9 @@
 
 Audit of `conduit.validation` and the core pipe/conduit engine for edge cases not
 covered by the existing test suite. Ambiguous-intent points were put to Daniel via
-the grilling process. This is a working register — resolved items still need
-implementing + tests.
+the grilling process. This was a working register; every item below has since been implemented.
 
-Status: ✅ all decisions resolved. Nothing implemented yet — this register is the spec to build against.
+Status: ✅ all decisions resolved and implemented (see ADR-0003 to ADR-0014, and ADR-0019 for a correction to Q9's null-safety follow-up). Kept as the historical record of what was decided and why.
 
 ## Resolved
 
@@ -21,12 +20,12 @@ Status: ✅ all decisions resolved. Nothing implemented yet — this register is
 | Q8 | `PipeConfigurationRegistry.cs:33` (`Add`) | Should throw (not silently no-op) when called after the registry is locked (post-`Build()`). |
 | Q9 / Q9a | `ShouldBuilder.cs` (`Should()` signature) | Expression scope for name extraction: nested member chains are supported (`x => x.Address.City`), walking the full `MemberExpression` chain. `PropertyName` is the **full dotted path** (`"Address.City"`, not just `"City"`) — avoids collisions when two nested properties share a leaf name. The chain must be pure member access all the way down; anything with a method call, indexer, or non-member node anywhere in the chain throws `ArgumentException` at rule-registration time. |
 
-## Clear coverage gaps (no ambiguity — just missing tests, add directly once above is settled)
+## Coverage gaps (all now covered by tests, except where noted)
 
 - `AddValidation()` parameterless overload (assembly scan) — untested.
 - `WithValidatorFor<TRequest,TResponse,TModelValidator>()` type-based overload — untested.
 - `RegisterPipesAsImplementedFrom<TLocator>` — untested.
-- `ReflectionHelper.GetRegistrationsAsImplementedFrom(includeCtorDeps: true)` — unreachable/dead code path.
+- ~~`ReflectionHelper.GetRegistrationsAsImplementedFrom(includeCtorDeps: true)` — unreachable/dead code path.~~ The parameter has since been removed.
 - `ShouldStringBuilder.NullOrWhitespace` with whitespace-only input (only `null` is tested).
 - `ModelValidator` with zero rules added (`AddRules` adds nothing) — untested "valid by default" path.
 - `ValidationErrorsExtensions.ToModelState` — completely untested.

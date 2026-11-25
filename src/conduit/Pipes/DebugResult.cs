@@ -3,12 +3,12 @@ namespace conduit.Pipes;
 public record DebugResult<TResponse>(TResponse? Response, long OverallDurationMs, StageMetric[] Metrics)
 {
     /// <summary>
-    /// The overall duration of the pipeline in milliseconds.
+    /// The overall duration of the pipe in milliseconds.
     /// </summary>
     public long OverallDurationMs { get; } = OverallDurationMs;
     
     /// <summary>
-    /// The result of the pipeline.
+    /// The result of the pipe.
     /// </summary>
     public TResponse? Response { get; } = Response;
     

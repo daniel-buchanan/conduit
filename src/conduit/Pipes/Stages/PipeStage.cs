@@ -20,7 +20,7 @@ public abstract class PipeStage<TRequest, TResponse>(ILog logger) :
     
     /// <summary>
     /// When overridden in a derived class, executes the internal logic of the pipe stage asynchronously.
-    /// This method does not involve calling the next stage in the pipeline.
+    /// This method does not involve calling the next stage in the pipe.
     /// </summary>
     /// <param name="instanceId">A unique identifier for the current pipe instance.</param>
     /// <param name="request">The request to process.</param>
