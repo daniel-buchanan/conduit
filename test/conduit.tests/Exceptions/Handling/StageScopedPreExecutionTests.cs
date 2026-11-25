@@ -88,5 +88,7 @@ public class StageScopedPreExecutionTests
         Assert.True(result.ShortCircuited);
         Assert.Equal(0, BusinessHandler.InvocationCount);
         Assert.Equal(1, AuditAction.InvocationCount);
+        var metric = Assert.Single(result.Metrics); // ThrowingPreStage only, BusinessHandler excluded
+        Assert.NotNull(metric);
     }
 }

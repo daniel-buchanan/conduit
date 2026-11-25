@@ -82,5 +82,6 @@ public class StageScopedPostExecutionTests
         Assert.True(result.ShortCircuited);
         Assert.Equal(0, LaterPostStage.InvocationCount);
         Assert.Equal(2, result.Metrics.Length); // SucceedingHandler + ThrowingPostStage only, LaterPostStage excluded
+        Assert.All(result.Metrics, metric => Assert.NotNull(metric));
     }
 }
