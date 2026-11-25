@@ -8,6 +8,12 @@ on:
 permissions:
   contents: read
 
+# An unset shell runs as `bash -e`, without pipefail, so `dotnet test | tee` would hide a test failure.
+# `shell: bash` runs as `bash --noprofile --norc -eo pipefail`.
+defaults:
+  run:
+    shell: bash
+
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
@@ -32,7 +38,7 @@ jobs:
       - run: dotnet build --no-restore --configuration Release
 
       # Microsoft.NET.Test.Sdk ships Microsoft Code Coverage, so no extra package is needed.
-      # The default bash shell runs with pipefail, so a test failure still fails this step through tee.
+      # pipefail (from the workflow-level shell) keeps a test failure failing this step through tee.
       - run: dotnet test --no-build --configuration Release --collect "Code Coverage;Format=cobertura" --results-directory coverage | tee test-output.txt
 
       - name: Test summary
