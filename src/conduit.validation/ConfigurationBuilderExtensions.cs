@@ -8,7 +8,9 @@ namespace conduit.validation;
 public static class ConfigurationBuilderExtensions
 {
     /// <summary>
-    /// Adds validation support to the Conduit configuration by automatically discovering and registering validators from all loaded assemblies.
+    /// Adds validation support to the Conduit configuration by automatically discovering and registering validators from all
+    /// assemblies already loaded into the current <see cref="AppDomain"/> when this is called. Validators in an assembly
+    /// that has not been loaded yet are not found; use the configure overload with <c>WithValidatorsFromAssembly</c> for those.
     /// </summary>
     /// <param name="builder">The Conduit configuration builder.</param>
     /// <returns>The configuration builder for method chaining.</returns>

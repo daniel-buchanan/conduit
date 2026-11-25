@@ -70,7 +70,7 @@ public class GetGreetingValidator : ModelValidator<GetGreeting, GreetingResponse
 services.AddConduit(config =>
 {
     config.RegisterHandlersAsImplementedFrom<Program>();
-    config.AddValidation(); // scans loaded assemblies for ModelValidator<,> implementations
+    config.AddValidation(); // scans already-loaded assemblies for ModelValidator<,> implementations
 });
 
 app.AddConduitValidation(); // ASP.NET Core middleware: maps Conduit exceptions to ProblemDetails responses
