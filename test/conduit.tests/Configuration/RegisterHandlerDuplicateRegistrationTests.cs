@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Xunit;
 
-namespace conduit.tests;
+namespace conduit.tests.Configuration;
 
 public class RegisterHandlerDuplicateRegistrationTests
 {

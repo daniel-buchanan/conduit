@@ -1,7 +1,7 @@
 using conduit.common;
 using Xunit;
 
-namespace conduit.tests;
+namespace conduit.tests.Common;
 
 public class AsyncExtensionsTests
 {
