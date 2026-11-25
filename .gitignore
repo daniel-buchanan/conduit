@@ -6,3 +6,6 @@ conduit.sln.DotSettings.user
 **/obj
 **/bin
 BenchmarkDotNet.Artifacts/
+# Coverage output (CI writes these; also produced by a local run of the same command)
+coverage/
+coverage-report/

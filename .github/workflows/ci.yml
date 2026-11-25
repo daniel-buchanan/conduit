@@ -1,0 +1,115 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+# An unset shell runs as `bash -e`, without pipefail, so `dotnet test | tee` would hide a test failure.
+# `shell: bash` runs as `bash --noprofile --norc -eo pipefail`.
+defaults:
+  run:
+    shell: bash
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
+        with:
+          dotnet-version: 10.0.x
+
+      - run: dotnet restore
+
+      # TreatWarningsAsErrors is on (Directory.Build.props); this builds every TargetFramework,
+      # so a netstandard2.0-only break fails here even though the tests only run on net10.0.
+      - run: dotnet build --no-restore --configuration Release
+
+      # Microsoft.NET.Test.Sdk ships Microsoft Code Coverage, so no extra package is needed.
+      # pipefail (from the workflow-level shell) keeps a test failure failing this step through tee.
+      - run: dotnet test --no-build --configuration Release --collect "Code Coverage;Format=cobertura" --results-directory coverage | tee test-output.txt
+
+      - name: Test summary
+        if: ${{ !cancelled() }}
+        run: |
+          mkdir -p coverage-report
+          {
+            echo "### Tests"
+            echo
+            grep -E '^(Passed|Failed)!' test-output.txt | sed 's/^/- /' || echo "- No test results: the build or test run failed before reporting."
+          } > coverage-report/TestSummary.md
+          cat coverage-report/TestSummary.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Coverage report
+        if: ${{ !cancelled() }}
+        uses: danielpalme/ReportGenerator-GitHub-Action@70c37c4d588cff5bf9cf190830c6f01dfcfb884b # 5.6.1
+        with:
+          reports: coverage/**/*.cobertura.xml
+          targetdir: coverage-report
+          reporttypes: MarkdownSummaryGithub;Cobertura;HtmlInline
+          assemblyfilters: -conduit.tests
+
+      - name: Publish coverage summary
+        if: ${{ !cancelled() }}
+        run: cat coverage-report/SummaryGithub.md >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: ${{ !cancelled() }}
+        with:
+          name: coverage-report
+          path: coverage-report
+
+  # A separate job, so write access to pull requests is never granted to the build job or the
+  # third-party coverage action. Skipped for fork and Dependabot PRs, whose token is read-only.
+  pr-comment:
+    needs: build-and-test
+    if: >-
+      ${{ !cancelled() && github.event_name == 'pull_request'
+      && github.event.pull_request.head.repo.full_name == github.repository
+      && github.actor != 'dependabot[bot]' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: coverage-report
+          path: coverage-report
+
+      - name: Post or update the results comment
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          RESULT: ${{ needs.build-and-test.result }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          {
+            echo "## CI results: ${RESULT}"
+            echo
+            cat coverage-report/TestSummary.md 2>/dev/null || echo "No test summary was produced."
+            echo
+            echo "### Coverage"
+            echo
+            if [ -f coverage-report/SummaryGithub.md ]; then
+              sed '1d' coverage-report/SummaryGithub.md
+            else
+              echo "No coverage report was produced."
+            fi
+            echo
+            echo "[Full run and HTML coverage report](${RUN_URL})"
+          } > comment.md
+          gh pr comment "$PR" --body-file comment.md --edit-last --create-if-none
