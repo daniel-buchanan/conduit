@@ -1,5 +1,6 @@
 using System.Linq;
 using conduit.common;
+using conduit.Exceptions.Handling;
 using conduit.Helpers;
 using conduit.Pipes;
 using conduit.Pipes.Stages;
@@ -118,6 +119,14 @@ public class ConduitConfigurationBuilder : IConduitConfigurationBuilder
             }
         }
 
+        return this;
+    }
+
+    /// <inheritdoc/>
+    public IConduitConfigurationBuilder RegisterExceptionHandlersAsImplementedFrom<TLocator>()
+    {
+        // IOrderedExceptionParticipant is the shared base of all four handler/action interfaces, so one scan finds them all.
+        AddDescriptors(ReflectionHelper.GetRegistrationsAsImplementedFrom<TLocator, IOrderedExceptionParticipant>());
         return this;
     }
 

@@ -78,6 +78,34 @@ app.UseConduitValidation(); // ASP.NET Core middleware: maps Conduit exceptions 
 
 A failing validator throws `ValidationFailedException` (aggregating every failed rule, not just the first). The middleware returns 400 for `ValidationFailedException`, and 500 for `StageFailedException` and `ValidatorNotFoundException`; anything else is rethrown. Opt a specific pipe out with `ExcludeValidation()` on `RegisterHandler`'s `configure` callback or `RegisterPipe`'s builder.
 
+## Exception handling
+
+Intercept an exception for one request type instead of letting it surface as `StageFailedException`. `IRequestExceptionHandler`/`IRequestExceptionAction` see exceptions from the handler; `IStageExceptionHandler`/`IStageExceptionAction` see exceptions from every other stage. An action only observes. A handler can supply a response, which ends the pipe:
+
+```csharp
+public class GreetingFallback : IRequestExceptionHandler<GetGreeting, GreetingResponse, TimeoutException>
+{
+    public int Order => 0; // lower runs first
+
+    public Task HandleAsync(GetGreeting request, TimeoutException exception,
+        RequestExceptionHandlerState<GreetingResponse> state, CancellationToken cancellationToken)
+    {
+        state.SetHandled(new GreetingResponse { Message = "Hello, whoever you are." });
+        return Task.CompletedTask;
+    }
+}
+```
+
+```csharp
+services.AddConduit(config =>
+{
+    config.RegisterHandlersAsImplementedFrom<Program>();
+    config.RegisterExceptionHandlersAsImplementedFrom<Program>(); // registers every handler and action as Scoped
+});
+```
+
+Matching walks the exception's type hierarchy, so a handler for `Exception` catches everything. Conduit's own exceptions (`ValidationFailedException`, `StageFailedException`, `ValidatorNotFoundException`) and caller cancellation bypass exception handlers. See [ADR-0016](docs/adr/0016-request-and-stage-exception-handlers.md).
+
 ## Concepts and vocabulary
 
 `Conduit` → `Pipe` → `Stage` is the core plumbing metaphor (deliberately not MediatR's `Send`/pipeline behavior naming). Full canonical vocabulary, including terms to avoid, lives in [CONTEXT.md](CONTEXT.md).
