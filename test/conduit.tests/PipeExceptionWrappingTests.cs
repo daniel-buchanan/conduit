@@ -36,6 +36,24 @@ public class PipeExceptionWrappingTests
             => throw new StageFailedException("already wrapped upstream");
     }
 
+    public class CancellationObservingStage(ILog logger) : PipeStage<ThrowingRequest, ThrowingResponse>(logger)
+    {
+        protected override Task<StageResult<ThrowingRequest, ThrowingResponse>> ExecuteInternalAsync(
+            Guid instanceId, ThrowingRequest request, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            throw new OperationCanceledException("internal timeout, not the caller's token");
+        }
+    }
+
+    public class FailingValidationStage(ILog logger) : PipeStage<ThrowingRequest, ThrowingResponse>(logger)
+    {
+        protected override Task<StageResult<ThrowingRequest, ThrowingResponse>> ExecuteInternalAsync(
+            Guid instanceId, ThrowingRequest request, CancellationToken cancellationToken)
+            => Task.FromResult(StageResult.WithValidationResult<ThrowingRequest, ThrowingResponse>(
+                ValidationResult.WithFailure(request, [new ValidationError("Name", "required")]), GetType()));
+    }
+
     private static IPipe<ThrowingRequest, ThrowingResponse> BuildPipeWith<TStage>()
         where TStage : class, IPipeStage<ThrowingRequest, ThrowingResponse>
     {
@@ -87,5 +105,39 @@ public class PipeExceptionWrappingTests
         var exception = await Assert.ThrowsAsync<StageFailedException>(act);
         Assert.Equal("already wrapped upstream", exception.Message);
         Assert.Null(exception.InnerException);
+    }
+
+    [Fact]
+    public async Task Cancellation_Of_The_Callers_Token_Should_Pass_Through_Unwrapped()
+    {
+        var pipe = BuildPipeWith<CancellationObservingStage>();
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+
+        Func<Task> act = () => pipe.PushAsync(new ThrowingRequest(), cts.Token);
+
+        await Assert.ThrowsAsync<OperationCanceledException>(act);
+    }
+
+    [Fact]
+    public async Task An_OperationCanceledException_Not_From_The_Callers_Token_Should_Be_Wrapped()
+    {
+        var pipe = BuildPipeWith<CancellationObservingStage>();
+
+        Func<Task> act = () => pipe.PushAsync(new ThrowingRequest());
+
+        var exception = await Assert.ThrowsAsync<StageFailedException>(act);
+        Assert.IsType<OperationCanceledException>(exception.InnerException);
+    }
+
+    [Fact]
+    public async Task A_Validation_Failure_Should_Name_The_Request_Type()
+    {
+        var pipe = BuildPipeWith<FailingValidationStage>();
+
+        Func<Task> act = () => pipe.PushAsync(new ThrowingRequest());
+
+        var exception = await Assert.ThrowsAsync<ValidationFailedException>(act);
+        Assert.Equal($"Validation Failed for {nameof(ThrowingRequest)}", exception.Message);
     }
 }

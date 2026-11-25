@@ -71,6 +71,10 @@ public abstract class Pipe<TRequest, TResponse>(
             if(withMetrics)
                 metric = new StageMetric(index, stageType.GetGenericName(), prefetchDuration ?? -1, stageTimer?.ElapsedMilliseconds ?? -1);
         }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
         catch (Exception e)
         {
             stageTimer?.Stop();
@@ -88,7 +92,7 @@ public abstract class Pipe<TRequest, TResponse>(
     {
         if (stageResponse.ValidationErrors.Length != 0)
         {
-            throw new ValidationFailedException(ValidationResult.WithFailure(stageResponse.Result,
+            throw new ValidationFailedException(ValidationResult.WithFailure(request,
                 stageResponse.ValidationErrors));
         }
         
