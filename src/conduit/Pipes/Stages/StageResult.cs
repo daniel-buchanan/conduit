@@ -1,7 +1,7 @@
 namespace conduit.Pipes.Stages;
 
 /// <summary>
-/// Represents the result of executing a pipeline stage, including the response and any validation errors or exceptions.
+/// Represents the result of executing a stage, including the response and any validation errors or exceptions.
 /// </summary>
 /// <typeparam name="TRequest">The type of the request being processed.</typeparam>
 /// <typeparam name="TResponse">The type of the response produced by the stage.</typeparam>

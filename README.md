@@ -1,6 +1,6 @@
 # Conduit
 
-A MediatR-style request/response mediator for .NET. Consumers define `IRequest<TResponse>` messages and `IRequestHandler` implementations; `IConduit` routes each request to its handler through a configurable pipeline, without callers taking a direct dependency on the handler.
+A MediatR-style request/response mediator for .NET. Consumers define `IRequest<TResponse>` messages and `IRequestHandler` implementations; `IConduit` routes each request to its handler through a configurable pipe of stages, without callers taking a direct dependency on the handler.
 
 `conduit`, `conduit.common`, `conduit.logging`, and `conduit.validation` target `netstandard2.0;net10.0`. `conduit.aspnetcore.validation` targets `net10.0` only.
 
@@ -34,7 +34,7 @@ public class GetGreetingHandler(ILog logger) : RequestHandler<GetGreeting, Greet
 }
 ```
 
-Register it and push a request through the pipeline:
+Register it and push a request through its pipe:
 
 ```csharp
 services.AddConduit(config =>
@@ -94,7 +94,7 @@ Measured with [BenchmarkDotNet](https://benchmarkdotnet.org/) v0.14.0 on an Appl
 dotnet run -c Release --project test/conduit.benchmarks -- --filter '*'
 ```
 
-**Dispatch path** — cost of each layer between calling code and a handler:
+**Push path** — cost of each layer between calling code and a handler:
 
 | Method | Mean | Allocated | vs. baseline |
 |---|---:|---:|---:|

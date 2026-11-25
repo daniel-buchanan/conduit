@@ -48,12 +48,12 @@ public class PipeDescriptor(Type request, Type response)
         => HashUtil.Instance.TypeNameHash(RequestType, ResponseType);
 
     /// <summary>
-    /// Whether this pipeline is excluded from Model Validation.
+    /// Whether this pipe is excluded from Model Validation.
     /// </summary>
     public bool ExcludeValidation { get; private set; } = false;
     
     /// <summary>
-    /// Exclude this pipeline from Model Validation.
+    /// Exclude this pipe from Model Validation.
     /// </summary>
     public void ExcludeFromValidation() => ExcludeValidation = true;
 }

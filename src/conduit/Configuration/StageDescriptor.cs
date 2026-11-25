@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace conduit.Configuration;
 
 /// <summary>
-/// Represents the configuration for a pipeline stage, including its types and service lifetime.
+/// Represents the configuration for a stage, including its types and service lifetime.
 /// </summary>
 /// <param name="request">The request type handled by the stage.</param>
 /// <param name="response">The response type produced by the stage.</param>

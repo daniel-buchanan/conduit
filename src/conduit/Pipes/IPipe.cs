@@ -17,7 +17,7 @@ public interface IPipe<in TRequest, TResponse> : IPipe
     /// <summary>
     /// Pushes a request through the pipe and awaits a response.
     /// </summary>
-    /// <param name="request">The request to send.</param>
+    /// <param name="request">The request to push.</param>
     /// <param name="cancellationToken">A cancellation token to observe while waiting for the task to complete.</param>
     /// <returns>A task that represents the asynchronous operation, returning the response.</returns>
     Task<TResponse?> PushAsync(TRequest request, CancellationToken cancellationToken = default);
@@ -25,7 +25,7 @@ public interface IPipe<in TRequest, TResponse> : IPipe
     /// <summary>
     /// Pushes a request through the pipe and awaits a response. While timing and recording information about each stage.
     /// </summary>
-    /// <param name="request">The request to send.</param>
+    /// <param name="request">The request to push.</param>
     /// <param name="cancellationToken">A cancellation token to observe while waiting for the task to complete.</param>
     /// <returns>A task that represents the asynchronous operation, returning the response wrapped in debugging information.</returns>
     Task<DebugResult<TResponse?>> PushWithDebugAsync(TRequest request, CancellationToken cancellationToken = default);

@@ -1,7 +1,7 @@
 namespace conduit.Exceptions;
 
 /// <summary>
-/// The exception that is thrown when a required pipeline stage cannot be found or resolved.
+/// The exception that is thrown when a required stage cannot be found or resolved.
 /// </summary>
 public class StageNotFoundException : Exception
 {
