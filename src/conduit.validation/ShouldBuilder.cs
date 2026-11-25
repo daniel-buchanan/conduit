@@ -29,9 +29,9 @@ public class ShouldBuilder<TRequest, TProperty> : IShouldBuilder<TRequest, TProp
 
     /// <inheritdoc/>
     public IShouldBeBuilder<TRequest, TProperty> Be()
-        => new ShouldBeBuilder<TRequest, TProperty>(_builder, _property, _propertyName);
+        => new ShouldBeBuilder<TRequest, TProperty>(_builder, _property, _propertyName, invertResults: false);
 
     /// <inheritdoc/>
     public IShouldBeBuilder<TRequest, TProperty> NotBe()
-        => new ShouldNotBeBuilder<TRequest, TProperty>(_builder, _property, _propertyName);
+        => new ShouldBeBuilder<TRequest, TProperty>(_builder, _property, _propertyName, invertResults: true);
 }
