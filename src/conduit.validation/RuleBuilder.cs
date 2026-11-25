@@ -34,13 +34,14 @@ public interface IRuleBuilder<TRequest> where TRequest : class
     /// When implemented, builds and returns the configured rules.
     /// </summary>
     /// <returns>An array of configured validation rules.</returns>
-    internal Rule<TRequest>[] Build();
+    internal IRule<TRequest>[] Build();
     
     /// <summary>
-    /// When implemented, adds a rule to the builder.
+    /// Adds a custom rule, for checks <c>Should(...)</c> can't express, such as rules that compare several
+    /// properties or call out to another service. Its errors are aggregated with every other rule's.
     /// </summary>
     /// <param name="rule">The rule to add.</param>
-    internal void AddRule(Rule<TRequest> rule);
+    void AddRule(IRule<TRequest> rule);
 }
 
 /// <summary>
@@ -49,7 +50,7 @@ public interface IRuleBuilder<TRequest> where TRequest : class
 /// <typeparam name="TRequest">The type of request being validated.</typeparam>
 public class RuleBuilder<TRequest> : IRuleBuilder<TRequest> where TRequest : class
 {
-    private readonly List<Rule<TRequest>> _rules = new();
+    private readonly List<IRule<TRequest>> _rules = new();
     
     /// <inheritdoc/>
     public IShouldBuilder<TRequest, TProperty> Should<TProperty>(Expression<Func<TRequest, TProperty>> property)
@@ -60,10 +61,10 @@ public class RuleBuilder<TRequest> : IRuleBuilder<TRequest> where TRequest : cla
         => new ShouldStringBuilder<TRequest>(this, property);
 
     /// <inheritdoc/>
-    public Rule<TRequest>[] Build()
+    public IRule<TRequest>[] Build()
         => _rules.ToArray();
 
     /// <inheritdoc/>
-    public void AddRule(Rule<TRequest> rule)
-        => _rules.Add(rule);
+    public void AddRule(IRule<TRequest> rule)
+        => _rules.Add(rule ?? throw new ArgumentNullException(nameof(rule)));
 }

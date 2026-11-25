@@ -62,9 +62,12 @@ public class GetGreetingValidator : ModelValidator<GetGreeting, GreetingResponse
     {
         ruleBuilder.Should(x => x.Name).NotBe().Null();
         ruleBuilder.Should(x => x.Name).NotBe().NullOrWhitespace();
+        ruleBuilder.AddRule(new NotOnBlocklistRule()); // your own IRule<GetGreeting>
     }
 }
 ```
+
+For a check `Should(...)` can't express, such as one comparing two properties or calling another service, implement `IRule<TRequest>` and add it with `AddRule`. Its errors are collected alongside the other rules' errors.
 
 ```csharp
 services.AddConduit(config =>

@@ -42,7 +42,7 @@ public abstract class ModelValidator<TRequest, TResponse> : IModelValidator<TReq
     where TRequest : class, IRequest<TResponse>
     where TResponse : class
 {
-    private readonly List<Rule<TRequest>> _rules = [];
+    private readonly List<IRule<TRequest>> _rules = [];
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ModelValidator{TRequest, TResponse}"/> class.
