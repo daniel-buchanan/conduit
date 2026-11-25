@@ -3,7 +3,7 @@
     <PropertyGroup>
         <TargetFrameworks>netstandard2.0;net10.0</TargetFrameworks>
         <PackageId>conduit.common</PackageId>
-        <Version>0.1.0</Version>
+        <Version>1.0.0</Version>
         <Description>Shared low-level helpers for Conduit (IEnvironment, HashUtil, extensions) with no dependency on Conduit core.</Description>
     </PropertyGroup>
 
