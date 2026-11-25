@@ -49,6 +49,8 @@ var response = await conduit.PushAsync(new GetGreeting { Name = "World" });
 
 `PushAsync` throws `PipeNotFoundException` if no pipe is registered for the request/response pair. `PushWithDebugAsync` returns the same response wrapped with per-stage timing.
 
+`IConduit` is transient and resolves pipes and handlers from the scope it was resolved in. Inject it into controllers or other scoped services; from a singleton (e.g. a `BackgroundService`), create a scope and resolve `IConduit` from it ([ADR-0017](docs/adr/0017-conduit-resolves-pipes-from-the-callers-scope.md)).
+
 ## Validation
 
 The optional `conduit.validation` package adds a `ValidationStage` that runs before your handler:
