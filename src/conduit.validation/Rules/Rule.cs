@@ -4,7 +4,9 @@ using conduit.Pipes.Stages;
 namespace conduit.validation.Rules;
 
 /// <summary>
-/// Defines the contract for a validation rule that can be executed synchronously or asynchronously.
+/// Defines the contract for a validation rule that can be executed synchronously or asynchronously. Implement it
+/// for a check <c>Should(...)</c> can't express, and add it in <c>AddRules</c> with
+/// <see cref="IRuleBuilder{TRequest}.AddRule"/>. <c>ModelValidator</c> always calls <see cref="ValidateAsync"/>.
 /// </summary>
 /// <typeparam name="TRequest">The type of request being validated.</typeparam>
 public interface IRule<TRequest> where TRequest : class
