@@ -37,7 +37,7 @@ public class ShouldStringBuilder<TRequest> : IShouldStringBuilder<TRequest> wher
 
 /// <summary>
 /// Provides a concrete implementation of <see cref="IShouldBeStringBuilder{TRequest}"/>, adding string-specific
-/// validation conditions on top of the shared <see cref="AbstractShouldBuilder{TRequest, TProperty}"/> behavior.
+/// validation conditions on top of <see cref="ShouldBeBuilder{TRequest, TProperty}"/>.
 /// </summary>
 /// <typeparam name="TRequest">The type of request being validated.</typeparam>
 public class ShouldBeStringBuilder<TRequest>(
@@ -45,12 +45,9 @@ public class ShouldBeStringBuilder<TRequest>(
     Func<TRequest, string?> property,
     string propertyName,
     bool invertResults) :
-    AbstractShouldBuilder<TRequest, string?>(builder, property, propertyName), IShouldBeStringBuilder<TRequest>
+    ShouldBeBuilder<TRequest, string?>(builder, property, propertyName, invertResults), IShouldBeStringBuilder<TRequest>
     where TRequest : class
 {
-    /// <inheritdoc/>
-    protected override bool InvertResults => invertResults;
-
     /// <inheritdoc/>
     public IRuleBuilder<TRequest> NullOrWhitespace(string? message = null)
         => AddRule(r => string.IsNullOrWhiteSpace(Property(r)), message);

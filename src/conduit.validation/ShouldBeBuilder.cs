@@ -4,29 +4,29 @@ using conduit.validation.Rules;
 namespace conduit.validation;
 
 /// <summary>
-/// Provides an abstract base class for building validation conditions for properties.
+/// Builds validation conditions for a property, for both <c>Be()</c> and <c>NotBe()</c>.
 /// </summary>
 /// <typeparam name="TRequest">The type of request being validated.</typeparam>
 /// <typeparam name="TProperty">The type of the property being validated.</typeparam>
-public abstract class AbstractShouldBuilder<TRequest, TProperty>(
+/// <param name="builder">The underlying rule builder to add rules to.</param>
+/// <param name="property">The function that selects the property being validated.</param>
+/// <param name="propertyName">The property name reported in validation errors.</param>
+/// <param name="invertResults"><c>true</c> for <c>NotBe()</c>: each condition passes when it does not hold.</param>
+public class ShouldBeBuilder<TRequest, TProperty>(
     IRuleBuilder<TRequest> builder,
     Func<TRequest, TProperty> property,
-    string propertyName) :
+    string propertyName,
+    bool invertResults) :
     IShouldBeBuilder<TRequest, TProperty>
     where TRequest : class
 {
-    /// <summary>
-    /// Gets a value indicating whether the validation results should be inverted.
-    /// </summary>
-    protected abstract bool InvertResults { get; }
-
     /// <summary>
     /// Gets the function that selects the property being validated.
     /// </summary>
     protected Func<TRequest, TProperty> Property => property;
 
     /// <summary>
-    /// Adds a rule to the underlying builder, applying <see cref="InvertResults"/> to the validator's outcome.
+    /// Adds a rule to the underlying builder, inverting the validator's outcome for <c>NotBe()</c>.
     /// </summary>
     /// <param name="validator">A function that returns whether the property is valid.</param>
     /// <param name="message">An optional custom error message.</param>
@@ -35,7 +35,7 @@ public abstract class AbstractShouldBuilder<TRequest, TProperty>(
         ValidationResult<TRequest> Execute(TRequest r)
         {
             var result = validator(r);
-            if (InvertResults) result = !result;
+            if (invertResults) result = !result;
             return result
                 ? ValidationResult.WithSuccess(r)
                 : ValidationResult.WithFailure(r, [new ValidationError(propertyName, message)]);
@@ -82,33 +82,4 @@ public abstract class AbstractShouldBuilder<TRequest, TProperty>(
     /// <inheritdoc/>
     public IRuleBuilder<TRequest> OneOf(string message, IEnumerable<TProperty> values)
         => In(message, values);
-}
-
-/// <summary>
-/// Provides a concrete implementation of <see cref="AbstractShouldBuilder{TRequest, TProperty}"/> for negative validation conditions.
-/// This builder inverts the results of validation conditions.
-/// </summary>
-/// <typeparam name="TRequest">The type of request being validated.</typeparam>
-/// <typeparam name="TProperty">The type of the property being validated.</typeparam>
-public class ShouldNotBeBuilder<TRequest, TProperty>(
-    IRuleBuilder<TRequest> builder, Func<TRequest, TProperty> property, string propertyName) :
-    AbstractShouldBuilder<TRequest, TProperty>(builder, property, propertyName)
-    where TRequest : class
-{
-    /// <inheritdoc/>
-    protected override bool InvertResults => true;
-}
-
-/// <summary>
-/// Provides a concrete implementation of <see cref="AbstractShouldBuilder{TRequest, TProperty}"/> for positive validation conditions.
-/// </summary>
-/// <typeparam name="TRequest">The type of request being validated.</typeparam>
-/// <typeparam name="TProperty">The type of the property being validated.</typeparam>
-public class ShouldBeBuilder<TRequest, TProperty>(
-    IRuleBuilder<TRequest> builder, Func<TRequest, TProperty> property, string propertyName) :
-    AbstractShouldBuilder<TRequest, TProperty>(builder, property, propertyName)
-    where TRequest : class
-{
-    /// <inheritdoc/>
-    protected override bool InvertResults => false;
 }
