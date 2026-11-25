@@ -8,7 +8,7 @@ public class StageNotFoundException : Exception
     /// <summary>
     /// Initializes a new instance of the <see cref="StageNotFoundException"/> class with a default message.
     /// </summary>
-    public StageNotFoundException() : base("Pipe not found") { }
+    public StageNotFoundException() : base("Stage not found") { }
     
     /// <summary>
     /// Initializes a new instance of the <see cref="StageNotFoundException"/> class with a specified error message.
