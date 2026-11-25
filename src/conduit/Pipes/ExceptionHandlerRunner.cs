@@ -8,9 +8,9 @@ namespace conduit.Pipes;
 
 /// <summary>
 /// Resolves, orders, and invokes <see cref="IRequestExceptionHandler{TRequest,TResponse,TException}"/> /
-/// <see cref="IRequestExceptionAction{TRequest,TException}"/> (when <c>isHandlerStage</c> is <c>true</c>) or
-/// <see cref="IStageExceptionHandler{TRequest,TResponse,TException}"/> /
-/// <see cref="IStageExceptionAction{TRequest,TException}"/> (otherwise) for a caught exception, walking the
+/// <see cref="IRequestExceptionAction{TRequest,TException}"/> (when the failed stage is the pipe's
+/// <see cref="IRequestHandler"/>) or <see cref="IStageExceptionHandler{TRequest,TResponse,TException}"/> /
+/// <see cref="IStageExceptionAction{TRequest,TException}"/> (any other stage) for a caught exception, walking the
 /// exception's real type hierarchy up to and including <see cref="Exception"/>.
 /// </summary>
 internal static class ExceptionHandlerRunner
@@ -19,13 +19,14 @@ internal static class ExceptionHandlerRunner
         IServiceProvider provider,
         TRequest request,
         Exception exception,
-        bool isHandlerStage,
+        IPipeStage<TRequest, TResponse> failedStage,
         CancellationToken cancellationToken)
         where TRequest : class, IRequest<TResponse>
         where TResponse : class
     {
-        var actionInterface = isHandlerStage ? typeof(IRequestExceptionAction<,>) : typeof(IStageExceptionAction<,>);
-        var handlerInterface = isHandlerStage ? typeof(IRequestExceptionHandler<,,>) : typeof(IStageExceptionHandler<,,>);
+        var (actionInterface, handlerInterface) = failedStage is IRequestHandler
+            ? (typeof(IRequestExceptionAction<,>), typeof(IRequestExceptionHandler<,,>))
+            : (typeof(IStageExceptionAction<,>), typeof(IStageExceptionHandler<,,>));
 
         var actions = new List<(int Order, object Instance, MethodInfo Method)>();
         var handlers = new List<(int Order, object Instance, MethodInfo Method)>();
