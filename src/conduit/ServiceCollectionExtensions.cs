@@ -27,7 +27,6 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IEnvironment, EnvironmentImpl>();
         services.AddSingleton<IPipeConfigurationRegistry, PipeConfigurationRegistry>();
         services.AddTransient<IPipeFactory, PipeFactory>();
-        services.AddTransient<IHashUtil, HashUtil>();
         return services;
     }
 

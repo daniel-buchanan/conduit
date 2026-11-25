@@ -15,7 +15,7 @@ public class ConduitConfigurationBuilder : IConduitConfigurationBuilder
 {
     private readonly DefaultPipeConfiguration _defaultPipeConfiguration = new();
     private readonly List<ServiceDescriptor> _descriptors = new();
-    private readonly PipeConfigurationRegistry _pipeConfigurationRegistry = new(HashUtil.Instance);
+    private readonly PipeConfigurationRegistry _pipeConfigurationRegistry = new();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ConduitConfigurationBuilder"/> class.

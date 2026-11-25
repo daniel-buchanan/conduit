@@ -1,4 +1,3 @@
-using conduit.common;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace conduit.Configuration;
@@ -33,12 +32,6 @@ public class PipeDescriptor(Type request, Type response)
     /// Gets the list of service descriptors representing the stages in the pipe.
     /// </summary>
     public List<StageDescriptor> Stages { get; } = new();
-
-    /// <summary>
-    /// Get the hash for this pipe descriptor.
-    /// </summary>
-    public string GetHash()
-        => HashUtil.Instance.TypeNameHash(RequestType, ResponseType);
 
     /// <summary>
     /// Whether this pipe is excluded from Model Validation.
