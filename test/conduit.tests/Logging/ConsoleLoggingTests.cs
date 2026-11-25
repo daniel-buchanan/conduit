@@ -1,3 +1,4 @@
+using System.Globalization;
 using conduit.common;
 using conduit.logging;
 using FluentAssertions;
@@ -6,115 +7,33 @@ using Xunit;
 
 namespace conduit.tests.Logging;
 
+/// <summary>
+/// Console-specific behaviour only; level filtering and message composition live in <see cref="CoreLoggingTests"/>.
+/// </summary>
 public class ConsoleLoggingTests
 {
     [Fact]
-    public void WriteMessageInternalCalled()
+    public void MessageWrittenToStdOut()
     {
-        // Arrange
-        var env = new EnvironmentImpl();
-        var stdOut = new MockStdIo(isStdErr: false);
-        var stdErr = new MockStdIo(isStdErr: true);
-        var console = new StdConsole(stdOut, stdErr);
-        var logger = new ConsoleLog(env, console);
-        var messageLogged = string.Empty;
-        stdOut.OnWriteLine += (msg) => messageLogged = msg;
-
-        // Act
-        var testMessage = "Test message";
-        logger.Info(testMessage);
-
-        // Assert
-        messageLogged.Should().EndWith(testMessage);
-    }
-    
-    [Fact]
-    public void MessageNotLogged_WrongLogLevel()
-    {
-        // Arrange
         var envMock = new Mock<IEnvironment>();
-        envMock.Setup(e => e.LogLevel).Returns(LoggingLevel.Error);
+        envMock.Setup(e => e.LogLevel).Returns(LoggingLevel.Info);
         var stdOut = new MockStdIo(isStdErr: false);
-        var stdErr = new MockStdIo(isStdErr: true);
-        var console = new StdConsole(stdOut, stdErr);
-        var logger = new ConsoleLog(envMock.Object, console);
+        var logger = new ConsoleLog(envMock.Object, new StdConsole(stdOut, new MockStdIo(isStdErr: true)));
         var messageLogged = string.Empty;
-        stdOut.OnWriteLine += (msg) => messageLogged = msg;
+        stdOut.OnWriteLine += msg => messageLogged = msg;
 
-        // Act
         logger.Info("Test message");
 
-        // Assert
-        Assert.Equal(string.Empty, messageLogged);
+        messageLogged.Should().StartWith("[INFO ] ").And.EndWith(" Test message");
     }
 
-    [Theory]
-    [MemberData(nameof(LogLevelShouldNotLogData))]
-    public void MessageLogged_CorrectLogLevel(LoggingLevel level, Func<ILog, ILog> logFunc)
+    [Fact]
+    public void Timestamp_Uses24HourClock()
     {
-        // Arrange
-        var envMock = new Mock<IEnvironment>();
-        envMock.Setup(e => e.LogLevel).Returns(level);
-        var stdOut = new MockStdIo(isStdErr: false);
-        var stdErr = new MockStdIo(isStdErr: true);
-        var console = new StdConsole(stdOut, stdErr);
-        var logger = new ConsoleLog(envMock.Object, console);
-        var messageLogged = string.Empty;
-        stdOut.OnWriteLine += (msg) => messageLogged = msg;
+        var afternoon = new DateTimeOffset(2026, 1, 2, 13, 4, 5, TimeSpan.Zero);
 
-        // Act
-        logFunc(logger);
+        var line = string.Format(CultureInfo.InvariantCulture, ConsoleLog.LogFormat, "INFO ", afternoon, "m");
 
-        // Assert
-        Assert.Equal(string.Empty, messageLogged);
+        line.Should().Be("[INFO ] 2026-01-02T13:04:05 m");
     }
-    
-    public static TheoryData<LoggingLevel, Func<ILog, ILog>> LogLevelShouldNotLogData => new TheoryData<LoggingLevel, Func<ILog, ILog>>
-    {
-        { LoggingLevel.Verbose, l => l.Debug("Test message") },
-        { LoggingLevel.Info, l => l.Verbose("Test message") },
-        { LoggingLevel.Info, l => l.Debug("Test message") },
-        { LoggingLevel.Warning, l => l.Info("Test message") },
-        { LoggingLevel.Warning, l => l.Verbose("Test message") },
-        { LoggingLevel.Warning, l => l.Debug("Test message") },
-        { LoggingLevel.Error, l => l.Warn("Test message") },
-        { LoggingLevel.Error, l => l.Info("Test message") },
-        { LoggingLevel.Error, l => l.Verbose("Test message") },
-        { LoggingLevel.Error, l => l.Debug("Test message") },
-    };
-
-    [Theory]
-    [MemberData(nameof(ExceptionLoggedCorrectlyData))]
-    public void ExceptionLoggedCorrectly(LoggingLevel level, Func<ILog, string, Exception, ILog> logFunc)
-    {
-        // Arrange
-        var envMock = new Mock<IEnvironment>();
-        envMock.Setup(e => e.LogLevel).Returns(level);
-        var stdOut = new MockStdIo(isStdErr: false);
-        var stdErr = new MockStdIo(isStdErr: true);
-        var console = new StdConsole(stdOut, stdErr);
-        var logger = new ConsoleLog(envMock.Object, console);
-        const string exceptionMessage = "Test exception";
-        var testException = new Exception(exceptionMessage);
-        var messageLogged = string.Empty;
-        stdOut.OnWriteLine += (msg) => messageLogged = msg;
-        
-        // Act
-        logFunc(logger, exceptionMessage, testException);
-
-        // Assert
-        var failureMessage = $"Error occurred! {exceptionMessage}";
-        messageLogged.Should().EndWith(failureMessage);
-    }
-    
-    public static TheoryData<LoggingLevel, Func<ILog, string, Exception, ILog>> ExceptionLoggedCorrectlyData => new ()
-    {
-        { LoggingLevel.Debug, (l, s, e) => l.Debug(s, e) },
-        { LoggingLevel.Verbose, (l, s, e) => l.Verbose(s, e) },
-        { LoggingLevel.Info, (l, s, e) => l.Info(s, e) },
-        { LoggingLevel.Warning, (l, s, e) => l.Warn(s, e) },
-        { LoggingLevel.Error, (l, s, e) => l.Error(s, e) },
-        { LoggingLevel.Error , (l, s, e) => l.Error(e) },
-        { LoggingLevel.Error , (l, s, e) => l.Error(e, s) },
-    };
 }
