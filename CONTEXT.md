@@ -1,6 +1,6 @@
 # Conduit
 
-A MediatR-style request/response mediator for .NET: consumers define `IRequest<TResponse>` messages and `IRequestHandler` implementations, and `IConduit` routes a request to its handler through a configurable pipeline, without callers taking a direct dependency on the handler.
+A MediatR-style request/response mediator for .NET: consumers define `IRequest<TResponse>` messages and `IRequestHandler` implementations, and `IConduit` routes a request to its handler through a configurable pipe of stages, without callers taking a direct dependency on the handler.
 
 ## Language
 

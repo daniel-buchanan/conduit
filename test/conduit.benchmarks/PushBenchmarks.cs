@@ -9,7 +9,7 @@ namespace conduit.benchmarks;
 /// versus a pipe with the default validation stage in front of it.
 /// </summary>
 [MemoryDiagnoser]
-public class DispatchBenchmarks
+public class PushBenchmarks
 {
     private IConduit _plainConduit = null!;
     private IConduit _validatedConduit = null!;
@@ -36,10 +36,10 @@ public class DispatchBenchmarks
     }
 
     [Benchmark(Baseline = true)]
-    public Task<NoOpResponse?> Dispatch_NoValidation()
+    public Task<NoOpResponse?> Push_NoValidation()
         => _plainConduit.PushAsync(_noOpRequest);
 
     [Benchmark]
-    public Task<ValidatedResponse?> Dispatch_WithValidation()
+    public Task<ValidatedResponse?> Push_WithValidation()
         => _validatedConduit.PushAsync(_validatedRequest);
 }
