@@ -29,7 +29,7 @@ public class ExceptionHandlerOrderingTests
         public Task HandleAsync(
             OrderingRequest request,
             InvalidOperationException exception,
-            RequestExceptionHandlerState<OrderingResponse> state,
+            ExceptionHandlerState<OrderingResponse> state,
             CancellationToken cancellationToken)
         {
             state.SetHandled(new OrderingResponse { Value = "first" });
@@ -45,7 +45,7 @@ public class ExceptionHandlerOrderingTests
         public Task HandleAsync(
             OrderingRequest request,
             InvalidOperationException exception,
-            RequestExceptionHandlerState<OrderingResponse> state,
+            ExceptionHandlerState<OrderingResponse> state,
             CancellationToken cancellationToken)
         {
             InvocationCount++;

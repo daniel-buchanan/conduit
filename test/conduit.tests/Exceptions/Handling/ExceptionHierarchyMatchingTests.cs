@@ -34,7 +34,7 @@ public class ExceptionHierarchyMatchingTests
         public Task HandleAsync(
             HierarchyRequest request,
             PaymentException exception,
-            RequestExceptionHandlerState<HierarchyResponse> state,
+            ExceptionHandlerState<HierarchyResponse> state,
             CancellationToken cancellationToken)
         {
             InvocationCount++;
@@ -51,7 +51,7 @@ public class ExceptionHierarchyMatchingTests
         public Task HandleAsync(
             HierarchyRequest request,
             PaymentDeclinedException exception,
-            RequestExceptionHandlerState<HierarchyResponse> state,
+            ExceptionHandlerState<HierarchyResponse> state,
             CancellationToken cancellationToken)
         {
             InvocationCount++;
@@ -68,7 +68,7 @@ public class ExceptionHierarchyMatchingTests
         public Task HandleAsync(
             HierarchyRequest request,
             PaymentException exception,
-            RequestExceptionHandlerState<HierarchyResponse> state,
+            ExceptionHandlerState<HierarchyResponse> state,
             CancellationToken cancellationToken)
         {
             InvocationCount++;
@@ -85,7 +85,7 @@ public class ExceptionHierarchyMatchingTests
         public Task HandleAsync(
             HierarchyRequest request,
             PaymentDeclinedException exception,
-            RequestExceptionHandlerState<HierarchyResponse> state,
+            ExceptionHandlerState<HierarchyResponse> state,
             CancellationToken cancellationToken)
         {
             InvocationCount++;

@@ -42,7 +42,7 @@ public class StageScopedPreExecutionTests
         public Task HandleAsync(
             PreStageRequest request,
             UnauthorizedAccessException exception,
-            RequestExceptionHandlerState<PreStageResponse> state,
+            ExceptionHandlerState<PreStageResponse> state,
             CancellationToken cancellationToken)
         {
             state.SetHandled(new PreStageResponse { Value = "not-authorized" });

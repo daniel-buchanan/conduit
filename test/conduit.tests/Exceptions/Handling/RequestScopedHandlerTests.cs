@@ -30,7 +30,7 @@ public class RequestScopedHandlerTests
         public Task HandleAsync(
             HandlerExceptionRequest request,
             InvalidOperationException exception,
-            RequestExceptionHandlerState<HandlerExceptionResponse> state,
+            ExceptionHandlerState<HandlerExceptionResponse> state,
             CancellationToken cancellationToken)
         {
             state.SetHandled(new HandlerExceptionResponse { Value = "recovered" });
@@ -45,7 +45,7 @@ public class RequestScopedHandlerTests
         public Task HandleAsync(
             HandlerExceptionRequest request,
             InvalidOperationException exception,
-            RequestExceptionHandlerState<HandlerExceptionResponse> state,
+            ExceptionHandlerState<HandlerExceptionResponse> state,
             CancellationToken cancellationToken)
             => Task.CompletedTask; // never calls SetHandled
     }
@@ -72,7 +72,7 @@ public class RequestScopedHandlerTests
     }
 
     private sealed class DelegateHandler(
-        Func<HandlerExceptionRequest, InvalidOperationException, RequestExceptionHandlerState<HandlerExceptionResponse>, CancellationToken, Task> handle)
+        Func<HandlerExceptionRequest, InvalidOperationException, ExceptionHandlerState<HandlerExceptionResponse>, CancellationToken, Task> handle)
         : IRequestExceptionHandler<HandlerExceptionRequest, HandlerExceptionResponse, InvalidOperationException>
     {
         public int Order => 0;
@@ -80,7 +80,7 @@ public class RequestScopedHandlerTests
         public Task HandleAsync(
             HandlerExceptionRequest request,
             InvalidOperationException exception,
-            RequestExceptionHandlerState<HandlerExceptionResponse> state,
+            ExceptionHandlerState<HandlerExceptionResponse> state,
             CancellationToken cancellationToken)
             => handle(request, exception, state, cancellationToken);
     }

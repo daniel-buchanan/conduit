@@ -63,7 +63,7 @@ The outcome of running a `ModelValidator` (or a single `Rule`) against a request
 The default pre-execution `Stage` that resolves and runs the registered `ModelValidator` for a `Pipe`'s `(TRequest, TResponse)` pair. Implements `IValidationPipeStage` so a `Pipe` configured with `ExcludeValidation` skips it, on either registration path.
 
 **RequestExceptionHandler / RequestExceptionAction**:
-Per-`(TRequest, TException)` interception points for exceptions thrown specifically by a `Pipe`'s `Handler` stage (`IRequestExceptionHandler<TRequest,TResponse,TException>`/`IRequestExceptionAction<TRequest,TException>`), named to mirror MediatR's equivalents directly. An `Action` observes/reacts and always lets the exception continue; a `Handler` may call `RequestExceptionHandlerState<TResponse>.SetHandled(response)` to supply a response instead, which short-circuits the rest of the `Pipe`. Multiple registrations run in ascending `Order`; matching walks the exception's real inheritance chain.
+Per-`(TRequest, TException)` interception points for exceptions thrown specifically by a `Pipe`'s `Handler` stage (`IRequestExceptionHandler<TRequest,TResponse,TException>`/`IRequestExceptionAction<TRequest,TException>`), named to mirror MediatR's equivalents directly. An `Action` observes/reacts and always lets the exception continue; a `Handler` may call `ExceptionHandlerState<TResponse>.SetHandled(response)` to supply a response instead, which short-circuits the rest of the `Pipe`. Multiple registrations run in ascending `Order`; matching walks the exception's real inheritance chain.
 _Avoid_: Middleware, pipeline behavior — these intercept exceptions per-type, they do not wrap-and-call-next.
 
 **StageExceptionHandler / StageExceptionAction**:

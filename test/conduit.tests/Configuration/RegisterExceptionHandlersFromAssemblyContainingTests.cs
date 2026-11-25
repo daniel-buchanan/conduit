@@ -40,7 +40,7 @@ public class RegisterExceptionHandlersFromAssemblyContainingTests
         public Task HandleAsync(
             ScannedRequest request,
             InvalidOperationException exception,
-            RequestExceptionHandlerState<ScannedResponse> state,
+            ExceptionHandlerState<ScannedResponse> state,
             CancellationToken cancellationToken)
         {
             state.SetHandled(new ScannedResponse { Value = "recovered-by-scan" });

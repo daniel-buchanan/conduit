@@ -88,7 +88,7 @@ public class GreetingFallback : IRequestExceptionHandler<GetGreeting, GreetingRe
     public int Order => 0; // lower runs first
 
     public Task HandleAsync(GetGreeting request, TimeoutException exception,
-        RequestExceptionHandlerState<GreetingResponse> state, CancellationToken cancellationToken)
+        ExceptionHandlerState<GreetingResponse> state, CancellationToken cancellationToken)
     {
         state.SetHandled(new GreetingResponse { Message = "Hello, whoever you are." });
         return Task.CompletedTask;

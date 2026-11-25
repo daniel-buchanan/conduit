@@ -24,5 +24,5 @@ public interface IRequestExceptionHandler<TRequest, TResponse, TException> : IOr
     /// response; otherwise the exception falls through to be wrapped as <c>StageFailedException</c> once
     /// every registered handler for this type has run without handling it.
     /// </summary>
-    Task HandleAsync(TRequest request, TException exception, RequestExceptionHandlerState<TResponse> state, CancellationToken cancellationToken);
+    Task HandleAsync(TRequest request, TException exception, ExceptionHandlerState<TResponse> state, CancellationToken cancellationToken);
 }

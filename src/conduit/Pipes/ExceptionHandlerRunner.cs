@@ -54,7 +54,7 @@ internal static class ExceptionHandlerRunner
             await InvokeAsTask(method, instance, [request, exception, cancellationToken]);
         }
 
-        var state = new RequestExceptionHandlerState<TResponse>();
+        var state = new ExceptionHandlerState<TResponse>();
         foreach (var (_, instance, method) in handlers.OrderBy(h => h.Order))
         {
             await InvokeAsTask(method, instance, [request, exception, state, cancellationToken]);

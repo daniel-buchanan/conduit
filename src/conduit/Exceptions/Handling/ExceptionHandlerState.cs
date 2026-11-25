@@ -7,7 +7,7 @@ namespace conduit.Exceptions.Handling;
 /// the supplied response immediately.
 /// </summary>
 /// <typeparam name="TResponse">The pipe's response type.</typeparam>
-public sealed class RequestExceptionHandlerState<TResponse> where TResponse : class
+public sealed class ExceptionHandlerState<TResponse> where TResponse : class
 {
     /// <summary>
     /// Gets whether a handler has supplied a response via <see cref="SetHandled"/>.

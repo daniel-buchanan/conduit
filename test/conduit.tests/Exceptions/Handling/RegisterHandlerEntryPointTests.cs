@@ -34,7 +34,7 @@ public class RegisterHandlerEntryPointTests
         public Task HandleAsync(
             SimplePathRequest request,
             InvalidOperationException exception,
-            RequestExceptionHandlerState<SimplePathResponse> state,
+            ExceptionHandlerState<SimplePathResponse> state,
             CancellationToken cancellationToken)
         {
             state.SetHandled(new SimplePathResponse { Value = "recovered-via-conduit" });
