@@ -1,4 +1,5 @@
 using System.IO;
+using System.Text.Json;
 using conduit.aspnetcore.validation;
 using conduit.Exceptions;
 using conduit.logging;
@@ -24,6 +25,12 @@ public class ConduitValidationExceptionHandlerTests
         };
     }
 
+    private static JsonElement ReadBody(HttpContext context)
+    {
+        context.Response.Body.Position = 0;
+        return JsonDocument.Parse(context.Response.Body).RootElement;
+    }
+
     [Fact]
     public async Task InvokeAsync_Should_Return_400_For_A_ValidationFailedException()
     {
@@ -38,6 +45,9 @@ public class ConduitValidationExceptionHandlerTests
 
         // Assert
         Assert.Equal(StatusCodes.Status400BadRequest, context.Response.StatusCode);
+        var body = ReadBody(context);
+        Assert.Equal("Validation Error", body.GetProperty("title").GetString());
+        Assert.Equal("Name is required.", body.GetProperty("errors").GetProperty("Name")[0].GetString());
     }
 
     [Fact]
@@ -53,6 +63,9 @@ public class ConduitValidationExceptionHandlerTests
 
         // Assert
         Assert.Equal(StatusCodes.Status500InternalServerError, context.Response.StatusCode);
+        var body = ReadBody(context);
+        Assert.Equal("A stage failed while processing your request.", body.GetProperty("title").GetString());
+        Assert.Equal("stage failed", body.GetProperty("detail").GetString());
     }
 
     [Fact]
@@ -70,6 +83,9 @@ public class ConduitValidationExceptionHandlerTests
 
         // Assert
         Assert.Equal(StatusCodes.Status500InternalServerError, context.Response.StatusCode);
+        var body = ReadBody(context);
+        Assert.Equal("No validator was registered for this request.", body.GetProperty("title").GetString());
+        Assert.Equal("no validator registered", body.GetProperty("detail").GetString());
     }
 
     [Fact]

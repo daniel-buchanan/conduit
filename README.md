@@ -73,10 +73,10 @@ services.AddConduit(config =>
     config.AddValidation(); // scans loaded assemblies for ModelValidator<,> implementations
 });
 
-app.AddConduitValidation(); // ASP.NET Core middleware: turns ValidationFailedException into a ProblemDetails response
+app.AddConduitValidation(); // ASP.NET Core middleware: maps Conduit exceptions to ProblemDetails responses
 ```
 
-A failing validator throws `ValidationFailedException` (aggregating every failed rule, not just the first). Opt a specific pipe out with `ExcludeValidation()` on `RegisterHandler`'s `configure` callback or `RegisterPipe`'s builder.
+A failing validator throws `ValidationFailedException` (aggregating every failed rule, not just the first). The middleware returns 400 for `ValidationFailedException`, and 500 for `StageFailedException` and `ValidatorNotFoundException`; anything else is rethrown. Opt a specific pipe out with `ExcludeValidation()` on `RegisterHandler`'s `configure` callback or `RegisterPipe`'s builder.
 
 ## Concepts and vocabulary
 
