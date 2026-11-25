@@ -25,5 +25,5 @@ public interface IStageExceptionHandler<TRequest, TResponse, TException> : IOrde
     /// response — this stops every remaining stage, including the <c>Handler</c> if the throwing stage
     /// ran before it.
     /// </summary>
-    Task HandleAsync(TRequest request, TException exception, RequestExceptionHandlerState<TResponse> state, CancellationToken cancellationToken);
+    Task HandleAsync(TRequest request, TException exception, ExceptionHandlerState<TResponse> state, CancellationToken cancellationToken);
 }

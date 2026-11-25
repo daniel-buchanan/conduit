@@ -76,4 +76,46 @@ public class ExcludeValidationTests
         Assert.NotNull(response);
         Assert.Equal(string.Empty, response!.Value);
     }
+
+    [Fact]
+    public async Task RegisterHandler_Without_ExcludeValidation_Should_Still_Apply_Default_Validation()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        services.AddConduit(c =>
+        {
+            c.AddValidation(vb => vb.WithValidatorsFromAssembly<ExcludeValidationTests>());
+            c.RegisterHandler<ExcludableRequest, ExcludableResponse, ExcludableRequestHandler>();
+        }, new Mock<ILog>().Object);
+        var provider = services.BuildServiceProvider();
+        var pipe = provider.GetRequiredService<IPipe<ExcludableRequest, ExcludableResponse>>();
+
+        // Act
+        Func<Task> act = () => pipe.PushAsync(new ExcludableRequest { Message = null });
+
+        // Assert
+        await Assert.ThrowsAsync<ValidationFailedException>(act);
+    }
+
+    [Fact]
+    public async Task RegisterHandler_With_ExcludeValidation_Should_Skip_Default_Validation()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        services.AddConduit(c =>
+        {
+            c.AddValidation(vb => vb.WithValidatorsFromAssembly<ExcludeValidationTests>());
+            c.RegisterHandler<ExcludableRequest, ExcludableResponse, ExcludableRequestHandler>(
+                o => o.ExcludeValidation());
+        }, new Mock<ILog>().Object);
+        var provider = services.BuildServiceProvider();
+        var pipe = provider.GetRequiredService<IPipe<ExcludableRequest, ExcludableResponse>>();
+
+        // Act
+        var response = await pipe.PushAsync(new ExcludableRequest { Message = null });
+
+        // Assert: the handler still ran even though the request would have failed validation.
+        Assert.NotNull(response);
+        Assert.Equal(string.Empty, response!.Value);
+    }
 }

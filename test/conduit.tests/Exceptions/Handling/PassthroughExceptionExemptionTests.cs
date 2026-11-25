@@ -30,7 +30,7 @@ public class PassthroughExceptionExemptionTests
         public Task HandleAsync(
             PassthroughRequest request,
             ValidatorNotFoundException exception,
-            RequestExceptionHandlerState<PassthroughResponse> state,
+            ExceptionHandlerState<PassthroughResponse> state,
             CancellationToken cancellationToken)
         {
             InvocationCount++;

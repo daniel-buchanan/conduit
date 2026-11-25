@@ -7,8 +7,8 @@ namespace conduit.benchmarks;
 /// <summary>
 /// Isolates <see cref="Conduit"/>'s per-call reflection cost — it looks up the closed
 /// <c>IPipe&lt;,&gt;</c> type, does an untyped <c>GetService</c>, then finds and invokes the
-/// send method via reflection (<c>Type.GetMethod</c> + <c>MethodInfo.Invoke</c>) — every single
-/// dispatch, with no caching. Compares that against resolving and calling the same
+/// push method via reflection (<c>Type.GetMethod</c> + <c>MethodInfo.Invoke</c>) — every single
+/// push, with no caching. Compares that against resolving and calling the same
 /// <see cref="IPipe{TRequest,TResponse}"/> directly, with no facade in between.
 /// </summary>
 [MemoryDiagnoser]

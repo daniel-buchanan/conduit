@@ -1,4 +1,3 @@
-using conduit.common;
 using conduit.Configuration;
 using conduit.Exceptions;
 
@@ -7,10 +6,9 @@ namespace conduit.Pipes;
 /// <summary>
 /// Provides a concrete implementation of a registry that stores pipe configurations.
 /// </summary>
-/// <param name="hashUtil">The hash utility for generating registry keys.</param>
-public class PipeConfigurationRegistry(IHashUtil hashUtil) : IPipeConfigurationRegistry
+public class PipeConfigurationRegistry : IPipeConfigurationRegistry
 {
-    private readonly Dictionary<string, PipeDescriptor> _registry = new();
+    private readonly Dictionary<(Type Request, Type Response), PipeDescriptor> _registry = new();
     private bool _isLocked;
 
     /// <summary>
@@ -44,10 +42,11 @@ public class PipeConfigurationRegistry(IHashUtil hashUtil) : IPipeConfigurationR
         if (_isLocked)
             throw new InvalidOperationException("Cannot add a pipe descriptor after the registry has been locked.");
 
-        if (_registry.ContainsKey(descriptor.GetHash()))
+        var key = (descriptor.RequestType, descriptor.ResponseType);
+        if (_registry.ContainsKey(key))
             throw new PipeAlreadyRegisteredException();
 
-        _registry.Add(descriptor.GetHash(), descriptor);
+        _registry.Add(key, descriptor);
     }
 
     /// <summary>
@@ -68,8 +67,5 @@ public class PipeConfigurationRegistry(IHashUtil hashUtil) : IPipeConfigurationR
     /// <param name="responseType">The response type.</param>
     /// <returns>The registered pipe descriptor, or null if not found.</returns>
     public PipeDescriptor? Get(Type requestType, Type responseType)
-    {
-        var key = hashUtil.TypeNameHash(requestType, responseType);
-        return _registry.TryGetValue(key, out var descriptor) ? descriptor : null;
-    }
+        => _registry.TryGetValue((requestType, responseType), out var descriptor) ? descriptor : null;
 }

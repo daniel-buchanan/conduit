@@ -49,7 +49,7 @@ public class StageScopedPostExecutionTests
         public Task HandleAsync(
             PostStageRequest request,
             TimeoutException exception,
-            RequestExceptionHandlerState<PostStageResponse> state,
+            ExceptionHandlerState<PostStageResponse> state,
             CancellationToken cancellationToken)
         {
             state.SetHandled(new PostStageResponse { Value = "recovered-from-timeout" });

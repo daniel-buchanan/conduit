@@ -44,7 +44,7 @@ public class ScopeIsolationTests
         public Task HandleAsync(
             ScopeIsolationRequest request,
             InvalidOperationException exception,
-            RequestExceptionHandlerState<ScopeIsolationResponse> state,
+            ExceptionHandlerState<ScopeIsolationResponse> state,
             CancellationToken cancellationToken)
         {
             state.SetHandled(new ScopeIsolationResponse { Value = "stage-scoped-handled" });
@@ -60,7 +60,7 @@ public class ScopeIsolationTests
         public Task HandleAsync(
             ScopeIsolationRequest request,
             InvalidOperationException exception,
-            RequestExceptionHandlerState<ScopeIsolationResponse> state,
+            ExceptionHandlerState<ScopeIsolationResponse> state,
             CancellationToken cancellationToken)
         {
             InvocationCount++;
@@ -76,7 +76,7 @@ public class ScopeIsolationTests
         public Task HandleAsync(
             ScopeIsolationRequest request,
             InvalidOperationException exception,
-            RequestExceptionHandlerState<ScopeIsolationResponse> state,
+            ExceptionHandlerState<ScopeIsolationResponse> state,
             CancellationToken cancellationToken)
         {
             state.SetHandled(new ScopeIsolationResponse { Value = "request-scoped-handled" });
@@ -92,7 +92,7 @@ public class ScopeIsolationTests
         public Task HandleAsync(
             ScopeIsolationRequest request,
             InvalidOperationException exception,
-            RequestExceptionHandlerState<ScopeIsolationResponse> state,
+            ExceptionHandlerState<ScopeIsolationResponse> state,
             CancellationToken cancellationToken)
         {
             InvocationCount++;

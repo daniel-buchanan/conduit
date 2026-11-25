@@ -43,7 +43,7 @@ public class ReturnedExceptionHandlingTests
         public Task HandleAsync(
             ReturnedExceptionRequest request,
             InvalidOperationException exception,
-            RequestExceptionHandlerState<ReturnedExceptionResponse> state,
+            ExceptionHandlerState<ReturnedExceptionResponse> state,
             CancellationToken cancellationToken)
         {
             state.SetHandled(new ReturnedExceptionResponse { Value = "recovered-from-returned-exception" });
@@ -58,7 +58,7 @@ public class ReturnedExceptionHandlingTests
         public Task HandleAsync(
             ReturnedExceptionRequest request,
             InvalidOperationException exception,
-            RequestExceptionHandlerState<ReturnedExceptionResponse> state,
+            ExceptionHandlerState<ReturnedExceptionResponse> state,
             CancellationToken cancellationToken)
             => Task.CompletedTask; // never calls SetHandled
     }
@@ -144,7 +144,7 @@ public class ReturnedExceptionHandlingTests
         public Task HandleAsync(
             ReturnedExceptionRequest request,
             Exception exception,
-            RequestExceptionHandlerState<ReturnedExceptionResponse> state,
+            ExceptionHandlerState<ReturnedExceptionResponse> state,
             CancellationToken cancellationToken)
         {
             InvocationCount++;
@@ -159,7 +159,7 @@ public class ReturnedExceptionHandlingTests
         public Task HandleAsync(
             ReturnedExceptionRequest request,
             InvalidOperationException exception,
-            RequestExceptionHandlerState<ReturnedExceptionResponse> state,
+            ExceptionHandlerState<ReturnedExceptionResponse> state,
             CancellationToken cancellationToken)
             => throw new NotSupportedException("handler itself is broken");
     }

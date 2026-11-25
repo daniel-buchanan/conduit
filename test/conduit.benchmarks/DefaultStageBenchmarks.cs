@@ -11,7 +11,7 @@ namespace conduit.benchmarks;
 /// added directly to one specific pipe via RegisterPipe/AddStage with an already-closed type. This
 /// benchmark reproduces the *default-stage* wiring path exactly, but with NoOpStage instead of
 /// ValidationStage, to see whether that wiring mechanism itself — independent of anything the
-/// validator does — accounts for DispatchBenchmarks' NoValidation-to-WithValidation delta.
+/// validator does — accounts for PushBenchmarks' NoValidation-to-WithValidation delta.
 /// </summary>
 [MemoryDiagnoser]
 public class DefaultStageBenchmarks

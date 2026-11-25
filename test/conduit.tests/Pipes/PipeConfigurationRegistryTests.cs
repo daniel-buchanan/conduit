@@ -1,4 +1,3 @@
-using conduit.common;
 using conduit.Configuration;
 using conduit.Pipes;
 using conduit.tests.Handlers;
@@ -12,7 +11,7 @@ public class PipeConfigurationRegistryTests
     public void Add_Should_Throw_When_The_Registry_Is_Locked()
     {
         // Arrange
-        var registry = new PipeConfigurationRegistry(HashUtil.Instance);
+        var registry = new PipeConfigurationRegistry();
         registry.Lock();
 
         // Act
@@ -26,7 +25,7 @@ public class PipeConfigurationRegistryTests
     public void Add_Should_Succeed_Before_The_Registry_Is_Locked()
     {
         // Arrange
-        var registry = new PipeConfigurationRegistry(HashUtil.Instance);
+        var registry = new PipeConfigurationRegistry();
 
         // Act
         registry.Add<TestRequest, TestResponse>(new PipeDescriptor<TestRequest, TestResponse>());

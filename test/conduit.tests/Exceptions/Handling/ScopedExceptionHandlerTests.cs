@@ -39,7 +39,7 @@ public class ScopedExceptionHandlerTests
         public Task HandleAsync(
             ScopedFailureRequest request,
             InvalidOperationException exception,
-            RequestExceptionHandlerState<ScopedFailureResponse> state,
+            ExceptionHandlerState<ScopedFailureResponse> state,
             CancellationToken cancellationToken)
         {
             state.SetHandled(new ScopedFailureResponse { ScopeId = marker.Id });

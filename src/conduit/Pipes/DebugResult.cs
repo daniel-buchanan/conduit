@@ -19,7 +19,7 @@ public record DebugResult<TResponse>(TResponse? Response, long OverallDurationMs
 
     /// <summary>
     /// Gets whether the pipe stopped early because a registered exception handler called
-    /// <c>RequestExceptionHandlerState&lt;TResponse&gt;.SetHandled</c>. When <c>true</c>, <see cref="Metrics"/>
+    /// <c>ExceptionHandlerState&lt;TResponse&gt;.SetHandled</c>. When <c>true</c>, <see cref="Metrics"/>
     /// only covers the stages that actually ran.
     /// </summary>
     public bool ShortCircuited { get; } = ShortCircuited;

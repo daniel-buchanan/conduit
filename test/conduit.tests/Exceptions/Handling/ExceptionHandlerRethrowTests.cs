@@ -26,7 +26,7 @@ public class ExceptionHandlerRethrowTests
         public Task HandleAsync(
             RethrowRequest request,
             InvalidOperationException exception,
-            RequestExceptionHandlerState<RethrowResponse> state,
+            ExceptionHandlerState<RethrowResponse> state,
             CancellationToken cancellationToken)
             => throw new NotSupportedException("handler itself is broken");
     }

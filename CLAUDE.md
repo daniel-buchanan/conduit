@@ -41,7 +41,7 @@ Both must pass clean before a change is considered done. There is no CI yet (tra
 ## Project structure
 
 - `src/conduit` — core: `IConduit`, `IRequest<TResponse>`, `IRequestHandler<,>`, pipe/stage machinery, configuration builders.
-- `src/conduit.common` — shared low-level helpers (`IEnvironment`, `HashUtil`, extensions) with no dependency on `conduit` core.
+- `src/conduit.common` — shared low-level helpers (`IEnvironment`, extensions) with no dependency on `conduit` core.
 - `src/conduit.logging` — logging abstraction (`ILog`) and console implementation.
 - `src/conduit.validation` — optional validation package (`ModelValidator<,>`, `RuleBuilder`, `ValidationStage`). Depends on `conduit` core; core must never depend back on it — cross the boundary only through marker interfaces (`IValidationPipeStage`, `IPassthroughException`), per [ADR-0007](docs/adr/0007-configuration-interfaces-own-their-real-surface.md). Contains no ASP.NET Core reference of any kind.
 - `src/conduit.aspnetcore.validation` — ASP.NET Core integration for `conduit.validation`: the exception-handling middleware (`ConduitValidationExceptionHandler`, `ApplicationBuilderExtensions.UseConduitValidation`) and `ValidationError[] → ModelStateDictionary` conversion. The only package in the repo that references ASP.NET Core (via `FrameworkReference`, not a NuGet package). See [ADR-0015](docs/adr/0015-aspnetcore-validation-package-and-netstandard2-targeting.md).
