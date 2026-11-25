@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime.ExceptionServices;
 using conduit.common;
 using conduit.Exceptions;
 using conduit.logging;
@@ -66,19 +67,10 @@ public abstract class Pipe<TRequest, TResponse>(
 
             if (!stageResponse.IsSuccessful)
             {
+                // A returned exception is treated exactly like a thrown one: rethrow it (stack trace kept) so
+                // the catch blocks below apply cancellation, passthrough and exception-handler rules once.
                 if (stageResponse.ValidationErrors.Length == 0 && stageResponse.Exception is not null)
-                {
-                    var (handled, handledResponse) = await ExceptionHandlerDispatcher.DispatchAsync<TRequest, TResponse>(
-                        provider, request, stageResponse.Exception, stage is IRequestHandler, cancellationToken);
-
-                    if (handled)
-                    {
-                        stageTimer?.Stop();
-                        if (withMetrics)
-                            metric = new StageMetric(index, stageName, prefetchDuration ?? -1, stageTimer?.ElapsedMilliseconds ?? -1);
-                        return (handledResponse, metric, true);
-                    }
-                }
+                    ExceptionDispatchInfo.Capture(stageResponse.Exception).Throw();
 
                 HandleUnsuccessfulResult(request, stageResponse);
             }
