@@ -21,7 +21,7 @@ public class ValidatorTests
         services.AddConduit(c =>
         {
             c.AddValidation(vb => vb.ThrowIfValidatorNotFound().WithValidatorsFromAssembly<ValidatorTests>());
-            c.RegisterHandlersAsImplementedFrom<ValidatorTests>();
+            c.RegisterHandlersFromAssemblyContaining<ValidatorTests>();
         }, _loggerMock.Object);
         _provider = services.BuildServiceProvider();
     }

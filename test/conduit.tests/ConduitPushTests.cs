@@ -16,7 +16,7 @@ public class ConduitPushTests
     {
         _loggerMock = new Mock<ILog>();
         var services = new ServiceCollection();
-        services.AddConduit(c => c.RegisterHandlersAsImplementedFrom<ConduitPushTests>(), _loggerMock.Object);
+        services.AddConduit(c => c.RegisterHandlersFromAssemblyContaining<ConduitPushTests>(), _loggerMock.Object);
         _provider = services.BuildServiceProvider();
     }
     

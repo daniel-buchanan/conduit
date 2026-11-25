@@ -43,5 +43,5 @@ No CI configuration exists (no `.github/workflows` or equivalent). `dotnet build
 ## Not gaps (parity already exists)
 
 - **Pre/post-processors** — Conduit's `Stage` model natively supports pre/post-handler placement (`AddDefaultPreExecutionStage`/`AddDefaultPostExecutionStage`), covering MediatR's `IRequestPreProcessor`/`IRequestPostProcessor` use case.
-- **Assembly scanning / auto-registration** — `RegisterHandlersAsImplementedFrom`, `RegisterPipesAsImplementedFrom`, `AddValidation()`'s app-domain scan already provide this.
+- **Assembly scanning / auto-registration** — `RegisterHandlersFromAssemblyContaining`, `RegisterPipesFromAssemblyContaining`, `AddValidation()`'s app-domain scan already provide this.
 - **Generic handler registration** — lower priority, not on this roadmap: the open-generic mechanism already works for framework stages (`ValidationStage<,>`); exposing it for user-authored handlers is a hardening task, not new capability.

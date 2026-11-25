@@ -41,7 +41,7 @@ services.AddConduit(config =>
 {
     config.RegisterHandler<GetGreeting, GreetingResponse, GetGreetingHandler>();
     // or scan an assembly for every handler at once:
-    // config.RegisterHandlersAsImplementedFrom<Program>();
+    // config.RegisterHandlersFromAssemblyContaining<Program>();
 });
 
 var response = await conduit.PushAsync(new GetGreeting { Name = "World" });
@@ -69,7 +69,7 @@ public class GetGreetingValidator : ModelValidator<GetGreeting, GreetingResponse
 ```csharp
 services.AddConduit(config =>
 {
-    config.RegisterHandlersAsImplementedFrom<Program>();
+    config.RegisterHandlersFromAssemblyContaining<Program>();
     config.AddValidation(); // scans already-loaded assemblies for ModelValidator<,> implementations
 });
 
@@ -99,8 +99,8 @@ public class GreetingFallback : IRequestExceptionHandler<GetGreeting, GreetingRe
 ```csharp
 services.AddConduit(config =>
 {
-    config.RegisterHandlersAsImplementedFrom<Program>();
-    config.RegisterExceptionHandlersAsImplementedFrom<Program>(); // registers every handler and action as Scoped
+    config.RegisterHandlersFromAssemblyContaining<Program>();
+    config.RegisterExceptionHandlersFromAssemblyContaining<Program>(); // registers every handler and action as Scoped
 });
 ```
 
@@ -139,7 +139,7 @@ dotnet run -c Release --project test/conduit.benchmarks -- --filter '*'
 
 | Method | Mean | Allocated |
 |---|---:|---:|
-| `RegisterHandlersAsImplementedFrom` (assembly scan) | 4.062 μs | 12.64 KB |
+| `RegisterHandlersFromAssemblyContaining` (assembly scan) | 4.062 μs | 12.64 KB |
 | `RegisterHandler` (explicit) | 5.219 μs | 15.24 KB |
 
 **Validation**:

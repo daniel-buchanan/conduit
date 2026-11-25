@@ -8,7 +8,7 @@ using Xunit;
 
 namespace conduit.tests.Configuration;
 
-public class RegisterExceptionHandlersAsImplementedFromTests
+public class RegisterExceptionHandlersFromAssemblyContainingTests
 {
     public class ScannedRequest : IRequest<ScannedResponse>;
 
@@ -57,7 +57,7 @@ public class RegisterExceptionHandlersAsImplementedFromTests
         services.AddConduit(c =>
         {
             c.RegisterHandler<ScannedRequest, ScannedResponse, ThrowingHandler>();
-            c.RegisterExceptionHandlersAsImplementedFrom<RegisterExceptionHandlersAsImplementedFromTests>();
+            c.RegisterExceptionHandlersFromAssemblyContaining<RegisterExceptionHandlersFromAssemblyContainingTests>();
         }, new Mock<ILog>().Object);
         using var provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
         using var scope = provider.CreateScope();
@@ -78,7 +78,7 @@ public class RegisterExceptionHandlersAsImplementedFromTests
 
         // Act
         services.AddConduit(
-            c => c.RegisterExceptionHandlersAsImplementedFrom<RegisterExceptionHandlersAsImplementedFromTests>(),
+            c => c.RegisterExceptionHandlersFromAssemblyContaining<RegisterExceptionHandlersFromAssemblyContainingTests>(),
             new Mock<ILog>().Object);
 
         // Assert
