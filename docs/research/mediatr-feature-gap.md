@@ -5,6 +5,8 @@
 > - The scan methods were renamed to `Register{Handlers,Pipes,ExceptionHandlers}FromAssemblyContaining<T>()` ([ADR-0020](../adr/0020-assembly-scan-methods-are-named-from-assembly-containing.md)). The old names below have been updated.
 > - Two gaps missed first time round are added as item 10: pushing a request whose type is only known at runtime, and value-type responses.
 >
+> - A follow-up check against MediatR's own docs and source (v15.0.0) is in [mediatr-feature-gap-docs-check.md](mediatr-feature-gap-docs-check.md). It found no major missing feature, but corrected items 5, 9 and 10 below and added finer-grained gaps.
+>
 > The Summary paragraph below is the original snapshot; the per-item status lines and the ranked list are current.
 
 ## Summary
@@ -68,13 +70,18 @@ Source: `https://raw.githubusercontent.com/LuckyPennySoftware/MediatR/main/src/M
 **MediatR**: Typed, per-request/per-exception-type interception, implemented as `IPipelineBehavior` wrappers (`RequestExceptionProcessorBehavior`, `RequestExceptionActionProcessorBehavior`) around the *handler call itself* — they catch exceptions the handler throws and can set a response via `RequestExceptionHandlerState<TResponse>` (handler) or just observe/log/rethrow (action). Auto-discovered and registered as open generics during assembly scan.
 Source: `https://raw.githubusercontent.com/LuckyPennySoftware/MediatR/main/src/MediatR/Pipeline/IRequestExceptionHandler.cs`, `.../IRequestExceptionAction.cs`; registration in `.../src/MediatR/Registration/ServiceRegistrar.cs` (`ConnectImplementationsToTypesClosing(typeof(IRequestExceptionHandler<,,>), ...)`).
 
-**Conduit status**: Full equivalent, and broader ([ADR-0016](../adr/0016-request-and-stage-exception-handlers.md)).
+**Conduit status**: Equivalent core, with differences in the details ([ADR-0016](../adr/0016-request-and-stage-exception-handlers.md)).
 - `IRequestExceptionHandler<TRequest,TResponse,TException>` and `IRequestExceptionAction<TRequest,TException>` intercept exceptions from the handler, as in MediatR. `ExceptionHandlerState<TResponse>.SetHandled` supplies a response and ends the pipe.
-- `IStageExceptionHandler`/`IStageExceptionAction` do the same for exceptions from every other stage. MediatR has no equivalent, because its behaviors wrap only the handler call.
+- `IStageExceptionHandler`/`IStageExceptionAction` do the same for exceptions from every other stage. MediatR's exception behaviors are outermost, so they also catch exceptions from processors and other behaviors; what Conduit adds is *separate* typed interfaces for handler vs. non-handler failures, not the ability to intercept non-handler failures at all.
 - Matching walks the exception's type hierarchy; `Order` sequences multiple matches. Registered by `RegisterExceptionHandlersFromAssemblyContaining<T>()` (Scoped) and resolved from the `IConduit` scope.
 - Conduit's own exceptions (`IPassthroughException`) and caller cancellation bypass them (ADR-0018).
 
-**Notes**: Gap closed.
+**Differences from MediatR** (detail and sources in [mediatr-feature-gap-docs-check.md](mediatr-feature-gap-docs-check.md), items 2, 3 and 6):
+- MediatR runs actions only for exceptions no handler handled (`ApplyForUnhandledExceptions`, its default). Conduit always runs actions first, which is MediatR's opt-in `ApplyForAllExceptions`; there is no switch.
+- MediatR's scan registers open-generic, catch-all handlers and actions. Conduit's scan throws on generic types.
+- MediatR tries the most-derived exception type first and ranks by assembly/namespace proximity. Conduit sorts by explicit `Order` only.
+
+**Notes**: Core gap closed; the action ordering default is tracked in `ROADMAP.md`.
 
 ### 6. Streaming requests (`IStreamRequest<TResponse>` / `IAsyncEnumerable`)
 
@@ -112,13 +119,13 @@ Source: `https://raw.githubusercontent.com/LuckyPennySoftware/MediatR/main/src/M
 - **`IBaseRequest` + covariance**: MediatR's `IRequest<out TResponse> : IBaseRequest` lets `IBaseRequest` serve as a common non-generic constraint across void and typed requests, and covariance lets an `IRequest<Derived>` be treated as `IRequest<Base>`. Source: `https://raw.githubusercontent.com/LuckyPennySoftware/MediatR/main/src/MediatR.Contracts/IRequest.cs`. Conduit's `IRequest<TResult> where TResult : class` (`src/conduit/IRequest.cs:7`) has neither a common non-generic base nor variance annotations, and there is no void-response `IRequest` at all — every Conduit request must produce a `class` response.
 - **`Unit`**: still present in MediatR (`src/MediatR.Contracts/Unit.cs`, confirmed in the repo tree), historically MediatR's "no real response" placeholder type; current MediatR instead gives void requests their own `IRequestHandler<TRequest>`/`Task Handle(...)` overload (see item 1), so `Unit` is legacy/secondary rather than central. Conduit has no equivalent type or void-request path.
 - **`ISender`/`IPublisher` split**: `IMediator : ISender, IPublisher` — `Send`/`CreateStream` live on `ISender`, `Publish` on `IPublisher`, so a consumer can depend on just the one it needs. Source: `https://raw.githubusercontent.com/LuckyPennySoftware/MediatR/main/src/MediatR/ISender.cs`, `.../IPublisher.cs`, `.../IMediator.cs`. Conduit has a single `IConduit` interface with `PushAsync`/`PushWithDebugAsync` (`src/conduit/IConduit.cs`) — no split, which is consistent with Conduit having no publish/notification side to split off in the first place.
-- **Licensing**: current MediatR requires a license key (`MediatRServiceConfiguration.LicenseKey` / `Mediator.LicenseKey`, resolved from `MEDIATR_LICENSE_KEY`/`LUCKYPENNY_LICENSE_KEY` env vars if not set in code), per the README's "Setting the license key" / "Auto-discovery via environment variables" sections (`https://raw.githubusercontent.com/jbogard/MediatR/master/README.md`) and `Mediator`'s constructor calling `_serviceProvider.CheckLicense()` (`https://raw.githubusercontent.com/LuckyPennySoftware/MediatR/main/src/MediatR/Mediator.cs`). Conduit has no licensing mechanism of any kind in its source — a difference worth flagging for anyone evaluating Conduit specifically as a non-commercial alternative.
+- **Licensing** (corrected 2026-11-26: the key check only logs a warning and gates no behavior): current MediatR asks for a license key (`MediatRServiceConfiguration.LicenseKey` / `Mediator.LicenseKey`, resolved from `MEDIATR_LICENSE_KEY`/`LUCKYPENNY_LICENSE_KEY` env vars if not set in code), per the README's "Setting the license key" / "Auto-discovery via environment variables" sections (`https://raw.githubusercontent.com/jbogard/MediatR/master/README.md`) and `Mediator`'s constructor calling `_serviceProvider.CheckLicense()` (`https://raw.githubusercontent.com/LuckyPennySoftware/MediatR/main/src/MediatR/Mediator.cs`). Conduit has no licensing mechanism of any kind in its source — a difference worth flagging for anyone evaluating Conduit specifically as a non-commercial alternative.
 
 ### 10. Runtime-typed dispatch and value-type responses (added 2026-11-26)
 
 - **Runtime-typed dispatch**: `ISender.Send(object request, CancellationToken)` returns `Task<object?>`, so a caller holding a request whose type is only known at runtime (deserialized from a queue, routed by a generic endpoint) can send it without reflection. Source: `https://raw.githubusercontent.com/LuckyPennySoftware/MediatR/main/src/MediatR/ISender.cs`. Conduit only has `PushAsync<TResponse>(IRequest<TResponse>, ...)` (`src/conduit/IConduit.cs`); the caller must know `TResponse` at compile time or close the generic method by reflection.
 - **Value-type responses**: MediatR's `TResponse` is unconstrained. Conduit's `IRequest<TResult> where TResult : class` (`src/conduit/IRequest.cs`) rejects `int`, `bool`, `Guid` and similar, so those need a wrapper class. The `class` constraint repeats through `IConduit`, `IPipe`, `IRequestHandler` and the stage types.
-- **Smaller differences, not tracked**: handler lifetime is fixed at Scoped (`ReflectionHelper.cs`), where MediatR offers `cfg.Lifetime`; and each scan call takes one assembly with no type filter, where MediatR takes several plus `TypeEvaluator`. ADR-0020 already describes the lambda selector that would cover the latter.
+- **Smaller differences, not tracked**: handlers are always Scoped in Conduit (`ReflectionHelper.cs`) and always Transient in MediatR (its `cfg.Lifetime` governs only `IMediator`/`ISender`/`IPublisher`); and each scan call takes one assembly with no type filter, where MediatR takes several plus `TypeEvaluator`. ADR-0020 already describes the lambda selector that would cover the latter.
 
 ---
 
@@ -136,4 +143,6 @@ Ranked by how load-bearing the missing feature would likely be for someone porti
 
 5. **Generic handler registration hardening (item 8).** Lower priority: the underlying open-generic-stage mechanism already works (`ValidationStage<,>`), so this is more "expose and harden an existing internal pattern for user handlers, with the same kind of safety limits MediatR added (`MaxGenericTypeParameters` etc.)" than "build a new capability."
 
-Not counted as a gap: exception handlers and actions (item 5, implemented per ADR-0016), pre/post-processors (item 4) and assembly scanning (item 7) — Conduit already has direct or superior equivalents for both (the `Stage` model natively supports pre/post placement, and `RegisterHandlersFromAssemblyContaining`/`RegisterPipesFromAssemblyContaining`/`AddValidation()` already do reflection-based registration), so porting MediatR usage of those specific features should be largely mechanical.
+Not ranked above, but tracked in `ROADMAP.md`: constrained default stages and the exception action ordering default (see the docs-check file).
+
+Not counted as a gap: exception handlers and actions (item 5, implemented per ADR-0016, with the differences listed there), pre/post-processors (item 4) and assembly scanning (item 7) — Conduit already has direct or superior equivalents for both (the `Stage` model natively supports pre/post placement, and `RegisterHandlersFromAssemblyContaining`/`RegisterPipesFromAssemblyContaining`/`AddValidation()` already do reflection-based registration), so porting MediatR usage of those specific features should be largely mechanical.

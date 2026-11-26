@@ -46,6 +46,18 @@ MediatR's `TResponse` is unconstrained. Conduit's `IRequest<TResult> where TResu
 
 **Status**: added 2026-11-26. Medium weight. Consider doing it together with item 1, which also reshapes `IRequest`.
 
+### 7. Constrained default stages
+
+MediatR runs an open behavior declared `where TRequest : ICommand` only for requests that satisfy the constraint. Conduit's `AddDefaultPreExecutionStage`/`AddDefaultPostExecutionStage` apply a stage to every pipe, and `StageMaterializer.Materialize` (`src/conduit/Helpers/StageMaterializer.cs`) calls `MakeGenericType` without checking constraints — so, by inspection, a constrained default stage throws `ArgumentException` when a non-matching pipe is built.
+
+**Status**: added 2026-11-26 from the MediatR docs check ([docs/research/mediatr-feature-gap-docs-check.md](docs/research/mediatr-feature-gap-docs-check.md)). Medium weight. Confirm the throw with a failing test first; the likely fix is to skip a default stage whose constraints the request doesn't satisfy.
+
+### 8. Exception action ordering default
+
+MediatR's default runs exception actions only when no exception handler handled the exception (`ApplyForUnhandledExceptions`); running them for every exception is opt-in. Conduit's `ExceptionHandlerRunner` always runs actions first, with no switch (`src/conduit/Pipes/ExceptionHandlerRunner.cs`), so code ported from MediatR fires actions (alerts, error logs) for exceptions a handler recovered from.
+
+**Status**: added 2026-11-26. Medium weight. A design decision, not a bug: choose the default (and whether to offer a switch) and record it in an ADR amending ADR-0016.
+
 ## Not gaps (parity already exists)
 
 - **Pre/post-processors** — Conduit's `Stage` model natively supports pre/post-handler placement (`AddDefaultPreExecutionStage`/`AddDefaultPostExecutionStage`), covering MediatR's `IRequestPreProcessor`/`IRequestPostProcessor` use case.
