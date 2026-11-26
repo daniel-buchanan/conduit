@@ -34,6 +34,30 @@ MediatR's one-event-to-many-handlers dispatch, pluggable publish strategy (seque
 
 **Follow-on**: once Notification exists, split `IConduit` into a `Push`-only and a `Publish`-only interface (mirroring MediatR's `ISender`/`IPublisher`), so consumers can depend on just the one they need. Not independently prioritized — tied to this item.
 
+### 5. Runtime-typed `Push`
+
+MediatR's `Send(object request)` returns `Task<object?>`, so a request whose type is only known at runtime (deserialized from a queue, routed by a generic endpoint) can be sent without reflection. `IConduit` only has `PushAsync<TResponse>(IRequest<TResponse>, ...)` (`src/conduit/IConduit.cs`); the caller must know `TResponse` at compile time or close the method by reflection.
+
+**Status**: added 2026-11-26 from a re-check against MediatR. Medium weight; build when a consumer needs it.
+
+### 6. Value-type responses
+
+MediatR's `TResponse` is unconstrained. Conduit's `IRequest<TResult> where TResult : class` (`src/conduit/IRequest.cs`) rejects `int`, `bool`, `Guid` and similar, so those need a wrapper class. The `class` constraint repeats through `IConduit`, `IPipe`, `IRequestHandler` and the stage types, so removing it is a breaking change across the public surface.
+
+**Status**: added 2026-11-26. Medium weight. Consider doing it together with item 1, which also reshapes `IRequest`.
+
+### 7. Constrained default stages
+
+MediatR runs an open behavior declared `where TRequest : ICommand` only for requests that satisfy the constraint. Conduit's `AddDefaultPreExecutionStage`/`AddDefaultPostExecutionStage` apply a stage to every pipe, and `StageMaterializer.Materialize` (`src/conduit/Helpers/StageMaterializer.cs`) calls `MakeGenericType` without checking constraints — so, by inspection, a constrained default stage throws `ArgumentException` when a non-matching pipe is built.
+
+**Status**: added 2026-11-26 from the MediatR docs check ([docs/research/mediatr-feature-gap-docs-check.md](docs/research/mediatr-feature-gap-docs-check.md)). Medium weight. Confirm the throw with a failing test first; the likely fix is to skip a default stage whose constraints the request doesn't satisfy.
+
+### 8. Exception action ordering default
+
+MediatR's default runs exception actions only when no exception handler handled the exception (`ApplyForUnhandledExceptions`); running them for every exception is opt-in. Conduit's `ExceptionHandlerRunner` always runs actions first, with no switch (`src/conduit/Pipes/ExceptionHandlerRunner.cs`), so code ported from MediatR fires actions (alerts, error logs) for exceptions a handler recovered from.
+
+**Status**: added 2026-11-26. Medium weight. A design decision, not a bug: choose the default (and whether to offer a switch) and record it in an ADR amending ADR-0016.
+
 ## Not gaps (parity already exists)
 
 - **Pre/post-processors** — Conduit's `Stage` model natively supports pre/post-handler placement (`AddDefaultPreExecutionStage`/`AddDefaultPostExecutionStage`), covering MediatR's `IRequestPreProcessor`/`IRequestPostProcessor` use case.
